@@ -1,0 +1,9 @@
+build/
+out/
+.vs/
+.cache/
+compile_commands.json
+imgui.ini
+log.txt
+*.spv
+captures/
