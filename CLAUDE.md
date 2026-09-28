@@ -114,10 +114,16 @@ glint/
 
 ## Source material (read-only references — do not modify)
 
-- `/mnt/e/tree/graphics/Glint_gl` — OpenGL 4.6 project (ported to Linux on 2026-09-29).
-  8 scenes in `src/Scenes/*.h` (quad, cube, uv cube, basic shading, VBO indexing, normal mapping,
-  render-to-texture, shadow mapping), helpers in `src/Graphics/`, shaders in `shaders/`, assets in `res/`.
-  Based on opengl-tutorial.org. Uses glad (compat profile 4.6), GLM, ImGui 1.91.9, tinyobjloader, stb.
+- `/mnt/e/tree/graphics/Glint_gl` — OpenGL 4.6 project (ported to Linux on 2026-09-29, builds and runs
+  on RADV/radeonsi). 8 scenes in `src/Scenes/*.h` (quad, cube, uv cube, basic shading, VBO indexing, normal
+  mapping, render-to-texture, shadow mapping), helpers in `src/Graphics/`, shaders in `shaders/`, assets in
+  `res/`. Based on opengl-tutorial.org. Uses glad (compat profile 4.6), GLM, ImGui 1.91.9, tinyobjloader, stb.
+  **Read `Glint_gl/docs/` before porting anything from it:**
+  - `architecture.md`: frame loop, lifecycle, GL state model
+  - `modules.md`: per-class reference with a "Port:" target for each
+  - `scenes.md`: per-technique passes, uniforms, and VK-port notes
+  - `known-issues.md`: bugs *not* to carry over, e.g. the shadow sampler missing compare mode, RTT uniforms
+    never set, textures that are never bound
 - `/mnt/e/tree/graphics/Glint_vk` — Vulkan project, still Windows-only build. ~10k lines.
   `src/glint_core/renderer/` (vk_context, swapchain, synchronization_manager, command_manager, descriptor,
   pipeline + builder, render_pass, texture, mesh), `src/glint_core/core/` (window, camera w/ arcball, config,

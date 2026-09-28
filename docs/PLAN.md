@@ -67,7 +67,9 @@ Pull the best of both, strip every GL/VK type.
 - [ ] `app_gl/main.cpp`: window(OpenGL) → glad load → KHR_debug callback (from GL:`Core/Sysinfo.cpp`) → ImGui GLFW+OpenGL3 backends → registry → loop
 - [ ] Port **01_triangle** raw in `techniques/01_triangle/gl.cpp` (no helpers yet)
 - [ ] Introduce `gl/` helpers by extracting from GL:`Graphics/` — `Shader` (with hot reload), `Buffer`, `VertexArray`, `Texture`, `Framebuffer`. Switch to **DSA** (`glCreateBuffers`, `glNamedBufferStorage`, `glTextureStorage2D`…) — GL 4.5+ DSA is the GL idiom closest to Vulkan's explicit objects; note it in `gl-vs-vk.md`
-- [ ] Port GL scenes as techniques (shaders move to `techniques/<n>/shaders/*.gl.*`):
+- [ ] Port GL scenes as techniques (shaders move to `techniques/<n>/shaders/*.gl.*`).
+      Use `Glint_gl/docs/scenes.md` for what each scene does and fix everything in
+      `Glint_gl/docs/known-issues.md` on the way (don't port the bugs):
   - [ ] 02_cube ← `Scenes/CubeScene.h`
   - [ ] 03_textured_cube ← `Scenes/UVCubeScene.h`
   - [ ] 04_basic_shading ← `Scenes/BasicShading.h`
