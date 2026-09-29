@@ -27,10 +27,16 @@ glm::mat4 Camera::projection(float aspect, ClipDepth depth) const {
                                        : glm::perspectiveRH_NO(fov, aspect, nearZ, farZ);
 }
 
+void Camera::setHome(glm::vec3 homeEye, glm::vec3 homeTarget) {
+  m_homeEye = homeEye;
+  m_homeTarget = homeTarget;
+  resetView();
+}
+
 void Camera::resetView() {
   const Camera defaults;
-  eye = defaults.eye;
-  target = defaults.target;
+  eye = m_homeEye;
+  target = m_homeTarget;
   up = defaults.up;
   fovY = defaults.fovY;
   nearZ = defaults.nearZ;

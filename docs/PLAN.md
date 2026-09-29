@@ -68,21 +68,21 @@ Pull the best of both, strip every GL/VK type.
 
 - [x] `app_gl/main.cpp`: window(OpenGL) → glad load → KHR_debug callback (from GL:`Core/Sysinfo.cpp`) → ImGui GLFW+OpenGL3 backends → registry → loop
 - [x] Port **01_triangle** raw in `techniques/01_triangle/gl.cpp` (no helpers yet)
-- [ ] Introduce `gl/` helpers by extracting from GL:`Graphics/` — `Shader` (with hot reload), `Buffer`, `VertexArray`, `Texture`, `Framebuffer`.
+- [x] Introduce `gl/` helpers by extracting from GL:`Graphics/` — `Shader` (with hot reload), `Buffer`, `VertexArray`, `Texture`, `Framebuffer`.
       Each one only after a technique has done it raw (CLAUDE.md): **done:** `Program` (shader.h, hot reload), `Buffer`,
-      `VertexArray`, `Mesh` (after 01). **Pending:** `Texture` (after 03 does it raw), `Framebuffer` (after 07). Switch to **DSA** (`glCreateBuffers`, `glNamedBufferStorage`, `glTextureStorage2D`…) — GL 4.5+ DSA is the GL idiom closest to Vulkan's explicit objects; note it in `gl-vs-vk.md`
-- [ ] Port GL scenes as techniques (shaders move to `techniques/<n>/shaders/*.gl.*`).
+      `VertexArray`, `Mesh` (after 01), `Texture` + `Sampler` (after 03), `Framebuffer` (after 07). Switch to **DSA** (`glCreateBuffers`, `glNamedBufferStorage`, `glTextureStorage2D`…) — GL 4.5+ DSA is the GL idiom closest to Vulkan's explicit objects; note it in `gl-vs-vk.md`
+- [x] Port GL scenes as techniques (shaders move to `techniques/<n>/shaders/*.gl.*`).
       Use `Glint_gl/docs/scenes.md` for what each scene does and fix everything in
       `Glint_gl/docs/known-issues.md` on the way (don't port the bugs):
   - [x] 02_cube ← `Scenes/CubeScene.h`
-  - [ ] 03_textured_cube ← `Scenes/UVCubeScene.h`
-  - [ ] 04_basic_shading ← `Scenes/BasicShading.h`
-  - [ ] 05_indexed_mesh ← `Scenes/VBOIndexing.h`
-  - [ ] 06_normal_mapping ← `Scenes/NormalMapping.h`
-  - [ ] 07_render_to_texture ← `Scenes/RenderToTexture.h`
-  - [ ] 08_shadow_mapping ← `Scenes/ShadowMapping.h`
+  - [x] 03_textured_cube ← `Scenes/UVCubeScene.h`
+  - [x] 04_basic_shading ← `Scenes/BasicShading.h`
+  - [x] 05_indexed_mesh ← `Scenes/VBOIndexing.h`
+  - [x] 06_normal_mapping ← `Scenes/NormalMapping.h`
+  - [x] 07_render_to_texture ← `Scenes/RenderToTexture.h`
+  - [x] 08_shadow_mapping ← `Scenes/ShadowMapping.h`
   (`QuadScene` becomes part of 01/07.)
-- [ ] Each technique gets `params.h` + shared ImGui panel (01, 02 done)
+- [x] Each technique gets `params.h` + shared ImGui panel (standard shading shared via `techniques/common/`)
 
 **Done when:** `glint_gl` runs all 8 techniques on RADV with no KHR_debug errors, matching the old Glint_gl visually.
 
@@ -211,4 +211,7 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-29 | GL techniques set all the state their draws need every frame; app resets GL state on switch | Fixes Glint_gl's state leaks; mirrors VK pipelines owning that state |
 | 2026-09-29 | Uniforms at explicit `layout(location)`, set via `glProgramUniform*` | No name lookups; closest GL analogue to VK's fixed binding numbers |
 | 2026-09-29 | `--frames N` / `--screenshot FILE` in both apps | Scripted runs + visual checks; groundwork for the parity tool |
+| 2026-09-30 | `techniques/common/` for the standard-shading shader + std140 struct (04, 05, 07) | Same shader three times otherwise; the struct is shared by GL and VK |
+| 2026-09-30 | Uniform blocks use only `mat4`/`vec4` | std140 vec3/array padding can't make C++ and GLSL disagree |
+| 2026-09-30 | Sampler objects everywhere (compare mode on the shadow sampler) | Mirrors `VkSampler`; lets the UI read the shadow map without compare |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

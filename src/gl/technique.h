@@ -5,6 +5,7 @@
 
 #include <memory>
 
+#include "core/camera.h"
 #include "core/frame.h"
 #include "core/registry.h"
 
@@ -16,6 +17,9 @@ class Technique {
 
   // Create GL objects. The context is current and the GL state is at the app's defaults.
   virtual void init() = 0;
+
+  // Where the camera starts (and "Reset view" returns to) for this technique. Default: Camera's default.
+  virtual void setupCamera(Camera& camera) { camera.setHome({4.0f, 3.0f, -3.0f}); }
 
   // Animation, input, shader hot reload. No GL draw calls here.
   virtual void update(float dt, Frame& frame) {

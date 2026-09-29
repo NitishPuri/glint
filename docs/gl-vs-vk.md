@@ -19,7 +19,22 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Uniforms | `glUniform*` / UBO binding points | Descriptor sets + layouts, push constants | 02 |
 | Synchronisation | Implicit (driver inserts hazards tracking) | Explicit barriers, fences, semaphores | 07 |
 | Command submission | Immediate-looking calls | Record command buffers, submit to queue | 01 |
-| Render targets | FBO, attach textures | Dynamic rendering: `VkRenderingInfo` with image views | 07 |
+| Render targets | FBO object: `glNamedFramebufferTexture`, completeness check | No object: attachments listed in `VkRenderingInfo` per `vkCmdBeginRendering` | 07 |
+| Pass-to-pass hazard | Implicit (driver orders write → sample) | Explicit image barrier + layout transition | 07 |
+| Attribute-less draw | `gl_VertexID`, still needs an (empty) VAO bound | `gl_VertexIndex`, empty vertex input state | 07 |
+| Stored depth | `d = z_ndc * 0.5 + 0.5` | `d = z_ndc` | 07 |
+| Shadow compare | `GL_TEXTURE_COMPARE_MODE` on sampler/texture | `VkSamplerCreateInfo::compareEnable` | 08 |
+| Shadow bias matrix | x, y, z: [-1,1] → [0,1] | x, y only (z already [0,1]); mind the Y flip | 08 |
+| Depth-only pass | Vertex-only program, `glDrawBuffer(GL_NONE)` | Pipeline without fragment stage / color attachments | 08 |
+| Channel swizzle | `GL_TEXTURE_SWIZZLE_RGBA` on the texture | `VkComponentMapping` on an image view | 08 |
 | Debugging | `KHR_debug` callback (checks built into the driver, fairly shallow) | Validation layers + debug utils messenger (separate, thorough) | 01 |
 | Object names | `glObjectLabel` | `vkSetDebugUtilsObjectNameEXT` | 01 |
 | Depth buffer | Comes with the default framebuffer | You create image + memory + view, transition it, attach it | 02 |
+| Texture upload | `glTextureStorage2D` + `glTextureSubImage2D` from a CPU pointer | Staging buffer + `vkCmdCopyBufferToImage` + layout transitions | 03 |
+| Mipmaps | `glGenerateTextureMipmap` | Loop of `vkCmdBlitImage` + barriers per level | 03 |
+| Samplers | Sampler object (mutable) bound per unit, or params on the texture | `VkSampler` (immutable), in a descriptor | 03 |
+| Texture binding | Global texture units (`glBindTextureUnit`) | Image view + sampler written into a descriptor set | 03 |
+| Uniform blocks | `layout(std140, binding = N)` + `glBindBufferBase` | Same GLSL block as `set/binding`, via descriptor set | 04 |
+| Updating in-use buffers | Allowed; driver copies/renames | Race: one buffer per frame in flight | 04 |
+| Per-draw data | Update the UBO between draws | Push constants / dynamic UBO offsets / instance buffer | 05 |
+| Blending | `glEnable(GL_BLEND)` any time | Pipeline state → a second pipeline | 05 |

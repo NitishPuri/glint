@@ -28,4 +28,4 @@ Scripted run with a screenshot (the UI isn't in it): `./run.sh gl 02_cube --scre
 
 Shaders: GL loads `techniques/*/shaders/*.gl.*` at runtime and hot-reloads them when saved.
 
-Status: Phase 3 in progress — GL app, 01_triangle (raw), 02_cube (on `gl/` helpers).
+Status: Phase 3 done — `glint_gl` runs 01–08. Next: Phase 4, Vulkan foundation.

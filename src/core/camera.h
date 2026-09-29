@@ -42,10 +42,16 @@ class Camera {
   glm::mat4 projection(float aspect, ClipDepth depth) const;
   glm::mat4 viewProjection(float aspect, ClipDepth depth) const { return projection(aspect, depth) * view(); }
 
-  // Back to the defaults above (keeps mode and speeds).
+  // The pose resetView() returns to. Techniques set it for their scene (Technique::setupCamera); it
+  // starts as the default eye/target above. Also moves the camera there.
+  void setHome(glm::vec3 homeEye, glm::vec3 homeTarget = glm::vec3(0.0f));
+  // Back to the home pose, default up and projection (keeps mode and speeds).
   void resetView();
 
  private:
+  glm::vec3 m_homeEye{4.0f, 3.0f, -3.0f};
+  glm::vec3 m_homeTarget{0.0f};
+
   void updateArcball(float dt, const Input& input, glm::ivec2 screenSize);
   void updateFly(float dt, const Input& input);
 };

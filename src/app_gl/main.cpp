@@ -45,7 +45,7 @@ void resetGlState() {
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
-std::unique_ptr<gl::Technique> createTechnique(const std::string& name) {
+std::unique_ptr<gl::Technique> createTechnique(const std::string& name, Camera& camera) {
   std::unique_ptr<gl::Technique> technique = gl::Registry::instance().create(name);
   if (!technique) throw std::runtime_error(fmt::format("unknown technique '{}'", name));
   resetGlState();
@@ -55,6 +55,7 @@ std::unique_ptr<gl::Technique> createTechnique(const std::string& name) {
     log::error("{}: init failed: {}", name, e.what());
     return nullptr;
   }
+  technique->setupCamera(camera);
   log::info("technique {}", name);
   return technique;
 }
@@ -96,9 +97,9 @@ int run(const Config& config) {
   const std::vector<std::string> names = gl::Registry::instance().names();
   if (names.empty()) throw std::runtime_error("no GL techniques registered");
   std::string current = config.technique.empty() ? names.front() : config.technique;
-  std::unique_ptr<gl::Technique> technique = createTechnique(current);
-
   Camera camera;
+  std::unique_ptr<gl::Technique> technique = createTechnique(current, camera);
+
   Timer frameTimer;
   const Timer startTimer;
   ui::FrameStats stats;
@@ -160,7 +161,7 @@ int run(const Config& config) {
     if (picked) {
       technique.reset();  // destroy the old technique's GL objects first
       current = *picked;
-      technique = createTechnique(current);
+      technique = createTechnique(current, camera);
     }
     if (lastFrame) window.requestClose();
   }

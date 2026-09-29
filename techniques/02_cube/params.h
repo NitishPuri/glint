@@ -10,7 +10,7 @@
 namespace glint::cube {
 
 struct Params {
-  glm::vec3 clearColor{0.0f, 0.0f, 0.4f};  // opengl-tutorial's dark blue
+  glm::vec3 clearColor{0.1f, 0.1f, 0.1f};
   float rotationSpeed = 10.0f;             // degrees per second
   bool cullBackFaces = true;
 };

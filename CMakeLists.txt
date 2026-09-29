@@ -49,7 +49,7 @@ add_library(imgui_backend_gl STATIC
   ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
 target_link_libraries(imgui_backend_gl PUBLIC imgui glfw OpenGL::GL)
 
-add_library(glint_gl_backend STATIC src/gl/debug.cpp src/gl/mesh.cpp src/gl/shader.cpp)
+add_library(glint_gl_backend STATIC src/gl/debug.cpp src/gl/mesh.cpp src/gl/shader.cpp src/gl/texture.cpp)
 target_link_libraries(glint_gl_backend
   PUBLIC glint_core glad OpenGL::GL imgui_backend_gl
   PRIVATE glint_warnings)
@@ -80,7 +80,13 @@ target_link_libraries(glint_vk PRIVATE glint_vk_backend glint_warnings)
 # into a library: a static library would let the linker drop their self-registration (core/registry.h).
 set(GLINT_TECHNIQUES
   01_triangle
-  02_cube)
+  02_cube
+  03_textured_cube
+  04_basic_shading
+  05_indexed_mesh
+  06_normal_mapping
+  07_render_to_texture
+  08_shadow_mapping)
 foreach(technique IN LISTS GLINT_TECHNIQUES)
   set(dir ${PROJECT_SOURCE_DIR}/techniques/${technique})
   if(EXISTS ${dir}/gl.cpp)
