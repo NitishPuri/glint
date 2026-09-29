@@ -12,11 +12,11 @@ Legend: `GL:` = source in `/mnt/e/tree/graphics/Glint_gl`, `VK:` = source in `/m
 
 ## Phase 0 — Machine setup (owner runs these)
 
-- [ ] `sudo apt install cmake ninja-build pkg-config libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl-dev`
+- [x] `sudo apt install cmake ninja-build pkg-config libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl-dev`
       (X11 dev headers are needed because GLFW is built from source via FetchContent)
-- [ ] LunarG Vulkan SDK (Linux tarball) → `~/vulkan-sdk/`; add `source ~/vulkan-sdk/*/setup-env.sh` to `~/.bashrc`
-- [ ] Verify: `glslc --version`, `vulkaninfo --summary` shows RADV, `vkconfig` launches
-- [ ] RenderDoc installed (tarball from renderdoc.org → `~/tools/renderdoc`)
+- [x] LunarG Vulkan SDK (Linux tarball) → `~/vulkan-sdk/`; add `source ~/vulkan-sdk/*/setup-env.sh` to `~/.bashrc`
+- [x] Verify: `glslc --version`, `vulkaninfo --summary` shows RADV, `vkconfig` launches
+- [x] RenderDoc installed (tarball from renderdoc.org → `~/tools/renderdoc`)
 
 **Done when:** the four checks above pass.
 
@@ -24,16 +24,18 @@ Legend: `GL:` = source in `/mnt/e/tree/graphics/Glint_gl`, `VK:` = source in `/m
 
 ## Phase 1 — Skeleton & build system
 
-- [ ] `CMakeLists.txt` (root) + `cmake/deps.cmake` with FetchContent:
+- [x] `CMakeLists.txt` (root) + `cmake/deps.cmake` with FetchContent:
       glfw 3.4, glm 1.0.1, imgui (docking branch, pinned tag), fmt 11.x, stb, tinyobjloader
-- [ ] `find_package(Vulkan REQUIRED COMPONENTS glslc)`; `find_package(OpenGL REQUIRED)`
-- [ ] Generate glad2 for **GL 4.6 core** + `GL_KHR_debug` → `external/glad/` (commit generated files)
-- [ ] `cmake/shaders.cmake`: function `glint_compile_shaders(target DIR)` → glslc `*.vk.{vert,frag,comp}` → `build/<cfg>/shaders/<technique>/*.spv`, with `-g` in Debug
-- [ ] Targets: `glint_core` (static lib), `glint_gl_backend`, `glint_vk_backend`, `glint_gl` (exe), `glint_vk` (exe)
-- [ ] Compile definitions: `GLINT_ASSET_DIR`, `GLINT_SHADER_DIR` (source dir for GL, build dir for SPIR-V)
-- [ ] Warnings: `-Wall -Wextra -Wpedantic`; `_DEBUG` on Debug for non-MSVC; export `compile_commands.json`
-- [ ] Copy assets: `GL:res/*` + `VK:res/*` → `assets/` (dedupe; note origin in `assets/README.md`)
-- [ ] `README.md`, `build.sh`, `run.sh <gl|vk> [technique]`
+      → pinned: imgui v1.92.9b-docking, fmt 11.2.0, stb @2c980bb, tinyobjloader v2.0.0rc13 (archives + SHA256)
+- [x] `find_package(Vulkan REQUIRED)` + `find_program(Vulkan_GLSLC_EXECUTABLE glslc ...)` (CMake 3.22 has no
+      `COMPONENTS glslc`, that's 3.24+); `find_package(OpenGL REQUIRED)`
+- [x] Generate glad2 for **GL 4.6 core** + `GL_KHR_debug` → `external/glad/` (commit generated files)
+- [x] `cmake/shaders.cmake`: function `glint_compile_shaders(target DIR)` → glslc `*.vk.{vert,frag,comp}` → `build/<cfg>/shaders/<technique>/*.spv`, with `-g` in Debug
+- [x] Targets: `glint_core` (static lib), `glint_gl_backend`, `glint_vk_backend`, `glint_gl` (exe), `glint_vk` (exe)
+- [x] Compile definitions: `GLINT_ASSET_DIR`, `GLINT_SHADER_DIR` (source dir for GL, build dir for SPIR-V)
+- [x] Warnings: `-Wall -Wextra -Wpedantic`; `_DEBUG` on Debug for non-MSVC; export `compile_commands.json`
+- [x] Copy assets: `GL:res/*` + `VK:res/*` → `assets/` (dedupe; note origin in `assets/README.md`)
+- [x] `README.md`, `build.sh`, `run.sh <gl|vk> [technique]`
 
 **Done when:** empty `glint_gl` and `glint_vk` executables build from a clean clone with one cmake command.
 
@@ -196,3 +198,6 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-29 | fmt instead of std::format | GCC 11.4 on Pop!_OS 22.04 |
 | 2026-09-29 | Deps via FetchContent, LunarG SDK for glslc/layers | No prebuilt binaries; apt Vulkan tools too old |
 | 2026-09-29 | Raw vkAllocateMemory first, VMA later | Learn memory types before abstracting them |
+| 2026-09-29 | glslc via `find_program`, not `COMPONENTS glslc` | Stay on CMake 3.22 (jammy); FindVulkan still caches the path |
+| 2026-09-29 | GLFW built X11-only on Linux | Wayland backend needs extra dev packages; session is X11 |
+| 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

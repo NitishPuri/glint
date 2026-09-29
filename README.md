@@ -9,4 +9,17 @@ Successor to [Glint_gl](../Glint_gl) and [Glint_vk](../Glint_vk).
 - API differences cheat-sheet: [docs/gl-vs-vk.md](docs/gl-vs-vk.md)
 - Context for AI assistants / contributors: [CLAUDE.md](CLAUDE.md)
 
-Status: planning — Phase 0.
+## Build & run (Linux)
+
+Needs CMake ≥ 3.22, Ninja, X11 dev headers and the [LunarG Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
+(for `glslc` and the validation layers) — see Phase 0 in the plan. Other dependencies are fetched by CMake.
+
+```bash
+./build.sh            # = source SDK env; cmake -S . -B build/debug -G Ninja; cmake --build build/debug
+./run.sh gl           # build/debug/glint_gl
+./run.sh vk           # build/debug/glint_vk
+```
+
+`./build.sh release` / `CFG=release ./run.sh vk` for an optimized build.
+
+Status: Phase 1 done (build skeleton). Next: Phase 2, `core/`.

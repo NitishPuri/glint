@@ -1,0 +1,65 @@
+cmake_minimum_required(VERSION 3.22)
+project(glint LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
+endif()
+
+find_package(OpenGL REQUIRED)
+find_package(Vulkan REQUIRED)  # uses $VULKAN_SDK when set (source setup-env.sh first)
+
+include(cmake/deps.cmake)
+include(cmake/shaders.cmake)
+
+# Warnings for our own code only (third-party targets don't link this).
+add_library(glint_warnings INTERFACE)
+if(MSVC)
+  target_compile_options(glint_warnings INTERFACE /W4 /permissive-)
+else()
+  target_compile_options(glint_warnings INTERFACE -Wall -Wextra -Wpedantic)
+  target_compile_definitions(glint_warnings INTERFACE $<$<CONFIG:Debug>:_DEBUG>)
+endif()
+
+# --- core: API-agnostic (never links glad or Vulkan) -------------------------------------------
+add_library(glint_core STATIC src/core/core.cpp)
+target_include_directories(glint_core PUBLIC src)
+target_link_libraries(glint_core
+  PUBLIC glfw glm::glm fmt::fmt imgui stb tinyobjloader
+  PRIVATE glint_warnings)
+target_compile_definitions(glint_core PUBLIC GLINT_ASSET_DIR="${PROJECT_SOURCE_DIR}/assets")
+
+# --- OpenGL backend + app ----------------------------------------------------------------------
+add_library(imgui_backend_gl STATIC
+  ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
+  ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
+target_link_libraries(imgui_backend_gl PUBLIC imgui glfw OpenGL::GL)
+
+add_library(glint_gl_backend STATIC src/gl/gl.cpp)
+target_link_libraries(glint_gl_backend
+  PUBLIC glint_core glad OpenGL::GL imgui_backend_gl
+  PRIVATE glint_warnings)
+# GL loads GLSL text at runtime (hot reload), straight from the source tree.
+target_compile_definitions(glint_gl_backend PUBLIC GLINT_SHADER_DIR="${PROJECT_SOURCE_DIR}/techniques")
+
+add_executable(glint_gl src/app_gl/main.cpp)
+target_link_libraries(glint_gl PRIVATE glint_gl_backend glint_warnings)
+
+# --- Vulkan backend + app ----------------------------------------------------------------------
+add_library(imgui_backend_vk STATIC
+  ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp
+  ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_vulkan.cpp)
+target_link_libraries(imgui_backend_vk PUBLIC imgui glfw Vulkan::Vulkan)
+
+add_library(glint_vk_backend STATIC src/vk/vk.cpp)
+target_link_libraries(glint_vk_backend
+  PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk
+  PRIVATE glint_warnings)
+# VK loads precompiled SPIR-V from the build tree (see cmake/shaders.cmake).
+target_compile_definitions(glint_vk_backend PUBLIC GLINT_SHADER_DIR="${CMAKE_BINARY_DIR}/shaders")
+
+add_executable(glint_vk src/app_vk/main.cpp)
+target_link_libraries(glint_vk PRIVATE glint_vk_backend glint_warnings)
