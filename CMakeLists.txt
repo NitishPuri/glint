@@ -25,12 +25,23 @@ else()
 endif()
 
 # --- core: API-agnostic (never links glad or Vulkan) -------------------------------------------
-add_library(glint_core STATIC src/core/core.cpp)
+add_library(glint_core STATIC
+  src/core/assets.cpp
+  src/core/camera.cpp
+  src/core/config.cpp
+  src/core/input.cpp
+  src/core/log.cpp
+  src/core/ui.cpp
+  src/core/window.cpp)
 target_include_directories(glint_core PUBLIC src)
 target_link_libraries(glint_core
-  PUBLIC glfw glm::glm fmt::fmt imgui stb tinyobjloader
-  PRIVATE glint_warnings)
-target_compile_definitions(glint_core PUBLIC GLINT_ASSET_DIR="${PROJECT_SOURCE_DIR}/assets")
+  PUBLIC glfw glm::glm fmt::fmt imgui
+  PRIVATE stb tinyobjloader arcball_camera glint_warnings)
+target_compile_definitions(glint_core
+  PUBLIC GLINT_ASSET_DIR="${PROJECT_SOURCE_DIR}/assets"
+  # Stop <GLFW/glfw3.h> from pulling in the system GL header: core must stay API-free, and the GL
+  # backend gets its declarations from glad instead.
+  PUBLIC GLFW_INCLUDE_NONE)
 
 # --- OpenGL backend + app ----------------------------------------------------------------------
 add_library(imgui_backend_gl STATIC
@@ -63,3 +74,12 @@ target_compile_definitions(glint_vk_backend PUBLIC GLINT_SHADER_DIR="${CMAKE_BIN
 
 add_executable(glint_vk src/app_vk/main.cpp)
 target_link_libraries(glint_vk PRIVATE glint_vk_backend glint_warnings)
+
+# --- unit tests (core only: no window, no GPU) -------------------------------------------------
+option(GLINT_BUILD_TESTS "Build unit tests" ON)
+if(GLINT_BUILD_TESTS)
+  enable_testing()
+  add_executable(glint_tests tests/main.cpp tests/test_assets.cpp tests/test_camera.cpp tests/test_config.cpp)
+  target_link_libraries(glint_tests PRIVATE glint_core doctest glint_warnings)
+  add_test(NAME glint_tests COMMAND glint_tests)
+endif()

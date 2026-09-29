@@ -24,7 +24,7 @@ read `NOTES.md`, and understand every line and every difference.
     every `VkXxxCreateInfo` is better than one that hides it behind a builder — *until* that technique has
     been done raw once. Helpers are introduced only after the raw version exists in an earlier technique.
   - Comment the **why** and the **GL↔VK difference**, not the what. E.g.
-    `// VK: clip-space Z is [0,1], GL is [-1,1] — projection uses GLM_FORCE_DEPTH_ZERO_TO_ONE here`.
+    `// VK: clip-space Z is [0,1], GL is [-1,1] — hence camera.projection(aspect, ClipDepth::ZeroToOne)`.
   - Every technique ships a `NOTES.md` (see template in `docs/PLAN.md`).
 - Work in the phase order of `docs/PLAN.md`. Tick checkboxes there as things land. Don't jump ahead.
 
@@ -106,9 +106,10 @@ glint/
 - Vulkan style: **Vulkan 1.3 core, dynamic rendering (`vkCmdBeginRendering`) + synchronization2**, no
   `VkRenderPass`/`VkFramebuffer` objects (render passes get one explicit NOTES.md entry explaining the
   legacy model). Raw `vkAllocateMemory` first; VMA is introduced deliberately in a later phase.
-- Clip-space conventions: VK uses `GLM_FORCE_DEPTH_ZERO_TO_ONE` and flips Y via negative viewport height
-  (VK_KHR_maintenance1, core in 1.1) so the same camera/projection code produces the same image. Document
-  in `docs/gl-vs-vk.md`.
+- Clip-space conventions: VK asks the shared camera for `ClipDepth::ZeroToOne` (`glm::perspectiveRH_ZO`) and
+  flips Y via negative viewport height (VK_KHR_maintenance1, core in 1.1), so the same camera code produces the
+  same image. No global `GLM_FORCE_DEPTH_ZERO_TO_ONE`: it would change what `glm::perspective` means per
+  translation unit. Documented in `docs/gl-vs-vk.md`.
 - Validation must be **clean** (zero VK validation errors, zero GL debug errors of severity ≥ medium) before
   a technique is ticked done.
 

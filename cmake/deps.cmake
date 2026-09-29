@@ -47,7 +47,19 @@ FetchContent_Declare(tinyobjloader
   URL_HASH SHA256=0feb92b838f8ce4aa6eb0ccc32dff30cb64a891e0ec3bde837fca49c78d44334
   SOURCE_SUBDIR _no_cmake)
 
-FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader)
+# --- arcball_camera (single header, public domain; no releases -> pinned commit) ---------------
+FetchContent_Declare(arcball_camera
+  URL https://github.com/nlguillemot/arcball_camera/archive/4d77b69779f9d717c4a84d79c1ea20680366fe40.tar.gz
+  URL_HASH SHA256=e4204fc12236ce5b6ee725f78af23b197e8337f4f8b9823e5de16e797c459264
+  SOURCE_SUBDIR _no_cmake)
+
+# --- doctest 2.4.12 (unit tests only) -----------------------------------------------------------
+FetchContent_Declare(doctest
+  URL https://github.com/doctest/doctest/archive/refs/tags/v2.4.12.tar.gz
+  URL_HASH SHA256=73381c7aa4dee704bd935609668cf41880ea7f19fa0504a200e13b74999c2d70
+  SOURCE_SUBDIR _no_cmake)
+
+FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader arcball_camera doctest)
 
 # ImGui core only. Platform/renderer backends (imgui_impl_glfw + imgui_impl_opengl3 / imgui_impl_vulkan)
 # are compiled into each backend library, so each app only pulls in the one it uses.
@@ -67,6 +79,18 @@ target_include_directories(stb SYSTEM INTERFACE ${stb_SOURCE_DIR})
 
 add_library(tinyobjloader INTERFACE)
 target_include_directories(tinyobjloader SYSTEM INTERFACE ${tinyobjloader_SOURCE_DIR})
+
+# The implementation lives in its own tiny library so it's compiled once, without our warning flags.
+file(WRITE ${CMAKE_BINARY_DIR}/arcball_camera_impl.c
+  "#define ARCBALL_CAMERA_IMPLEMENTATION\n#include <arcball_camera.h>\n")
+add_library(arcball_camera STATIC ${CMAKE_BINARY_DIR}/arcball_camera_impl.c)
+target_include_directories(arcball_camera SYSTEM PUBLIC ${arcball_camera_SOURCE_DIR})
+if(NOT MSVC)
+  target_link_libraries(arcball_camera PRIVATE m)
+endif()
+
+add_library(doctest INTERFACE)
+target_include_directories(doctest SYSTEM INTERFACE ${doctest_SOURCE_DIR})
 
 # Vendored glad2 loader: GL 4.6 core + GL_KHR_debug (see external/glad/README.md).
 add_library(glad STATIC ${PROJECT_SOURCE_DIR}/external/glad/src/gl.c)

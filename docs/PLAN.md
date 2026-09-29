@@ -57,8 +57,8 @@ Pull the best of both, strip every GL/VK type.
 | `technique registry` | GL:`Core/SceneManager.h`, VK:`samples/sample_manager.*` | template `Registry<T>` keyed by name, instantiated separately per backend |
 | `config` | VK:`core/config.*` | paths, window size, vsync, validation on/off, via CLI flags |
 
-- [ ] Each piece above ported and building
-- [ ] Unit tests (doctest, FetchContent) for `assets` (cube vertex count, tangent orthogonality, index dedupe) and `camera` (projection clip-depth variants)
+- [x] Each piece above ported and building
+- [x] Unit tests (doctest, FetchContent) for `assets` (cube vertex count, tangent orthogonality, index dedupe) and `camera` (projection clip-depth variants)
 
 **Done when:** `glint_core` builds with zero GL/VK includes (`grep -r "vulkan\|glad" src/core` is empty) and tests pass.
 
@@ -107,7 +107,7 @@ Port from Glint_vk, but modernise. Read VK:`src/minimal/triangle/main.cpp` first
 
 Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers only for things already done raw in an earlier technique; then write `NOTES.md`.
 
-- [ ] 02_cube — vertex/index buffers, staging upload, raw `vkAllocateMemory`; UBO + descriptor set; depth image; `GLM_FORCE_DEPTH_ZERO_TO_ONE` + negative viewport. Introduce `vk/buffer` helper after this.
+- [ ] 02_cube — vertex/index buffers, staging upload, raw `vkAllocateMemory`; UBO + descriptor set; depth image; `ClipDepth::ZeroToOne` projection + negative viewport. Introduce `vk/buffer` helper after this.
       ← VK:`samples/cube_sample.*`, `minimal/cube/main.cpp`
 - [ ] 03_textured_cube — image upload, layout transitions, sampler, combined image sampler descriptors; mipmaps via `vkCmdBlitImage`
       ← VK:`samples/textured_quad.*`, `renderer/texture.*`
@@ -200,4 +200,9 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-29 | Raw vkAllocateMemory first, VMA later | Learn memory types before abstracting them |
 | 2026-09-29 | glslc via `find_program`, not `COMPONENTS glslc` | Stay on CMake 3.22 (jammy); FindVulkan still caches the path |
 | 2026-09-29 | GLFW built X11-only on Linux | Wayland backend needs extra dev packages; session is X11 |
+| 2026-09-29 | Projection picks `perspectiveRH_NO/ZO` per call via `ClipDepth`, no `GLM_FORCE_DEPTH_ZERO_TO_ONE` | A global define would give `glm::perspective` different meanings in different TUs of one program |
+| 2026-09-29 | Tangents are `vec4` (w = handedness), bitangent rebuilt in the shader | Half the data of T+B; standard (glTF) layout. opengl-tutorial stored B and flipped T |
+| 2026-09-29 | `indexMesh` before `computeTangents` (exact-match hash dedupe, then per-vertex tangent accumulation) | O(n) instead of opengl-tutorial's O(n²) epsilon search; same result on our assets (Suzanne 2904→590) |
+| 2026-09-29 | Camera modes: arcball + fly (GL's free/orbit modes dropped) | Arcball covers orbit; GL's free mode moved along the unnormalised look vector |
+| 2026-09-29 | Technique sources compile into the executables, not a static lib | Static-init registration in a static lib gets dead-stripped by the linker |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

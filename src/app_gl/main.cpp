@@ -1,8 +1,8 @@
 // glint_gl — Phase 1 skeleton: proves the GL-side dependencies compile and link.
 // The real app (window, glad load, KHR_debug, ImGui, technique registry) arrives in Phase 3.
 
-// glad must come before GLFW: it provides the GL declarations, and GLFW would otherwise pull in the
-// system <GL/gl.h> (GL 1.x only on Linux; the rest has to be loaded at runtime anyway).
+// glad provides all GL declarations. (glint_core defines GLFW_INCLUDE_NONE, so <GLFW/glfw3.h> never pulls in
+// the system <GL/gl.h>, which only declares GL 1.x on Linux anyway.)
 #include <glad/gl.h>
 //
 #include <GLFW/glfw3.h>

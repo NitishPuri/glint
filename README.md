@@ -22,4 +22,6 @@ Needs CMake ≥ 3.22, Ninja, X11 dev headers and the [LunarG Vulkan SDK](https:/
 
 `./build.sh release` / `CFG=release ./run.sh vk` for an optimized build.
 
-Status: Phase 1 done (build skeleton). Next: Phase 2, `core/`.
+Unit tests (core only): `ctest --test-dir build/debug` or `./build/debug/glint_tests`.
+
+Status: Phase 2 done (`src/core/`: window, input, camera, assets, ui, registry, config, log). Next: Phase 3, GL app.
