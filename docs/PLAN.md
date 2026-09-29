@@ -214,4 +214,5 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | `techniques/common/` for the standard-shading shader + std140 struct (04, 05, 07) | Same shader three times otherwise; the struct is shared by GL and VK |
 | 2026-09-30 | Uniform blocks use only `mat4`/`vec4` | std140 vec3/array padding can't make C++ and GLSL disagree |
 | 2026-09-30 | Sampler objects everywhere (compare mode on the shadow sampler) | Mirrors `VkSampler`; lets the UI read the shadow map without compare |
+| 2026-09-30 | Keep the hand-rolled fmt logger (not spdlog); per-run file `logs/<app>_<date>_<time>.log` by default, with a header (commit + dirty, build, args, config, GPU) and per-technique frame-time summaries | For comparing runs; spdlog's extras (rotation, async, sinks) aren't needed, and swapping it in later only touches `log.cpp` |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

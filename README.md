@@ -26,6 +26,9 @@ Unit tests (core only): `ctest --test-dir build/debug` or `./build/debug/glint_t
 
 Scripted run with a screenshot (the UI isn't in it): `./run.sh gl 02_cube --screenshot out.png` (60 frames, then quit).
 
+Logs: every run writes `logs/<app>_<date>_<time>.log` (commit, config, GPU, per-technique frame times);
+`--no-log-file` to skip it.
+
 Shaders: GL loads `techniques/*/shaders/*.gl.*` at runtime and hot-reloads them when saved.
 
 Status: Phase 3 done — `glint_gl` runs 01–08. Next: Phase 4, Vulkan foundation.

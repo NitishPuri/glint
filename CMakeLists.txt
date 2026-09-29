@@ -25,20 +25,33 @@ else()
 endif()
 
 # --- core: API-agnostic (never links glad or Vulkan) -------------------------------------------
+# Commit hash + dirty flag, refreshed on every build (the script only rewrites the file when it changes).
+set(GLINT_GIT_INFO ${CMAKE_BINARY_DIR}/generated/git_info.cpp)
+add_custom_target(glint_git_info
+  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${PROJECT_SOURCE_DIR} -DOUTPUT=${GLINT_GIT_INFO}
+          -P ${PROJECT_SOURCE_DIR}/cmake/git_info.cmake
+  BYPRODUCTS ${GLINT_GIT_INFO}
+  COMMENT "git info")
+
 add_library(glint_core STATIC
+  ${GLINT_GIT_INFO}
   src/core/assets.cpp
   src/core/camera.cpp
   src/core/config.cpp
   src/core/input.cpp
   src/core/log.cpp
+  src/core/run_log.cpp
   src/core/ui.cpp
   src/core/window.cpp)
 target_include_directories(glint_core PUBLIC src)
 target_link_libraries(glint_core
   PUBLIC glfw glm::glm fmt::fmt imgui
   PRIVATE stb tinyobjloader arcball_camera glint_warnings)
+add_dependencies(glint_core glint_git_info)
 target_compile_definitions(glint_core
   PUBLIC GLINT_ASSET_DIR="${PROJECT_SOURCE_DIR}/assets"
+  # Per-run log files go here (gitignored).
+  PRIVATE GLINT_LOG_DIR="${PROJECT_SOURCE_DIR}/logs"
   # Stop <GLFW/glfw3.h> from pulling in the system GL header: core must stay API-free, and the GL
   # backend gets its declarations from glad instead.
   PUBLIC GLFW_INCLUDE_NONE)

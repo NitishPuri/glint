@@ -14,6 +14,12 @@ TEST_CASE("parseArgs") {
   CHECK_FALSE(c.vsync);
   CHECK_FALSE(c.validation);
 
+  CHECK(c.writeLogFile);  // on by default
+  const char* noLog[] = {"x", "--no-log-file", "--log", "a.log"};
+  const Config n = parseArgs(4, noLog);
+  CHECK_FALSE(n.writeLogFile);
+  CHECK(n.logFile == "a.log");
+
   const char* bad1[] = {"x", "--size", "800"};
   CHECK_THROWS_AS(parseArgs(3, bad1), std::invalid_argument);
   const char* bad2[] = {"x", "--bogus"};

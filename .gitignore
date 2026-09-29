@@ -5,5 +5,6 @@ out/
 compile_commands.json
 imgui.ini
 log.txt
+logs/
 *.spv
 captures/

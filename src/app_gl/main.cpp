@@ -15,6 +15,7 @@
 #include "core/camera.h"
 #include "core/config.h"
 #include "core/log.h"
+#include "core/run_log.h"
 #include "core/timer.h"
 #include "core/ui.h"
 #include "core/window.h"
@@ -103,6 +104,16 @@ int run(const Config& config) {
   Timer frameTimer;
   const Timer startTimer;
   ui::FrameStats stats;
+  // For the run log: frame times and debug issues while the current technique was on screen.
+  FrameTimeSummary summary;
+  int issuesAtStart = gl::debugIssueCount();
+  auto logSummary = [&] {
+    if (summary.count() == 0) return;
+    log::info("summary  {}: {}, KHR_debug issues {}", current, summary.describe(),
+              gl::debugIssueCount() - issuesAtStart);
+    summary.clear();
+    issuesAtStart = gl::debugIssueCount();
+  };
   const std::string device = gl::rendererName();
 
   for (uint64_t frameIndex = 0; !window.shouldClose(); ++frameIndex) {
@@ -114,6 +125,7 @@ int run(const Config& config) {
     }
     const float dt = float(frameTimer.lap());
     stats.add(dt);
+    summary.add(dt);
     const glm::ivec2 fbSize = window.framebufferSize();
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -159,6 +171,7 @@ int run(const Config& config) {
     glfwSwapBuffers(window.handle());
 
     if (picked) {
+      logSummary();
       technique.reset();  // destroy the old technique's GL objects first
       current = *picked;
       technique = createTechnique(current, camera);
@@ -166,6 +179,7 @@ int run(const Config& config) {
     if (lastFrame) window.requestClose();
   }
 
+  logSummary();
   technique.reset();
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -185,7 +199,7 @@ int main(int argc, char** argv) {
       for (const std::string& name : gl::Registry::instance().names()) fmt::print("  {}\n", name);
       return 0;
     }
-    if (!config.logFile.empty()) log::setFile(config.logFile);
+    startRunLog("glint_gl", config, argc, argv);
     if (!config.assetDir.empty()) setAssetDir(config.assetDir);
     return run(config);
   } catch (const std::exception& e) {

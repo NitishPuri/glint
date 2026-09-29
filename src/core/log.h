@@ -2,11 +2,14 @@
 
 // Logging on top of {fmt} (GCC 11 has no std::format).
 //   glint::log::info("loaded {} ({} vertices)", path, mesh.vertexCount());
-// Every line goes to the console (warn/error to stderr) and, once setFile() is called, to a file.
+// Every line goes to the console (warn/error to stderr) and, once a file is open, to that file too.
+// Console lines carry seconds since start; file lines also carry the wall-clock time, so logs from
+// different runs can be lined up (see core/run_log.h for the per-run file and its header).
 
 #include <fmt/format.h>
 
 #include <glm/glm.hpp>
+#include <string>
 #include <string_view>
 
 namespace glint::log {
@@ -15,8 +18,9 @@ enum class Level { Debug, Info, Warn, Error };
 
 void write(Level level, std::string_view message);
 
-// Also append every message to this file (truncated on open). Empty path closes it.
-void setFile(const std::string& path);
+// Also write every message to this file (truncated on open). Empty path closes it. Returns false if the
+// file can't be opened.
+bool setFile(const std::string& path);
 
 // Messages below this level are dropped. Default: Debug in debug builds, Info otherwise.
 void setMinLevel(Level level);

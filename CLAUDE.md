@@ -138,5 +138,7 @@ glint/
 - C++20 (GCC 11 subset), `.clang-format` (Google, 2-space, 120 cols). Namespaces `glint`, `glint::gl`, `glint::vk`.
 - Files: `snake_case.cpp/.h`. Types `PascalCase`, functions `camelCase`, members `m_camelCase`.
 - Errors: `VK_CHECK(expr)` aborts with file/line + `string_VkResult`; GL errors come via `KHR_debug` callback.
-- Logging: `glint::log::info/warn/error` on top of fmt.
+- Logging: `glint::log::info/warn/error` on top of fmt. Every run also writes `logs/<app>_<date>_<time>.log`
+  (gitignored) with a header (commit, build, args, config, GPU) and per-technique `summary` lines — compare
+  those across runs for regressions. `--log FILE` / `--no-log-file` override.
 - Commit per technique-backend (`techniques/05_vbo_indexing: vk`), small and reviewable.

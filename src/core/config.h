@@ -2,7 +2,7 @@
 
 // Startup settings from the command line, shared by both apps:
 //   glint_vk [technique] [--size WxH] [--no-vsync] [--validation|--no-validation] [--log FILE] [--assets DIR]
-//            [--frames N] [--screenshot FILE]
+//            [--frames N] [--screenshot FILE] [--no-log-file]
 
 #include <string>
 
@@ -19,7 +19,8 @@ struct Config {
 #else
   bool validation = true;
 #endif
-  std::string logFile;   // empty: console only
+  std::string logFile;       // empty: logs/<app>_<date>_<time>.log (see core/run_log.h)
+  bool writeLogFile = true;  // --no-log-file: console only
   std::string assetDir;  // empty: GLINT_ASSET_DIR
   int exitAfterFrames = 0;  // > 0: quit after this many frames (for scripted runs)
   std::string screenshot;   // non-empty: save the last frame as PNG before quitting
