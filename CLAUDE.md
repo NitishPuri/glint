@@ -98,7 +98,7 @@ glint/
 - A technique = shared `params.h` (a plain struct edited by an ImGui panel in `core/ui`) + `gl.cpp` + `vk.cpp`.
   Both apps show the same panel, so the same knobs exist on both sides.
 - Each backend has its **own** technique interface (no common base across APIs):
-  - `gl::Technique { init(); update(dt, Frame&); render(); ui(); ~dtor }`
+  - `gl::Technique { init(); update(dt, Frame&); render(const Frame&); ui(); ~dtor }`
   - `vk::Technique { init(vk::Context&); update(dt, Frame&); record(VkCommandBuffer, const vk::FrameInfo&); ui(); ~dtor }`
   Registration is by name in each app, e.g. `GLINT_REGISTER_GL("08_shadow_mapping", ShadowMappingGL)`.
 - GL and VK apps are **separate executables** (a GLFW window created for GL cannot get a Vulkan surface).

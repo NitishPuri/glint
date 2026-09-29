@@ -24,4 +24,8 @@ Needs CMake ≥ 3.22, Ninja, X11 dev headers and the [LunarG Vulkan SDK](https:/
 
 Unit tests (core only): `ctest --test-dir build/debug` or `./build/debug/glint_tests`.
 
-Status: Phase 2 done (`src/core/`: window, input, camera, assets, ui, registry, config, log). Next: Phase 3, GL app.
+Scripted run with a screenshot (the UI isn't in it): `./run.sh gl 02_cube --screenshot out.png` (60 frames, then quit).
+
+Shaders: GL loads `techniques/*/shaders/*.gl.*` at runtime and hot-reloads them when saved.
+
+Status: Phase 3 in progress — GL app, 01_triangle (raw), 02_cube (on `gl/` helpers).

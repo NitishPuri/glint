@@ -1,6 +1,8 @@
 #include "core/assets.h"
 
 #include <cstring>
+#include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -9,6 +11,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
@@ -241,6 +245,25 @@ ImageData loadImage(const std::filesystem::path& path, bool flipVertically) {
 
   log::info("loadImage {}: {}x{} ({} channels in file)", path.filename().string(), w, h, fileChannels);
   return img;
+}
+
+void writePng(const std::filesystem::path& path, const ImageData& image, bool flipVertically) {
+  if (image.channels != 4 || image.pixels.size() != size_t(image.width) * image.height * 4) {
+    throw std::runtime_error("writePng: expects tightly packed RGBA8");
+  }
+  stbi_flip_vertically_on_write(flipVertically ? 1 : 0);
+  if (!stbi_write_png(path.string().c_str(), image.width, image.height, 4, image.pixels.data(), image.width * 4)) {
+    throw std::runtime_error(fmt::format("writePng '{}' failed", path.string()));
+  }
+  stbi_flip_vertically_on_write(0);
+}
+
+std::string readTextFile(const std::filesystem::path& path) {
+  std::ifstream file(path, std::ios::binary);
+  if (!file) throw std::runtime_error(fmt::format("cannot open '{}'", path.string()));
+  std::ostringstream text;
+  text << file.rdbuf();
+  return text.str();
 }
 
 // ------------------------------------------------------------------------------------------ paths

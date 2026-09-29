@@ -49,7 +49,7 @@ add_library(imgui_backend_gl STATIC
   ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
 target_link_libraries(imgui_backend_gl PUBLIC imgui glfw OpenGL::GL)
 
-add_library(glint_gl_backend STATIC src/gl/gl.cpp)
+add_library(glint_gl_backend STATIC src/gl/debug.cpp src/gl/mesh.cpp src/gl/shader.cpp)
 target_link_libraries(glint_gl_backend
   PUBLIC glint_core glad OpenGL::GL imgui_backend_gl
   PRIVATE glint_warnings)
@@ -74,6 +74,23 @@ target_compile_definitions(glint_vk_backend PUBLIC GLINT_SHADER_DIR="${CMAKE_BIN
 
 add_executable(glint_vk src/app_vk/main.cpp)
 target_link_libraries(glint_vk PRIVATE glint_vk_backend glint_warnings)
+
+# --- techniques --------------------------------------------------------------------------------
+# Each techniques/<name>/ has gl.cpp and/or vk.cpp. They are compiled straight into the executables, not
+# into a library: a static library would let the linker drop their self-registration (core/registry.h).
+set(GLINT_TECHNIQUES
+  01_triangle
+  02_cube)
+foreach(technique IN LISTS GLINT_TECHNIQUES)
+  set(dir ${PROJECT_SOURCE_DIR}/techniques/${technique})
+  if(EXISTS ${dir}/gl.cpp)
+    target_sources(glint_gl PRIVATE ${dir}/gl.cpp)
+  endif()
+  if(EXISTS ${dir}/vk.cpp)
+    target_sources(glint_vk PRIVATE ${dir}/vk.cpp)
+    glint_compile_shaders(glint_vk ${dir}/shaders)
+  endif()
+endforeach()
 
 # --- unit tests (core only: no window, no GPU) -------------------------------------------------
 option(GLINT_BUILD_TESTS "Build unit tests" ON)

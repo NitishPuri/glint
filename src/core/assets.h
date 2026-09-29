@@ -6,10 +6,21 @@
 #include <cstdint>
 #include <filesystem>
 #include <glm/glm.hpp>
+#include <string>
 #include <string_view>
 #include <vector>
 
 namespace glint {
+
+// Vertex attribute locations used by every technique's shaders, in both APIs:
+//   layout(location = 0) in vec3 inPosition;  ... and so on.
+enum AttribLocation : uint32_t {
+  kAttribPosition = 0,
+  kAttribNormal = 1,
+  kAttribUv = 2,
+  kAttribTangent = 3,
+  kAttribColor = 4,
+};
 
 // Separate arrays per attribute ("structure of arrays"), like opengl-tutorial: easy to read, and each
 // backend decides whether to upload them as separate buffers or interleave them.
@@ -56,6 +67,12 @@ struct ImageData {
 // flipVertically = true puts the image's bottom row first in memory, so that uv (0,0) — the first texel in
 // both GL and VK — samples the bottom-left corner, matching OBJ uvs. Throws on failure.
 ImageData loadImage(const std::filesystem::path& path, bool flipVertically = true);
+
+// PNG from RGBA8 pixels; rows top-to-bottom unless flipVertically. Throws on failure.
+void writePng(const std::filesystem::path& path, const ImageData& image, bool flipVertically = false);
+
+// Whole file as a string (shader sources). Throws on failure.
+std::string readTextFile(const std::filesystem::path& path);
 
 // <asset dir>/<relative>. The asset dir defaults to the repo's assets/ (GLINT_ASSET_DIR), see setAssetDir().
 std::filesystem::path assetPath(std::string_view relative);

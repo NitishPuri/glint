@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 
 #include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 #include <string_view>
 
@@ -33,6 +34,12 @@ Config parseArgs(int argc, const char* const* argv) {
       config.validation = false;
     } else if (arg == "--log") {
       config.logFile = value();
+    } else if (arg == "--frames") {
+      config.exitAfterFrames = std::atoi(value().c_str());
+      if (config.exitAfterFrames <= 0) throw std::invalid_argument("--frames expects a positive number");
+    } else if (arg == "--screenshot") {
+      config.screenshot = value();
+      if (config.exitAfterFrames == 0) config.exitAfterFrames = 60;
     } else if (arg == "--assets") {
       config.assetDir = value();
     } else if (!arg.empty() && arg[0] == '-') {
@@ -56,6 +63,8 @@ std::string usage(const char* exe) {
       "  --no-validation\n"
       "  --log FILE         also write the log to FILE\n"
       "  --assets DIR       asset directory (default: the repo's assets/)\n"
+      "  --frames N         quit after N frames\n"
+      "  --screenshot FILE  save the last frame to FILE (PNG) and quit (after 60 frames unless --frames)\n"
       "  -h, --help\n",
       exe);
 }
