@@ -7,6 +7,13 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Window | `GLFW_CLIENT_API = GLFW_OPENGL_API` + version/profile hints; the window owns the context | `GLFW_CLIENT_API = GLFW_NO_API`; you create a `VkSurfaceKHR` for it | 01 |
 | Context / device | Implicit, created with the window | Instance → physical device → logical device + queues, all explicit | 01 |
 | Presentation | `glfwSwapBuffers` | Swapchain images, acquire/present, semaphores | 01 |
+| Vsync | `glfwSwapInterval(1/0)` | Present mode FIFO / MAILBOX / IMMEDIATE, chosen at swapchain creation | 01 |
+| Resize | Nothing to do (driver resizes the default framebuffer) | Recreate the swapchain (`OUT_OF_DATE` / `SUBOPTIMAL`), after the GPU is idle | 01 |
+| CPU/GPU overlap | Driver buffers frames, `SwapBuffers` may block | Frames in flight: per-frame command buffer + fence, waited before reuse | 01 |
+| Image layouts | Invisible | `UNDEFINED → COLOR_ATTACHMENT_OPTIMAL → PRESENT_SRC_KHR` via `vkCmdPipelineBarrier2` | 01 |
+| Memory for a buffer | Driver's choice | `vkGetBufferMemoryRequirements` → pick a memory type by flags → `vkAllocateMemory` → bind | 01 |
+| Destroying objects | Any time; freed once the GPU is done | Only when no queued work uses them (fence / `vkDeviceWaitIdle`) | 01 |
+| Y axis | Framebuffer +Y up | +Y down; negative-height viewport restores GL's orientation | 01 |
 | State | Global state machine: depth/cull/blend set before each draw, leaks unless reset | Immutable pipeline objects baked up front | 01 |
 | Object editing | DSA (4.5): `glNamedBufferStorage(buf, …)`, `glVertexArrayAttribFormat(vao, …)`. Pre-DSA bind-to-edit: `glBindBuffer` + `glBufferData` | Every call names its object: `vkCmdBindVertexBuffers(cmd, …, &buf)` | 01 |
 | Vertex layout | VAO: binding (buffer + stride) + attribute (location, format, offset); VAO also remembers the buffer | `VkVertexInputBindingDescription` + `VkVertexInputAttributeDescription` in the pipeline; buffer bound at record time | 01 |

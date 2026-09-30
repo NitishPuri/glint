@@ -28,7 +28,46 @@ Written **raw**: no helpers, every GL call is in `gl.cpp`.
   - presenting, inside `glfwSwapBuffers`
 
 ## VK path
-*(Phase 4.)*
+Written **raw**: no helpers, every VK object for the technique is in `vk.cpp`.
+- `init()`:
+  - Two buffers, each with its own `VkDeviceMemory`: `vkCreateBuffer` →
+    `vkGetBufferMemoryRequirements` → a loop over `memoryTypes` for `HOST_VISIBLE | HOST_COHERENT` →
+    `vkAllocateMemory` → `vkBindBufferMemory` → map, `memcpy`, unmap. On this APU "host visible" is ordinary
+    RAM the GPU reads directly. 02 adds staging copies into `DEVICE_LOCAL` memory.
+  - A pipeline layout with one push-constant range (the matrix).
+  - One graphics pipeline that bakes in everything: both SPIR-V stages (compiled by `glslc` at build
+    time), vertex input (binding 0 with stride `sizeof(Vertex)`, attributes at locations 0 and 4),
+    triangle-list topology, no culling, no depth, no blending, and the color attachment format
+    (`VkPipelineRenderingCreateInfo`, since there's no render pass). Viewport and scissor are *dynamic*,
+    so a resize doesn't need a new pipeline.
+- `record()`:
+  - `vkCmdBeginRendering` on the swapchain view with `loadOp = CLEAR`.
+  - Bind the pipeline, set a **negative-height viewport** (the Y flip), then `vkCmdPushConstants`.
+  - Bind the vertex and index buffers, then `vkCmdDrawIndexed` with `firstIndex` counted in indices.
+  - `vkCmdEndRendering`.
+- The app (`app_vk/main.cpp`) owns everything around it: the frame loop, acquire, command buffer,
+  layout transitions, submit, present, and swapchain recreation.
+
+## Why does VK need so much more code?
+Counting lines including comments: `gl.cpp` is 161 and `vk.cpp` is 281. The bigger difference is outside the
+technique. The GL app needs about 200 lines around it plus 110 of debug output. The VK app needs about 400,
+plus 750 in `src/vk/` (context, swapchain, frame sync, debug). For "a triangle on screen", that's roughly
+**3× the code overall**. The GL driver makes every one of the following decisions for you:
+
+| Decided by the GL driver | Written out in VK |
+|---|---|
+| Which GPU, which queue | `vkEnumeratePhysicalDevices` + scoring, queue family search, `vkCreateDevice` with opt-in features |
+| Back buffer: format, count, vsync, resize | Swapchain: surface format, image count, present mode, recreate on `OUT_OF_DATE` |
+| When the CPU may reuse memory the GPU reads | Frames in flight: a fence per frame slot, waited before reuse |
+| Ordering of "render, then present" | An acquire semaphore (submit waits on it), a render-done semaphore per swapchain image (present waits on it) |
+| Image memory layouts | `UNDEFINED → COLOR_ATTACHMENT_OPTIMAL → PRESENT_SRC` barriers with explicit stages and access masks |
+| Buffer memory placement | `vkGetBufferMemoryRequirements`, a memory type picked by flags, `vkAllocateMemory`, bind |
+| Shader compilation | Offline to SPIR-V; the pipeline also carries all fixed-function state |
+| "Draw now" | Record into a command buffer, submit later, and wait for the fence before touching anything again |
+| Error checking | Nothing, unless you enable the validation layer (+ synchronization validation) |
+
+None of this is ceremony. Each row is a decision the driver has to guess in GL: which memory, when to
+block, how many frames to buffer. VK makes the app decide, which is also why it can decide better.
 
 ## Differences that matter
 - **Pipeline vs program + state.** A GL program is just the linked shaders. Depth, cull, blend and
@@ -45,6 +84,19 @@ Written **raw**: no helpers, every GL call is in `gl.cpp`.
 
 ## Gotchas hit
 - `glDeleteShader` right after linking is fine: it only flags them, and the program keeps them alive.
+- VK: `vkDestroyShaderModule` right after creating the pipeline is also fine, because the pipeline keeps
+  its own compiled copy.
+- VK: resetting the frame fence *before* `vkAcquireNextImageKHR` and then bailing out on `OUT_OF_DATE`
+  leaves it unsignalled forever, and the next wait deadlocks. The fence is reset only after a successful acquire.
+- VK: after a resize, GLFW's size event can arrive a frame *after* present already reported `OUT_OF_DATE`
+  and the swapchain was rebuilt. The swapchain was being rebuilt twice until the event was only acted on
+  if the size differs.
+- The loader warns about a duplicate validation layer (the SDK's plus the distro's old
+  `vulkan-validationlayers` package). That's the environment, not our API usage, so GENERAL-type messages
+  are logged but not counted as validation issues.
+- The shared aspect fix squeezed only x, so in portrait windows the shape *grew*. It now fits the shorter
+  side, in both APIs.
 
 ## Numbers
-LOC: gl.cpp 161 (about half of it comments). VK: tbd.
+LOC: gl.cpp 161, vk.cpp 281 (both about 1/4 comment lines). App + backend: GL ≈ 320, VK ≈ 1150.
+Frame time at vsync 144 Hz on RADV/radeonsi: both ≈ 6.9 ms (vsync-bound). GPU timings come in Phase 7.

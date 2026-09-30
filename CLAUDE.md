@@ -99,7 +99,8 @@ glint/
   Both apps show the same panel, so the same knobs exist on both sides.
 - Each backend has its **own** technique interface (no common base across APIs):
   - `gl::Technique { init(); update(dt, Frame&); render(const Frame&); ui(); ~dtor }`
-  - `vk::Technique { init(vk::Context&); update(dt, Frame&); record(VkCommandBuffer, const vk::FrameInfo&); ui(); ~dtor }`
+  - `vk::Technique { init(vk::Context&, VkFormat swapchainFormat); update(dt, Frame&); record(VkCommandBuffer, const vk::FrameInfo&); ui(); ~dtor }`
+  - Both also have `setupCamera(Camera&)` (the technique's start/home camera).
   Registration is by name in each app, e.g. `GLINT_REGISTER_GL("08_shadow_mapping", ShadowMappingGL)`.
 - GL and VK apps are **separate executables** (a GLFW window created for GL cannot get a Vulkan surface).
   A dual-window side-by-side mode is a later phase.

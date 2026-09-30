@@ -92,14 +92,16 @@ Pull the best of both, strip every GL/VK type.
 
 Port from Glint_vk, but modernise. Read VK:`src/minimal/triangle/main.cpp` first — that's the raw reference.
 
-- [ ] `vk/context` ← VK:`renderer/vk_context.*`: instance (1.3), debug utils messenger, surface, physical device pick (prefer discrete > integrated, **skip llvmpipe/CPU**), queues, enable `dynamicRendering` + `synchronization2` features
-- [ ] `vk/swapchain` ← VK:`renderer/swapchain.*`: recreate on resize/`VK_ERROR_OUT_OF_DATE_KHR`
-- [ ] `vk/frame` ← VK:`synchronization_manager.*` + `command_manager.*`: **frames in flight = 2**, per-frame command pool/buffer + fence + acquire semaphore; **present semaphore per swapchain image**. Record command buffers every frame (drop Glint_vk's cached command buffers — ImGui needs per-frame recording anyway, see VK commit 2be473a)
-- [ ] Transitions via `vkCmdPipelineBarrier2`; small `transitionImage()` helper
-- [ ] `vk/debug`: object names + `vkCmdBeginDebugUtilsLabelEXT` per technique pass (shows up in RenderDoc)
-- [ ] ImGui Vulkan backend with dynamic rendering (`UseDynamicRendering = true`)
-- [ ] **01_triangle** raw in `techniques/01_triangle/vk.cpp`: hardcoded vertices in shader (`gl_VertexIndex`), pipeline with `VkPipelineRenderingCreateInfo`
-- [ ] `NOTES.md` for 01 written — the "why does VK need 10× the code" entry
+- [x] `vk/context` ← VK:`renderer/vk_context.*`: instance (1.3), debug utils messenger, surface, physical device pick (prefer discrete > integrated, **skip llvmpipe/CPU**), queues, enable `dynamicRendering` + `synchronization2` features
+- [x] `vk/swapchain` ← VK:`renderer/swapchain.*`: recreate on resize/`VK_ERROR_OUT_OF_DATE_KHR`
+- [x] `vk/frame` ← VK:`synchronization_manager.*` + `command_manager.*`: **frames in flight = 2**, per-frame command pool/buffer + fence + acquire semaphore; **present semaphore per swapchain image**. Record command buffers every frame (drop Glint_vk's cached command buffers — ImGui needs per-frame recording anyway, see VK commit 2be473a)
+- [x] Transitions via `vkCmdPipelineBarrier2`; small `transitionImage()` helper
+- [x] `vk/debug`: object names + `vkCmdBeginDebugUtilsLabelEXT` per technique pass (shows up in RenderDoc)
+- [x] ImGui Vulkan backend with dynamic rendering (`UseDynamicRendering = true`)
+- [x] **01_triangle** raw in `techniques/01_triangle/vk.cpp`: pipeline with `VkPipelineRenderingCreateInfo`.
+      Changed from "hardcoded vertices in shader": GL 01 uses vertex + index buffers (and the quad toggle), so VK 01
+      mirrors it with host-visible buffers + raw `vkAllocateMemory`; staging into DEVICE_LOCAL stays in 02.
+- [x] `NOTES.md` for 01 written — the "why does VK need 10× the code" entry
 
 **Done when:** `glint_vk` shows triangle + ImGui, resizes without errors, **zero validation messages**, clean shutdown (no leaked objects reported by validation).
 
@@ -215,4 +217,9 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | Uniform blocks use only `mat4`/`vec4` | std140 vec3/array padding can't make C++ and GLSL disagree |
 | 2026-09-30 | Sampler objects everywhere (compare mode on the shadow sampler) | Mirrors `VkSampler`; lets the UI read the shadow map without compare |
 | 2026-09-30 | Keep the hand-rolled fmt logger (not spdlog); per-run file `logs/<app>_<date>_<time>.log` by default, with a header (commit + dirty, build, args, config, GPU) and per-technique frame-time summaries | For comparing runs; spdlog's extras (rotation, async, sinks) aren't needed, and swapping it in later only touches `log.cpp` |
+| 2026-09-30 | VK 01 uses host-visible vertex/index buffers instead of shader-hardcoded vertices | Same data/params as GL 01; staging is 02's lesson |
+| 2026-09-30 | Swapchain `B8G8R8A8_UNORM` (not `_SRGB`) | Matches GL's default framebuffer (no sRGB encode), so GL and VK output compare; gamma is its own technique later |
+| 2026-09-30 | Synchronization validation on; only VALIDATION/PERFORMANCE messages count as issues | Sync bugs are the class GL never lets you make; loader (GENERAL) messages describe the environment |
+| 2026-09-30 | `vk::Technique::init(Context&, VkFormat swapchainFormat)` | Pipelines need the color attachment format (dynamic rendering) |
+| 2026-09-30 | `-Wno-missing-field-initializers` | `VkFooInfo info{VK_STRUCTURE_TYPE_FOO};` zero-initialises the rest by design |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

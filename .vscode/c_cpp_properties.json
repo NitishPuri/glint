@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Linux (build/debug)",
+            "compileCommands": "${workspaceFolder}/build/debug/compile_commands.json",
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-x64",
+            "browse": {
+                "path": ["${workspaceFolder}/src", "${workspaceFolder}/techniques", "${workspaceFolder}/external",
+                         "${workspaceFolder}/tests", "${workspaceFolder}/build/debug/_deps"],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ],
+    "version": 4
+}

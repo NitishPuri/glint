@@ -41,9 +41,11 @@ inline constexpr Vertex kVertices[] = {
 inline constexpr uint32_t kTriangleIndices[] = {0, 1, 4};
 inline constexpr uint32_t kQuadIndices[] = {0, 1, 2, 2, 3, 0};
 
-// Model transform: spin around Z, then undo the window's aspect stretch so the shape keeps its proportions.
+// Model transform: spin around Z, then undo the window's aspect stretch so the shape keeps its proportions
+// and fits the shorter side (squeeze x in landscape windows, y in portrait ones).
 inline glm::mat4 transform(float angleDegrees, float aspect) {
-  const glm::mat4 fixAspect = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / aspect, 1.0f, 1.0f));
+  const glm::vec3 scale = aspect >= 1.0f ? glm::vec3(1.0f / aspect, 1.0f, 1.0f) : glm::vec3(1.0f, aspect, 1.0f);
+  const glm::mat4 fixAspect = glm::scale(glm::mat4(1.0f), scale);
   return fixAspect * glm::rotate(glm::mat4(1.0f), glm::radians(angleDegrees), glm::vec3(0.0f, 0.0f, 1.0f));
 }
 

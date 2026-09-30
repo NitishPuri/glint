@@ -20,7 +20,9 @@ add_library(glint_warnings INTERFACE)
 if(MSVC)
   target_compile_options(glint_warnings INTERFACE /W4 /permissive-)
 else()
-  target_compile_options(glint_warnings INTERFACE -Wall -Wextra -Wpedantic)
+  # -Wno-missing-field-initializers: Vulkan code says `VkFooCreateInfo info{VK_STRUCTURE_TYPE_FOO_CREATE_INFO};`
+  # on purpose — C++ guarantees the remaining members are zeroed, which is exactly what VK wants.
+  target_compile_options(glint_warnings INTERFACE -Wall -Wextra -Wpedantic -Wno-missing-field-initializers)
   target_compile_definitions(glint_warnings INTERFACE $<$<CONFIG:Debug>:_DEBUG>)
 endif()
 
@@ -78,7 +80,7 @@ add_library(imgui_backend_vk STATIC
   ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_vulkan.cpp)
 target_link_libraries(imgui_backend_vk PUBLIC imgui glfw Vulkan::Vulkan)
 
-add_library(glint_vk_backend STATIC src/vk/vk.cpp)
+add_library(glint_vk_backend STATIC src/vk/context.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/swapchain.cpp)
 target_link_libraries(glint_vk_backend
   PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk
   PRIVATE glint_warnings)
