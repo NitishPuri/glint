@@ -111,16 +111,17 @@ Port from Glint_vk, but modernise. Read VK:`src/minimal/triangle/main.cpp` first
 
 Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers only for things already done raw in an earlier technique; then write `NOTES.md`.
 
-- [ ] 02_cube — vertex/index buffers, staging upload, raw `vkAllocateMemory`; UBO + descriptor set; depth image; `ClipDepth::ZeroToOne` projection + negative viewport. Introduce `vk/buffer` helper after this.
+- [x] 02_cube — vertex/index buffers, staging upload, raw `vkAllocateMemory`; UBO + descriptor set; depth image; `ClipDepth::ZeroToOne` projection + negative viewport. Introduce `vk/buffer` helper after this.
       ← VK:`samples/cube_sample.*`, `minimal/cube/main.cpp`
-- [ ] 03_textured_cube — image upload, layout transitions, sampler, combined image sampler descriptors; mipmaps via `vkCmdBlitImage`
+- [x] 03_textured_cube — image upload, layout transitions, sampler, combined image sampler descriptors; mipmaps via `vkCmdBlitImage`
       ← VK:`samples/textured_quad.*`, `renderer/texture.*`
 - [ ] 04_basic_shading — push constants for model matrix vs GL uniforms
 - [ ] 05_indexed_mesh — OBJ via `core/assets`, same mesh data both sides
 - [ ] 06_normal_mapping — 3 textures, descriptor set layout with multiple bindings
 - [ ] 07_render_to_texture — offscreen color+depth image, two dynamic-rendering passes, barrier between them (vs GL FBO + implicit sync)
 - [ ] 08_shadow_mapping — depth-only pass, depth bias (`vkCmdSetDepthBias` vs `glPolygonOffset`), comparison sampler (`sampler2DShadow`), PCF
-- [ ] Introduce **VMA** here (after 03 at the latest if raw allocation gets tedious) — `NOTES.md` entry on memory types/heaps on RADV (integrated GPU: device-local + host-visible heap!)
+- [ ] Introduce **VMA** here (after 03 at the latest if raw allocation gets tedious) — *after 03: not tedious yet
+      (`vk::Buffer`/`vk::Image` wrap one allocation each); memory-types NOTES entry written in 02. Revisit after 08.* — `NOTES.md` entry on memory types/heaps on RADV (integrated GPU: device-local + host-visible heap!)
 
 **Done when:** all 8 techniques run on both backends, validation clean, each has `NOTES.md`.
 
@@ -222,4 +223,8 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | Synchronization validation on; only VALIDATION/PERFORMANCE messages count as issues | Sync bugs are the class GL never lets you make; loader (GENERAL) messages describe the environment |
 | 2026-09-30 | `vk::Technique::init(Context&, VkFormat swapchainFormat)` | Pipelines need the color attachment format (dynamic rendering) |
 | 2026-09-30 | `-Wno-missing-field-initializers` | `VkFooInfo info{VK_STRUCTURE_TYPE_FOO};` zero-initialises the rest by design |
+| 2026-09-30 | vk helpers after 02: Buffer (+staging upload), OneTimeCommands, Image, Mesh, GraphicsPipelineDesc; after 03: createTexture/createSampler | Each wraps code written raw in 01–03; techniques 04+ read like their GL twins |
+| 2026-09-30 | Dynamic cull mode (`VK_DYNAMIC_STATE_CULL_MODE`) in every pipeline | Core in 1.3; mirrors GL's per-frame `glEnable(GL_CULL_FACE)` without extra pipelines |
+| 2026-09-30 | Staging uploads even though RADV/APU has DEVICE_LOCAL+HOST_VISIBLE memory | Portable path; the APU shortcut is documented in 02's NOTES |
+| 2026-09-30 | VMA deferred past 03 | Raw allocation behind vk::Buffer/Image is short and readable; revisit after 08 |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

@@ -37,8 +37,12 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Debugging | `KHR_debug` callback (checks built into the driver, fairly shallow) | Validation layers + debug utils messenger (separate, thorough) | 01 |
 | Object names | `glObjectLabel` | `vkSetDebugUtilsObjectNameEXT` | 01 |
 | Depth buffer | Comes with the default framebuffer | You create image + memory + view, transition it, attach it | 02 |
+| Uploading static data | `glNamedBufferStorage(buf, size, data, 0)` | Staging buffer + `vkCmdCopyBuffer` + barrier (or direct write where a DEVICE_LOCAL+HOST_VISIBLE type exists, e.g. APUs) | 02 |
+| Uniform binding | Uniform location / `glBindBufferBase` | Descriptor set layout + pool + set per frame slot, `vkCmdBindDescriptorSets` | 02 |
+| Changing cull mode | `glEnable/glCullFace` any time | Pipeline state, or dynamic state `vkCmdSetCullMode` (core 1.3) | 02 |
 | Texture upload | `glTextureStorage2D` + `glTextureSubImage2D` from a CPU pointer | Staging buffer + `vkCmdCopyBufferToImage` + layout transitions | 03 |
-| Mipmaps | `glGenerateTextureMipmap` | Loop of `vkCmdBlitImage` + barriers per level | 03 |
+| Mipmaps | `glGenerateTextureMipmap` | Loop of `vkCmdBlitImage` + per-level barriers (check `SAMPLED_IMAGE_FILTER_LINEAR` first) | 03 |
+| Changing a bound texture | `glBindTextureUnit` any time | `vkUpdateDescriptorSets` only on sets no pending work uses | 03 |
 | Samplers | Sampler object (mutable) bound per unit, or params on the texture | `VkSampler` (immutable), in a descriptor | 03 |
 | Texture binding | Global texture units (`glBindTextureUnit`) | Image view + sampler written into a descriptor set | 03 |
 | Uniform blocks | `layout(std140, binding = N)` + `glBindBufferBase` | Same GLSL block as `set/binding`, via descriptor set | 04 |

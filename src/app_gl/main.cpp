@@ -99,6 +99,8 @@ int run(const Config& config) {
   if (names.empty()) throw std::runtime_error("no GL techniques registered");
   std::string current = config.technique.empty() ? names.front() : config.technique;
   Camera camera;
+  // Baseline for the per-technique summary; taken before init() so init-time issues count too.
+  int issuesAtStart = gl::debugIssueCount();
   std::unique_ptr<gl::Technique> technique = createTechnique(current, camera);
 
   Timer frameTimer;
@@ -106,7 +108,6 @@ int run(const Config& config) {
   ui::FrameStats stats;
   // For the run log: frame times and debug issues while the current technique was on screen.
   FrameTimeSummary summary;
-  int issuesAtStart = gl::debugIssueCount();
   auto logSummary = [&] {
     if (summary.count() == 0) return;
     log::info("summary  {}: {}, KHR_debug issues {}", current, summary.describe(),
@@ -198,6 +199,12 @@ int main(int argc, char** argv) {
       fmt::print("techniques:\n");
       for (const std::string& name : gl::Registry::instance().names()) fmt::print("  {}\n", name);
       return 0;
+    }
+    // Check the name before creating any GPU objects: failing halfway through startup would skip the
+    // orderly shutdown (and, in VK, show up as a pile of "object not destroyed" validation errors).
+    if (!config.technique.empty() && !gl::Registry::instance().contains(config.technique)) {
+      log::error("unknown technique '{}' (see --help for the list)", config.technique);
+      return 1;
     }
     startRunLog("glint_gl", config, argc, argv);
     if (!config.assetDir.empty()) setAssetDir(config.assetDir);

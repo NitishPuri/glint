@@ -80,7 +80,9 @@ add_library(imgui_backend_vk STATIC
   ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_vulkan.cpp)
 target_link_libraries(imgui_backend_vk PUBLIC imgui glfw Vulkan::Vulkan)
 
-add_library(glint_vk_backend STATIC src/vk/context.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/swapchain.cpp)
+add_library(glint_vk_backend STATIC
+  src/vk/buffer.cpp src/vk/context.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/image.cpp src/vk/mesh.cpp
+  src/vk/pipeline.cpp src/vk/shader.cpp src/vk/swapchain.cpp src/vk/texture.cpp src/vk/upload.cpp)
 target_link_libraries(glint_vk_backend
   PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk
   PRIVATE glint_warnings)

@@ -16,7 +16,24 @@ Textures are written **raw** here. The `gl::Texture` / `gl::Sampler` helpers com
 - Switching textures deletes and recreates the texture, because immutable storage can't change size.
 
 ## VK path
-*(Phase 5.)*
+Textures are written **raw**. `vk::createTexture` / `vk::createSampler` come after this. Buffers, depth, mesh and
+pipeline use the helpers extracted after 02.
+- **Upload + mips** (one `OneTimeCommands`):
+  1. All levels `UNDEFINED → TRANSFER_DST`.
+  2. `vkCmdCopyBufferToImage` from a staging buffer into level 0.
+  3. For each level *i*: level *i-1* `TRANSFER_DST → TRANSFER_SRC`, then `vkCmdBlitImage` (i-1 → i, half size,
+     linear filter).
+  4. Levels 0..n-2 `TRANSFER_SRC → SHADER_READ_ONLY`, and the last level `TRANSFER_DST → SHADER_READ_ONLY`.
+     Two barriers, because the levels are in two different layouts.
+
+  First it checks that RGBA8 supports `SAMPLED_IMAGE_FILTER_LINEAR` (it's needed for linear blits).
+- **Samplers.** Three immutable `VkSampler`s (nearest, linear, trilinear). "Linear/nearest without mips" is
+  `maxLod = 0`.
+- **Descriptors.** Binding 0 is the uniform buffer (vertex stage) and binding 1 is a combined image sampler
+  (fragment stage). There's one set per frame slot. Binding 1 is **rewritten every frame** with the current
+  texture view + sampler. That's legal because this slot's fence was waited on, so no pending work uses the set.
+- **Switching textures** waits for the GPU to go idle before destroying the old image, because frames in
+  flight may still sample it.
 
 ## Differences that matter
 - **Upload.** GL copies straight from your pointer. VK needs a staging buffer, `vkCmdCopyBufferToImage`,
@@ -29,10 +46,20 @@ Textures are written **raw** here. The `gl::Texture` / `gl::Sampler` helpers com
   descriptor set, which is bound per draw.
 
 ## Gotchas hit
+- 🔴 **Synchronization validation caught a real hazard** (`SYNC-HAZARD-WRITE_AFTER_WRITE` on `vkCmdBlitImage`).
+  The first barrier moved *all* levels to `TRANSFER_DST`, but its `dstStageMask` was only `COPY`. The blits
+  write levels 1..n in the `BLIT` stage, which wasn't ordered after that layout transition. The fix is
+  `dst = COPY | BLIT`. In GL this bug can't exist, because `glGenerateTextureMipmap` does all of it. It
+  also renders correctly on RADV either way, which is why you need the validation layer to find it.
+- A pipeline that declared normal and tangent inputs the shader doesn't read got a performance warning
+  ("vertex attribute not consumed"). `vk::Mesh::vertexInput({kAttribPosition, kAttribUv})` now declares
+  only what the shader reads.
+- The per-technique summary said "0 validation issues" although the errors above had happened. Its
+  baseline was taken *after* the first technique's `init()`. Both apps now take it before.
 - ImGui's font atlas also lives on texture unit 0. The technique unbinds its sampler after drawing so it
   doesn't change how ImGui's font is filtered.
 - Glint_gl never bound the texture in `onRender` and relied on the constructor leaving it bound. Here the
   texture is bound explicitly for every draw.
 
 ## Numbers
-LOC: gl.cpp 107. VK: tbd.
+LOC: gl.cpp 107, vk.cpp 324.
