@@ -81,7 +81,7 @@ add_library(imgui_backend_vk STATIC
 target_link_libraries(imgui_backend_vk PUBLIC imgui glfw Vulkan::Vulkan)
 
 add_library(glint_vk_backend STATIC
-  src/vk/buffer.cpp src/vk/context.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/image.cpp src/vk/mesh.cpp
+  src/vk/buffer.cpp src/vk/context.cpp src/vk/descriptors.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/image.cpp src/vk/mesh.cpp
   src/vk/pipeline.cpp src/vk/shader.cpp src/vk/swapchain.cpp src/vk/texture.cpp src/vk/upload.cpp)
 target_link_libraries(glint_vk_backend
   PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk
@@ -104,6 +104,8 @@ set(GLINT_TECHNIQUES
   06_normal_mapping
   07_render_to_texture
   08_shadow_mapping)
+# Shaders shared by several techniques (standard shading in 04, 05, 07).
+glint_compile_shaders(glint_vk ${PROJECT_SOURCE_DIR}/techniques/common/shaders)
 foreach(technique IN LISTS GLINT_TECHNIQUES)
   set(dir ${PROJECT_SOURCE_DIR}/techniques/${technique})
   if(EXISTS ${dir}/gl.cpp)

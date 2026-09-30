@@ -6,6 +6,10 @@
 // transfer, presentation), and moving between uses needs a barrier that (1) makes the earlier writes
 // visible to the later reads/writes and (2) changes the layout. GL does all of this invisibly.
 //
+// Convention: before a shader reads an image through a descriptor, dstAccess = VK_ACCESS_2_SHADER_READ_BIT
+// (any shader read), not the narrower SHADER_SAMPLED_READ. The synchronization validation layer tracks
+// descriptor image reads as generic shader reads and reports READ_AFTER_WRITE otherwise (07 hit it).
+//
 // Each barrier names both sides: "after these stages finished these accesses (src) ... before these stages
 // do these accesses (dst)". Written out at every call site on purpose: the stages/access masks *are* the
 // lesson.

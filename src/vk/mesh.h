@@ -33,7 +33,9 @@ class Mesh {
   // vkCmdBindVertexBuffers (all attributes; bindings the pipeline doesn't use are ignored) +
   // vkCmdBindIndexBuffer + vkCmdDrawIndexed.
   void draw(VkCommandBuffer cmd) const;
-  // Same, binding only the position buffer (for pipelines built with positionsOnly()).
+  // Non-indexed: vkCmdDraw over all vertices in order (for flat meshes, like GL's glDrawArrays).
+  void drawNonIndexed(VkCommandBuffer cmd) const;
+  // Same as draw(), binding only the position buffer (for pipelines built with positionsOnly()).
   void drawPositionsOnly(VkCommandBuffer cmd) const;
 
   uint32_t indexCount() const { return m_indexCount; }

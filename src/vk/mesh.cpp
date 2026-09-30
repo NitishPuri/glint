@@ -55,6 +55,15 @@ void Mesh::draw(VkCommandBuffer cmd) const {
   vkCmdDrawIndexed(cmd, m_indexCount, 1, 0, 0, 0);
 }
 
+void Mesh::drawNonIndexed(VkCommandBuffer cmd) const {
+  for (size_t i = 0; i < m_vertexBuffers.size(); ++i) {
+    const VkBuffer buffer = m_vertexBuffers[i].handle();
+    const VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(cmd, m_bindings[i], 1, &buffer, &offset);
+  }
+  vkCmdDraw(cmd, m_vertexCount, 1, 0, 0);
+}
+
 void Mesh::drawPositionsOnly(VkCommandBuffer cmd) const {
   const VkBuffer buffer = m_vertexBuffers.front().handle();  // positions are always added first
   const VkDeviceSize offset = 0;

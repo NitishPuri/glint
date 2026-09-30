@@ -30,8 +30,11 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Pass-to-pass hazard | Implicit (driver orders write → sample) | Explicit image barrier + layout transition | 07 |
 | Attribute-less draw | `gl_VertexID`, still needs an (empty) VAO bound | `gl_VertexIndex`, empty vertex input state | 07 |
 | Stored depth | `d = z_ndc * 0.5 + 0.5` | `d = z_ndc` | 07 |
+| Row order of render targets | Row 0 = bottom | Row 0 = top (even with the flipped viewport) → flip v when sampling a rendered image | 07 |
+| "Now sample it" barrier | Implicit | `dstAccess = SHADER_READ` (sync validation flags `SHADER_SAMPLED_READ` alone) | 07 |
 | Shadow compare | `GL_TEXTURE_COMPARE_MODE` on sampler/texture | `VkSamplerCreateInfo::compareEnable` | 08 |
-| Shadow bias matrix | x, y, z: [-1,1] → [0,1] | x, y only (z already [0,1]); mind the Y flip | 08 |
+| Shadow bias matrix | x, y, z: [-1,1] → [0,1] | x → [0,1], y → [1,0] (flipped rows), z unchanged | 08 |
+| Showing a texture in ImGui | GL texture name as `ImTextureID` | `ImGui_ImplVulkan_AddTexture(view, layout)` → descriptor set | 08 |
 | Depth-only pass | Vertex-only program, `glDrawBuffer(GL_NONE)` | Pipeline without fragment stage / color attachments | 08 |
 | Channel swizzle | `GL_TEXTURE_SWIZZLE_RGBA` on the texture | `VkComponentMapping` on an image view | 08 |
 | Debugging | `KHR_debug` callback (checks built into the driver, fairly shallow) | Validation layers + debug utils messenger (separate, thorough) | 01 |
@@ -47,5 +50,5 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Texture binding | Global texture units (`glBindTextureUnit`) | Image view + sampler written into a descriptor set | 03 |
 | Uniform blocks | `layout(std140, binding = N)` + `glBindBufferBase` | Same GLSL block as `set/binding`, via descriptor set | 04 |
 | Updating in-use buffers | Allowed; driver copies/renames | Race: one buffer per frame in flight | 04 |
-| Per-draw data | Update the UBO between draws | Push constants / dynamic UBO offsets / instance buffer | 05 |
+| Per-draw data | Update the UBO between draws | Dynamic UBO: one buffer, `UNIFORM_BUFFER_DYNAMIC`, per-draw offset aligned to `minUniformBufferOffsetAlignment` (or push constants) | 05 |
 | Blending | `glEnable(GL_BLEND)` any time | Pipeline state → a second pipeline | 05 |

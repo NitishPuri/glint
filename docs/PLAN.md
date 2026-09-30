@@ -115,13 +115,13 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
       ← VK:`samples/cube_sample.*`, `minimal/cube/main.cpp`
 - [x] 03_textured_cube — image upload, layout transitions, sampler, combined image sampler descriptors; mipmaps via `vkCmdBlitImage`
       ← VK:`samples/textured_quad.*`, `renderer/texture.*`
-- [ ] 04_basic_shading — push constants for model matrix vs GL uniforms
-- [ ] 05_indexed_mesh — OBJ via `core/assets`, same mesh data both sides
-- [ ] 06_normal_mapping — 3 textures, descriptor set layout with multiple bindings
-- [ ] 07_render_to_texture — offscreen color+depth image, two dynamic-rendering passes, barrier between them (vs GL FBO + implicit sync)
-- [ ] 08_shadow_mapping — depth-only pass, depth bias (`vkCmdSetDepthBias` vs `glPolygonOffset`), comparison sampler (`sampler2DShadow`), PCF
-- [ ] Introduce **VMA** here (after 03 at the latest if raw allocation gets tedious) — *after 03: not tedious yet
-      (`vk::Buffer`/`vk::Image` wrap one allocation each); memory-types NOTES entry written in 02. Revisit after 08.* — `NOTES.md` entry on memory types/heaps on RADV (integrated GPU: device-local + host-visible heap!)
+- [x] 04_basic_shading — same std140 UBO as GL (push constants appear in 01 and 08 instead)
+- [x] 05_indexed_mesh — OBJ via `core/assets`, same mesh data both sides; dynamic UBO offsets for the two draws
+- [x] 06_normal_mapping — 3 textures, descriptor set layout with multiple bindings
+- [x] 07_render_to_texture — offscreen color+depth image, two dynamic-rendering passes, barrier between them (vs GL FBO + implicit sync)
+- [x] 08_shadow_mapping — depth-only pass, depth bias (kept in the shader on both sides for parity; `vkCmdSetDepthBias`/`glPolygonOffset` noted), comparison sampler (`sampler2DShadow`), PCF
+- [x] ~~Introduce **VMA** here~~ → **moved to Phase 8** (2026-09-30): raw allocation behind `vk::Buffer`/`vk::Image`
+      never got tedious (≤ ~10 allocations per technique). The memory types/heaps entry for RADV is in 02's NOTES.
 
 **Done when:** all 8 techniques run on both backends, validation clean, each has `NOTES.md`.
 
@@ -130,6 +130,7 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
 ## Phase 6 — Bring over Glint_vk-only samples (give them GL twins)
 
 - [ ] 09_dynamic_uniform_buffer ← VK:`samples/dynamic_uniform_buffer.*` | GL twin: `glBindBufferRange` with UBO offset alignment
+      (05's VK path already uses `UNIFORM_BUFFER_DYNAMIC` for its two draws — 09 generalises it to many objects)
 - [ ] 10_specialization_constants ← VK:`samples/specialization_constants.*` | GL twin: `#define` injection at compile time (+ ARB_gl_spirv specialization in Phase 8)
 - [ ] 11_gltf ← VK:`vks/vk_gltf_model.*` (Sascha Willems) — rewrite loader into `core/assets` (tinygltf → `MeshData` + materials), then both backends render it
 - [ ] Retire Glint_vk's `vks/VulkanDevice.*` — not needed once `vk/context` exists
@@ -140,7 +141,8 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
 
 ## Phase 7 — Comparison tooling (the payoff)
 
-- [ ] `--screenshot <technique> <out.png>` in both apps (GL `glReadPixels`, VK copy swapchain/offscreen image → host buffer)
+- [x] `--screenshot <technique> <out.png>` in both apps (GL `glReadPixels`, VK copy swapchain/offscreen image → host buffer)
+      — done early (Phase 3/4) as `glint_<api> <technique> --screenshot out.png [--frames N]`
 - [ ] `tools/parity.py`: runs both apps per technique, diffs images, reports PSNR — catches convention bugs (Y flip, depth range, sRGB)
 - [ ] GPU timings: GL `GL_TIME_ELAPSED` queries vs VK timestamp queries (`timestampPeriod`), shown in the same ImGui stats panel
 - [ ] CPU frame time + draw-call count side by side
@@ -153,6 +155,8 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
 ## Phase 8 — Stretch / new learning
 
 Pick freely; each is a new technique dir with gl + vk + NOTES.
+- [ ] **VMA**: swap `vk::Buffer`/`vk::Image` internals to VMA; NOTES on what it decides (memory type choice,
+      sub-allocation, dedicated allocations) vs the raw path. Compare allocation counts in the log.
 - [ ] Dual-window mode: one process, GL window + VK window, shared camera — true side by side
 - [ ] Single-source shaders: `.glsl` with `#ifdef VULKAN`, and GL consuming **SPIR-V** via `GL_ARB_gl_spirv` (GL 4.6)
 - [ ] Compute: particle system (GL compute + SSBO vs VK compute queue + barriers)
@@ -226,5 +230,8 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | vk helpers after 02: Buffer (+staging upload), OneTimeCommands, Image, Mesh, GraphicsPipelineDesc; after 03: createTexture/createSampler | Each wraps code written raw in 01–03; techniques 04+ read like their GL twins |
 | 2026-09-30 | Dynamic cull mode (`VK_DYNAMIC_STATE_CULL_MODE`) in every pipeline | Core in 1.3; mirrors GL's per-frame `glEnable(GL_CULL_FACE)` without extra pipelines |
 | 2026-09-30 | Staging uploads even though RADV/APU has DEVICE_LOCAL+HOST_VISIBLE memory | Portable path; the APU shortcut is documented in 02's NOTES |
-| 2026-09-30 | VMA deferred past 03 | Raw allocation behind vk::Buffer/Image is short and readable; revisit after 08 |
+| 2026-09-30 | VMA deferred past 03, then moved to Phase 8 | Raw allocation behind vk::Buffer/Image stayed short and readable through 08 |
+| 2026-09-30 | vk helpers after 03: descriptors (layout/pool/sets/writes, pipeline layout), `beginRendering`, `transitionDepthForRendering` | Written raw in 02–03 |
+| 2026-09-30 | Barriers before shader reads use `VK_ACCESS_2_SHADER_READ_BIT` | Sync validation reports RAW with `SHADER_SAMPLED_READ` only (07) |
+| 2026-09-30 | Flipped viewport everywhere, incl. offscreen passes; readers flip v / negate y in the shadow matrix | One convention; the row-order difference is documented where it matters (07, 08) |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

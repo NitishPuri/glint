@@ -13,7 +13,14 @@ camera space. The mesh is **not indexed**: 2904 vertices, one per triangle corne
 - The texture and sampler use the `gl::Texture` / `gl::Sampler` helpers extracted after 03.
 
 ## VK path
-*(Phase 5.)*
+- It uses the **same std140 struct** (`shading::Uniforms`). There's one host-visible copy per frame in flight,
+  written in `record()` with `ClipDepth::ZeroToOne`.
+- Descriptor set 0 has the uniform block at binding 0 (both stages) and the diffuse texture + sampler at
+  binding 1.
+- The shaders `common/shaders/shading.vk.*` differ from the GL ones **only in the binding
+  declarations** (`set = 0, binding = N`). Diff them.
+- It's a non-indexed draw: `vk::Mesh::drawNonIndexed` → `vkCmdDraw(2904)`, like `glDrawArrays`.
+- The images match GL **pixel for pixel** (0 pixels differ by more than 2%).
 
 ## Differences that matter
 - **std140.** A `vec3` is aligned to 16 bytes, and array elements are padded to 16 bytes. The shared struct
@@ -28,4 +35,4 @@ camera space. The mesh is **not indexed**: 2904 vertices, one per triangle corne
   lighting. Here `view` really is the view matrix.
 
 ## Numbers
-LOC: gl.cpp 81. VK: tbd.
+LOC: gl.cpp 81, vk.cpp 122.

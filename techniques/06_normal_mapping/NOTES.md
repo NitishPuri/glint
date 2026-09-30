@@ -15,7 +15,11 @@ for comparison.
 - Three textures on units 0–2, with one sampler object bound to all three units.
 
 ## VK path
-*(Phase 5.)*
+- It declares all four vertex attributes, one binding each.
+- The descriptor set has the uniform block at binding 0 and three combined image samplers at bindings 1–3,
+  all using the same `VkSampler`. The alternative is one binding with `descriptorCount = 3` (a sampler array in GLSL).
+- The shaders differ from GL only in bindings.
+- The images match GL pixel for pixel.
 
 ## Differences that matter
 - **Three textures.** GL: three units. VK: three combined-image-sampler bindings in one descriptor set,
@@ -31,4 +35,4 @@ for comparison.
 - Glint_gl passed view-projection as `V` here too, which also skewed the tangent-space vectors.
 
 ## Numbers
-LOC: gl.cpp 78. VK: tbd.
+LOC: gl.cpp 78, vk.cpp 129.

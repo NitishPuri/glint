@@ -22,7 +22,22 @@ hardware's 2×2 compare filtering. The shadow map can be shown in the panel.
   - A swizzle (R, R, R, 1) turns the red depth channel into gray.
 
 ## VK path
-*(Phase 5.)*
+- **Pass 1** is a depth-only pipeline: no fragment stage, no color attachment, and `vertexInput =
+  positionsOnly()`. The light matrix is a **push constant**. The map is a `D32_SFLOAT` image
+  (`DEPTH_STENCIL_ATTACHMENT | SAMPLED`), sized from the UI and recreated when the size changes.
+- **Barriers:**
+  - map `UNDEFINED → DEPTH_ATTACHMENT`, after last frame's fragment reads (pass 2 and the ImGui preview)
+  - `DEPTH_ATTACHMENT → SHADER_READ_ONLY` between the passes; the map stays in that layout for the UI pass.
+- **Comparison sampler:** `compareEnable = VK_TRUE`, `LESS_OR_EQUAL`, clamp-to-border with an opaque white
+  border (= depth 1 = lit). Linear filtering for the free 2×2 PCF is used only if the format reports
+  `SAMPLED_IMAGE_FILTER_LINEAR`; it does on RADV.
+- **Shadow matrix:** `bias = [x: *0.5+0.5, y: *-0.5+0.5, z: unchanged]`. y is negated because the light pass
+  also uses the flipped viewport, so row 0 of the map is the light's +Y. z is already [0, 1].
+- **Preview:** a second `VkImageView` of the map with `components = (R, R, R, ONE)`, registered with
+  `ImGui_ImplVulkan_AddTexture` (which returns a descriptor set used as `ImTextureID`) and removed before the
+  map is destroyed. No uv flip is needed, unlike GL.
+- The images match GL except along shadow edges (about 1000 edge pixels at 800×600): the drivers' PCF and
+  rasterisation differ slightly.
 
 ## Differences that matter
 - **Compare sampling.** GL: `GL_TEXTURE_COMPARE_MODE` on a sampler or texture. VK:
@@ -49,4 +64,4 @@ Fixed from Glint_gl (known-issues.md):
 - The unused `LightPosition_worldspace` uniform that made the driver warn is gone.
 
 ## Numbers
-LOC: gl.cpp 141. VK: tbd.
+LOC: gl.cpp 141, vk.cpp 244.

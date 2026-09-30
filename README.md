@@ -31,4 +31,4 @@ Logs: every run writes `logs/<app>_<date>_<time>.log` (commit, config, GPU, per-
 
 Shaders: GL loads `techniques/*/shaders/*.gl.*` at runtime and hot-reloads them when saved.
 
-Status: Phase 5 in progress — `glint_vk` runs 01–03 (validation-clean, incl. sync validation). Next: 04–08 on VK.
+Status: Phase 5 done — all 8 techniques on both backends, validation-clean (VK incl. sync validation). Next: Phase 6.

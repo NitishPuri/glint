@@ -13,7 +13,13 @@ just a field in the uniform block.
 - Blending: `glEnable(GL_BLEND)` + `glBlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA)`, toggled per frame.
 
 ## VK path
-*(Phase 5.)*
+- **A dynamic uniform buffer.** There's one buffer per frame slot holding *both* draws' blocks, each at a
+  stride of `sizeof(Uniforms)` rounded up to `minUniformBufferOffsetAlignment` (16 on RADV; 64 or 256 on
+  other GPUs). The descriptor is `UNIFORM_BUFFER_DYNAMIC` with range = one block. Each draw passes its
+  own offset to `vkCmdBindDescriptorSets`. Both blocks are written *before* the command buffer runs, and the
+  shader is unchanged.
+- **Transparency is a second pipeline** that differs only in `alphaBlend = true`.
+- The images match GL to within 1 pixel.
 
 ## Differences that matter
 - **Per-draw data.** Updating one buffer between draws works in GL because the driver snapshots it for
@@ -28,4 +34,4 @@ just a field in the uniform block.
 - The second monkey is at x = +2.5. Glint_gl used +1, which overlapped the first one.
 
 ## Numbers
-LOC: gl.cpp 94. VK: tbd.
+LOC: gl.cpp 94, vk.cpp 152.
