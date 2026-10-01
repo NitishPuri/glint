@@ -35,6 +35,7 @@ class Context {
   VkDevice device = VK_NULL_HANDLE;
   uint32_t queueFamily = 0;  // one family for graphics + present (true on every desktop GPU we target)
   VkQueue queue = VK_NULL_HANDLE;
+  bool pipelineStatistics = false;  // the pipelineStatisticsQuery feature is enabled
 
   // Index of a memory type allowed by `typeBits` (from vkGet*MemoryRequirements) that has all `flags`.
   // Throws if there is none. (01_triangle spells this loop out once; everything else calls this.)

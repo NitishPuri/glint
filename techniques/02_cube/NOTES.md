@@ -58,6 +58,11 @@ per-GPU choices for you. It's deferred: `vk::Buffer`/`vk::Image` keep raw alloca
 from the `maxMemoryAllocationCount` limit.
 
 ## Gotchas hit
+- **A depth-range mistake is invisible here.** With `ClipDepth::NegOneToOne` in VK (a planted bug, found while
+  testing `tools/parity.py`), VK clips everything with NDC z < 0, but for a 0.1 near plane that's only geometry
+  closer than about 0.2 units. The cube is ~5 units away and the depth test only compares relative depths,
+  so the image stays pixel-identical. The bug would only show up close to the near plane, or as lost
+  precision. A missing Y flip, by contrast, drops parity to 10.6 dB.
 - The negative-viewport Y flip keeps GL's winding, so `VK_FRONT_FACE_COUNTER_CLOCKWISE` with back-face
   culling shows the same faces as GL (checked side by side: identical image).
 - Starting `glint_vk` with a technique name it doesn't know threw halfway through startup, skipping

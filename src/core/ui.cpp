@@ -39,26 +39,44 @@ std::optional<std::string> techniqueCombo(const std::vector<std::string>& names,
   return picked;
 }
 
-void FrameStats::add(float dtSeconds) {
-  m_history[size_t(m_next)] = dtSeconds * 1000.0f;
-  m_next = (m_next + 1) % int(m_history.size());
-  m_count = std::min(m_count + 1, int(m_history.size()));
+void FrameStats::add(float frameSeconds, float cpuMs, float gpuMs) {
+  m_frame[size_t(m_next)] = frameSeconds * 1000.0f;
+  m_cpu[size_t(m_next)] = cpuMs;
+  m_gpu[size_t(m_next)] = gpuMs;
+  m_next = (m_next + 1) % int(m_frame.size());
+  m_count = std::min(m_count + 1, int(m_frame.size()));
 }
 
-float FrameStats::averageMs() const {
-  if (m_count == 0) return 0.0f;
+float FrameStats::average(const std::array<float, 120>& values) const {
   float sum = 0.0f;
-  for (int i = 0; i < m_count; ++i) sum += m_history[size_t(i)];
-  return sum / float(m_count);
+  int n = 0;
+  for (int i = 0; i < m_count; ++i) {
+    if (values[size_t(i)] < 0.0f) continue;  // "not available" samples
+    sum += values[size_t(i)];
+    ++n;
+  }
+  return n > 0 ? sum / float(n) : -1.0f;
 }
 
-void statsSection(const FrameStats& stats, const char* api, const std::string& device, int fbWidth, int fbHeight) {
+void statsSection(const FrameStats& stats, const GpuStats& gpu, const char* api, const std::string& device,
+                  int fbWidth, int fbHeight) {
   if (!ImGui::CollapsingHeader("Stats", ImGuiTreeNodeFlags_DefaultOpen)) return;
   ImGui::Text("%s on %s", api, device.c_str());
   const float ms = stats.averageMs();
   ImGui::Text("%.2f ms/frame (%.0f FPS)", ms, ms > 0.0f ? 1000.0f / ms : 0.0f);
   ImGui::PlotLines("##frametimes", stats.historyMs(), stats.historySize(), stats.historyOffset(), "frame ms", 0.0f,
                    std::max(33.3f, ms * 2.0f), ImVec2(-1.0f, 40.0f));
+  const float gpuMs = stats.averageGpuMs();
+  if (gpuMs >= 0.0f) {
+    ImGui::Text("CPU %.2f ms   GPU %.3f ms (technique)", stats.averageCpuMs(), gpuMs);
+  } else {
+    ImGui::Text("CPU %.2f ms   GPU -", stats.averageCpuMs());
+  }
+  if (gpu.valid && gpu.hasPipelineStatistics) {
+    ImGui::Text("%llu vertices, %llu triangles", (unsigned long long)gpu.vertices, (unsigned long long)gpu.primitives);
+    ImGui::Text("VS %llu, FS %llu invocations", (unsigned long long)gpu.vertexInvocations,
+                (unsigned long long)gpu.fragmentInvocations);
+  }
   ImGui::Text("framebuffer %d x %d", fbWidth, fbHeight);
 }
 

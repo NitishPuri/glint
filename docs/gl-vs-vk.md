@@ -39,6 +39,10 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Channel swizzle | `GL_TEXTURE_SWIZZLE_RGBA` on the texture | `VkComponentMapping` on an image view | 08 |
 | Debugging | `KHR_debug` callback (checks built into the driver, fairly shallow) | Validation layers + debug utils messenger (separate, thorough) | 01 |
 | Object names | `glObjectLabel` | `vkSetDebugUtilsObjectNameEXT` | 01 |
+| GPU timing | `GL_TIME_ELAPSED` query (ns), read when `GL_QUERY_RESULT_AVAILABLE` | Timestamp query pool, `vkCmdWriteTimestamp2` × 2, ticks × `timestampPeriod`; read after the frame's fence | 7 |
+| Pipeline statistics | `GL_VERTICES_SUBMITTED`, `GL_*_SHADER_INVOCATIONS` queries (core 4.6; `glGenQueries` — Mesa rejects them in `glCreateQueries`) | `VK_QUERY_TYPE_PIPELINE_STATISTICS` pool, optional `pipelineStatisticsQuery` feature | 7 |
+| Measuring CPU time | The driver blocks *inside* GL calls (e.g. waiting for a back buffer): with vsync on, "CPU" ≈ the vsync interval | Waits are explicit (`vkWaitForFences`, `vkAcquireNextImageKHR`): CPU time excludes them | 7 |
+| RenderDoc hooking (Linux) | Symbol interposition: `librenderdoc.so` must be `LD_PRELOAD`ed | Implicit layer: manifest + `ENABLE_VULKAN_RENDERDOC_CAPTURE=1` before `vkCreateInstance` | 7 |
 | Depth buffer | Comes with the default framebuffer | You create image + memory + view, transition it, attach it | 02 |
 | Uploading static data | `glNamedBufferStorage(buf, size, data, 0)` | Staging buffer + `vkCmdCopyBuffer` + barrier (or direct write where a DEVICE_LOCAL+HOST_VISIBLE type exists, e.g. APUs) | 02 |
 | Uniform binding | Uniform location / `glBindBufferBase` | Descriptor set layout + pool + set per frame slot, `vkCmdBindDescriptorSets` | 02 |

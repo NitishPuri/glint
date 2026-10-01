@@ -31,6 +31,15 @@ Logs: every run writes `logs/<app>_<date>_<time>.log` (commit, config, GPU, per-
 
 Shaders: GL loads `techniques/*/shaders/*.gl.*` at runtime and hot-reloads them when saved.
 
-Status: Phase 6 done — 01–11 on both backends, validation-clean. Next: Phase 7 (comparison tooling).
+Comparison tooling:
+- `tools/parity.py` renders every technique in both apps (`--fixed-dt`, `--screenshot`) and compares them
+  (PSNR; images in `build/debug/parity/`). Exit code 1 if any technique disagrees.
+- The stats panel and each run log's `summary` lines show frame, CPU and GPU time (timer queries) and
+  pipeline statistics. For cross-API comparisons use `--no-vsync` (GL's CPU time includes driver waits).
+- `--renderdoc` loads RenderDoc's in-app API: F12 or the panel button captures a frame into `captures/`,
+  and "Open latest in RenderDoc" launches qrenderdoc on it. RenderDoc is found in `~/tools/renderdoc`
+  (CMake `GLINT_RENDERDOC_DIR`, or `$RENDERDOC_DIR` at runtime).
+
+Status: Phase 7 done (comparison tooling). Next: Phase 8 (stretch goals).
 
 First configure downloads ~47 MB of glTF sample assets (FlightHelmet) into `assets/gltf/`; `-DGLINT_DOWNLOAD_ASSETS=OFF` skips it.

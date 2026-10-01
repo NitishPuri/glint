@@ -2,7 +2,7 @@
 
 // Startup settings from the command line, shared by both apps:
 //   glint_vk [technique] [--size WxH] [--no-vsync] [--validation|--no-validation] [--log FILE] [--assets DIR]
-//            [--frames N] [--screenshot FILE] [--no-log-file]
+//            [--frames N] [--screenshot FILE] [--fixed-dt S] [--no-log-file] [--renderdoc]
 
 #include <string>
 
@@ -23,7 +23,9 @@ struct Config {
   bool writeLogFile = true;  // --no-log-file: console only
   std::string assetDir;  // empty: GLINT_ASSET_DIR
   int exitAfterFrames = 0;  // > 0: quit after this many frames (for scripted runs)
-  std::string screenshot;   // non-empty: save the last frame as PNG before quitting
+  std::string screenshot;   // non-empty: save the last frame as PNG before quitting (camera input is ignored)
+  float fixedDt = 0.0f;     // > 0: every frame advances the simulation by exactly this many seconds
+  bool renderdoc = false;   // load RenderDoc's in-app API (before the window/context/instance exist)
   bool showHelp = false;
 };
 

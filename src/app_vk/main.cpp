@@ -11,7 +11,11 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <regex>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -20,6 +24,7 @@
 #include "core/camera.h"
 #include "core/config.h"
 #include "core/log.h"
+#include "core/renderdoc.h"
 #include "core/run_log.h"
 #include "core/timer.h"
 #include "core/ui.h"
@@ -28,6 +33,7 @@
 #include "vk/context.h"
 #include "vk/debug.h"
 #include "vk/frame.h"
+#include "vk/gpu_queries.h"
 #include "vk/swapchain.h"
 #include "vk/technique.h"
 
@@ -135,6 +141,7 @@ void runApp(const Config& config) {
   const glm::ivec2 fb = window.framebufferSize();
   vk::Swapchain swapchain(ctx, {uint32_t(fb.x), uint32_t(fb.y)}, config.vsync);
   vk::Frames frames(ctx);
+  vk::GpuQueries gpuQueries(ctx);  // GPU time + pipeline statistics of the technique's commands (not ImGui)
 
   // --- ImGui: GLFW platform backend + Vulkan renderer backend, drawing with dynamic rendering -----------
   ui::init();
@@ -166,14 +173,18 @@ void runApp(const Config& config) {
   Timer frameTimer;
   const Timer startTimer;
   ui::FrameStats stats;
-  FrameTimeSummary summary;
+  FrameTimeSummary summary, cpuSummary, gpuSummary;
   auto logSummary = [&] {
     if (summary.count() == 0) return;
-    log::info("summary  {}: {}, validation issues {}", current, summary.describe(),
-              vk::Context::validationIssueCount() - issuesAtStart);
+    log::info("summary  {}: {}, validation issues {}; cpu {}; gpu {}", current, summary.describe(),
+              vk::Context::validationIssueCount() - issuesAtStart, cpuSummary.meanP95(), gpuSummary.meanP95());
     summary.clear();
+    cpuSummary.clear();
+    gpuSummary.clear();
     issuesAtStart = vk::Context::validationIssueCount();
   };
+  Timer cpuTimer;
+  float lastCpuMs = 0.0f;
   const std::string device = ctx.deviceDescription();
   std::optional<Readback> readback;
 
@@ -201,6 +212,8 @@ void runApp(const Config& config) {
     // --- 1. wait until this frame slot's previous submission is done --------------------------------------
     // Then its command buffer (and any per-frame buffers) can be reused. GL: the driver does this.
     VK_CHECK(vkWaitForFences(ctx.device, 1, &sync.inFlight, VK_TRUE, UINT64_MAX));
+    // The slot is free, so its queries from kFramesInFlight frames ago are done: read them (no stall).
+    gpuQueries.collect(frameInFlight);
 
     // --- 2. get a swapchain image to render into -----------------------------------------------------------
     uint32_t imageIndex = 0;
@@ -214,18 +227,29 @@ void runApp(const Config& config) {
     // Reset only now that we'll definitely submit: resetting and then bailing out would leave the fence
     // unsignalled forever and deadlock the next wait.
     VK_CHECK(vkResetFences(ctx.device, 1, &sync.inFlight));
+    // CPU time starts after the waits (fence + acquire) and ends at submit: the app's own work.
+    cpuTimer.reset();
 
     const float dt = float(frameTimer.lap());
-    stats.add(dt);
+    // Simulation time: real, or fixed steps (--fixed-dt) so scripted runs (parity tool) render the same frame
+    // in both apps regardless of how fast each one runs.
+    const float simDt = config.fixedDt > 0.0f ? config.fixedDt : dt;
+    const double simTime = config.fixedDt > 0.0f ? double(frameIndex) * config.fixedDt : startTimer.elapsed();
+    const GpuStats& gpu = gpuQueries.stats();
+    stats.add(dt, lastCpuMs, gpu.valid ? float(gpu.gpuMs) : -1.0f);
     summary.add(dt);
+    cpuSummary.add(lastCpuMs * 1e-3f);
+    if (gpu.valid) gpuSummary.add(float(gpu.gpuMs) * 1e-3f);
     const glm::ivec2 fbSize = {int(swapchain.extent.width), int(swapchain.extent.height)};
 
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ui::newFrame(window.input());
-    camera.update(dt, window.input(), window.framebufferSize());
-    Frame frame{dt, startTimer.elapsed(), frameIndex, fbSize, camera, window.input()};
-    if (technique) technique->update(dt, frame);
+    // Scripted screenshot runs ignore input: the window opens under the mouse, and a stray scroll would
+    // move the camera (one 11_gltf GL/VK comparison differed for exactly that reason).
+    if (config.screenshot.empty()) camera.update(simDt, window.input(), window.framebufferSize());
+    Frame frame{simDt, simTime, frameIndex, fbSize, camera, window.input()};
+    if (technique) technique->update(simDt, frame);
 
     // UI for this frame (recorded into the command buffer below).
     std::optional<std::string> picked;
@@ -233,9 +257,10 @@ void runApp(const Config& config) {
     ImGui::SetNextWindowSize(ImVec2(360, 0), ImGuiCond_FirstUseEver);
     ImGui::Begin("glint - Vulkan");
     picked = ui::techniqueCombo(names, current);
-    ui::statsSection(stats, "Vulkan 1.3", device, fbSize.x, fbSize.y);
+    ui::statsSection(stats, gpuQueries.stats(), "Vulkan 1.3", device, fbSize.x, fbSize.y);
     if (config.validation) ImGui::Text("validation issues: %d", vk::Context::validationIssueCount());
     ui::cameraSection(camera);
+    renderdoc::uiSection();
     if (technique && ImGui::CollapsingHeader(current.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) technique->ui();
     ImGui::End();
     ImGui::Render();
@@ -261,8 +286,10 @@ void runApp(const Config& config) {
 
     if (technique) {
       vk::debug::Label label(cmd, current);  // groups the technique's commands in RenderDoc
+      gpuQueries.begin(cmd, frameInFlight);
       technique->record(cmd, {frame, frameInFlight, image, swapchain.views[imageIndex], swapchain.format,
                               swapchain.extent});
+      gpuQueries.end(cmd, frameInFlight);
     } else {
       // Technique failed to initialise: clear to dark red, like the GL app.
       VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
@@ -324,6 +351,7 @@ void runApp(const Config& config) {
     submit.signalSemaphoreInfoCount = 1;
     submit.pSignalSemaphoreInfos = &signal;
     VK_CHECK(vkQueueSubmit2(ctx.queue, 1, &submit, sync.inFlight));
+    lastCpuMs = float(cpuTimer.elapsed() * 1000.0);
 
     // --- 5. present --------------------------------------------------------------------------------------
     VkPresentInfoKHR present{VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
@@ -378,7 +406,37 @@ void runApp(const Config& config) {
   // Validation reports any object we forgot to destroy when the device goes away.
 }
 
+// RenderDoc captures VK through an implicit *layer*, which the loader only finds via a registered manifest.
+// The tarball's manifest has a library_path from RenderDoc's build machine (/io/dist/...), so write a fixed
+// copy into the build dir and point the loader at it for this process only (qrenderdoc's "register layer"
+// writes the same thing to ~/.local/share/vulkan/implicit_layer.d for everyone).
+void enableRenderDocLayer() {
+  const std::filesystem::path installed =
+      std::filesystem::path(renderdoc::installDir()) / "etc/vulkan/implicit_layer.d/renderdoc_capture.json";
+  std::ifstream in(installed);
+  if (!in) {
+    log::warn("RenderDoc: no layer manifest at {}; VK frames can't be captured", installed.string());
+    return;
+  }
+  std::string json((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  const std::string library = renderdoc::installDir() + "/lib/librenderdoc.so";
+  json = std::regex_replace(json, std::regex(R"("library_path"\s*:\s*"[^"]*")"),
+                            "\"library_path\": \"" + library + "\"");
+  const std::filesystem::path dir = std::filesystem::path(GLINT_BUILD_DIR) / "renderdoc_layer";
+  std::filesystem::create_directories(dir);
+  std::ofstream(dir / "renderdoc_capture.json") << json;
+  // Read by the loader at vkCreateInstance: an extra implicit-layer directory, and the layer's opt-in switch.
+  setenv("VK_ADD_IMPLICIT_LAYER_PATH", dir.string().c_str(), 1);
+  setenv("ENABLE_VULKAN_RENDERDOC_CAPTURE", "1", 1);
+}
+
 int run(const Config& config) {
+  if (config.renderdoc) {
+#ifndef _WIN32  // on Windows the RenderDoc installer registers the layer
+    enableRenderDocLayer();
+#endif
+    renderdoc::load("glint_vk");  // before the instance exists
+  }
   runApp(config);  // everything VK is destroyed when this returns, so leak reports are counted below
   if (config.validation) log::info("validation issues (warnings + errors): {}", vk::Context::validationIssueCount());
   return config.validation && vk::Context::validationIssueCount() > 0 ? 2 : 0;

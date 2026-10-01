@@ -15,6 +15,10 @@ TEST_CASE("parseArgs") {
   CHECK_FALSE(c.validation);
 
   CHECK(c.writeLogFile);  // on by default
+  const char* fixed[] = {"x", "--fixed-dt", "0.02", "--renderdoc"};
+  const Config fx = parseArgs(4, fixed);
+  CHECK(fx.fixedDt == doctest::Approx(0.02f));
+  CHECK(fx.renderdoc);
   const char* noLog[] = {"x", "--no-log-file", "--log", "a.log"};
   const Config n = parseArgs(4, noLog);
   CHECK_FALSE(n.writeLogFile);

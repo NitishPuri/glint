@@ -34,6 +34,8 @@ Config parseArgs(int argc, const char* const* argv) {
       config.validation = false;
     } else if (arg == "--log") {
       config.logFile = value();
+    } else if (arg == "--renderdoc") {
+      config.renderdoc = true;
     } else if (arg == "--no-log-file") {
       config.writeLogFile = false;
     } else if (arg == "--frames") {
@@ -42,6 +44,9 @@ Config parseArgs(int argc, const char* const* argv) {
     } else if (arg == "--screenshot") {
       config.screenshot = value();
       if (config.exitAfterFrames == 0) config.exitAfterFrames = 60;
+    } else if (arg == "--fixed-dt") {
+      config.fixedDt = float(std::atof(value().c_str()));
+      if (config.fixedDt <= 0.0f) throw std::invalid_argument("--fixed-dt expects seconds > 0");
     } else if (arg == "--assets") {
       config.assetDir = value();
     } else if (!arg.empty() && arg[0] == '-') {
@@ -66,8 +71,10 @@ std::string usage(const char* exe) {
       "  --log FILE         write the log to FILE (default: logs/<app>_<date>_<time>.log)\n"
       "  --no-log-file      console only\n"
       "  --assets DIR       asset directory (default: the repo's assets/)\n"
+      "  --renderdoc        load RenderDoc's in-app API: F12 / panel button captures a frame\n"
       "  --frames N         quit after N frames\n"
       "  --screenshot FILE  save the last frame to FILE (PNG) and quit (after 60 frames unless --frames)\n"
+      "  --fixed-dt S       advance animations by exactly S seconds per frame (deterministic screenshots)\n"
       "  -h, --help\n",
       exe);
 }

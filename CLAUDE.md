@@ -89,7 +89,7 @@ glint/
     01_triangle/          gl.cpp, vk.cpp, shaders/{*.gl.vert,*.gl.frag,*.vk.vert,*.vk.frag} or shared, NOTES.md, params.h
     02_cube/ ...
   assets/                 meshes, textures (copied from Glint_gl/res and Glint_vk/res)
-  tools/                  parity screenshot diff, etc.
+  tools/                  parity.py (GL vs VK screenshot diff, PSNR), etc.
 ```
 
 ### Key rules

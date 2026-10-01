@@ -15,11 +15,13 @@
 #include "core/camera.h"
 #include "core/config.h"
 #include "core/log.h"
+#include "core/renderdoc.h"
 #include "core/run_log.h"
 #include "core/timer.h"
 #include "core/ui.h"
 #include "core/window.h"
 #include "gl/debug.h"
+#include "gl/gpu_queries.h"
 #include "gl/gl.h"
 #include "gl/technique.h"
 
@@ -77,6 +79,8 @@ void saveScreenshot(const std::string& path, glm::ivec2 size) {
 }
 
 int run(const Config& config) {
+  // RenderDoc hooks GL when the context is created, so it must be loaded before the window.
+  if (config.renderdoc) renderdoc::load("glint_gl");
   Window window({.title = "glint - OpenGL",
                  .width = config.width,
                  .height = config.height,
@@ -107,14 +111,20 @@ int run(const Config& config) {
   const Timer startTimer;
   ui::FrameStats stats;
   // For the run log: frame times and debug issues while the current technique was on screen.
-  FrameTimeSummary summary;
+  FrameTimeSummary summary, cpuSummary, gpuSummary;
   auto logSummary = [&] {
     if (summary.count() == 0) return;
-    log::info("summary  {}: {}, KHR_debug issues {}", current, summary.describe(),
-              gl::debugIssueCount() - issuesAtStart);
+    log::info("summary  {}: {}, KHR_debug issues {}; cpu {}; gpu {}", current, summary.describe(),
+              gl::debugIssueCount() - issuesAtStart, cpuSummary.meanP95(), gpuSummary.meanP95());
     summary.clear();
+    cpuSummary.clear();
+    gpuSummary.clear();
     issuesAtStart = gl::debugIssueCount();
   };
+  // GPU time + pipeline statistics of the technique's render() (not ImGui).
+  gl::GpuQueries gpuQueries;
+  Timer cpuTimer;
+  float lastCpuMs = 0.0f;
   const std::string device = gl::rendererName();
 
   for (uint64_t frameIndex = 0; !window.shouldClose(); ++frameIndex) {
@@ -125,20 +135,32 @@ int run(const Config& config) {
       continue;
     }
     const float dt = float(frameTimer.lap());
-    stats.add(dt);
+    // Simulation time: real, or fixed steps (--fixed-dt) so scripted runs (parity tool) render the same frame
+    // in both apps regardless of how fast each one runs.
+    const float simDt = config.fixedDt > 0.0f ? config.fixedDt : dt;
+    const double simTime = config.fixedDt > 0.0f ? double(frameIndex) * config.fixedDt : startTimer.elapsed();
+    cpuTimer.reset();
+    const GpuStats& gpu = gpuQueries.stats();
+    stats.add(dt, lastCpuMs, gpu.valid ? float(gpu.gpuMs) : -1.0f);
     summary.add(dt);
+    cpuSummary.add(lastCpuMs * 1e-3f);
+    if (gpu.valid) gpuSummary.add(float(gpu.gpuMs) * 1e-3f);
     const glm::ivec2 fbSize = window.framebufferSize();
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ui::newFrame(window.input());
 
-    camera.update(dt, window.input(), fbSize);
-    Frame frame{dt, startTimer.elapsed(), frameIndex, fbSize, camera, window.input()};
+    // Scripted screenshot runs ignore input: the window opens under the mouse, and a stray scroll would
+    // move the camera (one 11_gltf GL/VK comparison differed for exactly that reason).
+    if (config.screenshot.empty()) camera.update(simDt, window.input(), fbSize);
+    Frame frame{simDt, simTime, frameIndex, fbSize, camera, window.input()};
 
     if (technique) {
-      technique->update(dt, frame);
+      technique->update(simDt, frame);
+      gpuQueries.begin();
       technique->render(frame);
+      gpuQueries.end();
     } else {
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       glViewport(0, 0, fbSize.x, fbSize.y);
@@ -154,9 +176,10 @@ int run(const Config& config) {
     ImGui::SetNextWindowSize(ImVec2(360, 0), ImGuiCond_FirstUseEver);
     ImGui::Begin("glint - OpenGL");
     picked = ui::techniqueCombo(names, current);
-    ui::statsSection(stats, "OpenGL 4.6", device, fbSize.x, fbSize.y);
+    ui::statsSection(stats, gpuQueries.stats(), "OpenGL 4.6", device, fbSize.x, fbSize.y);
     if (config.validation) ImGui::Text("KHR_debug issues: %d", gl::debugIssueCount());
     ui::cameraSection(camera);
+    renderdoc::uiSection();
     if (technique && ImGui::CollapsingHeader(current.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) technique->ui();
     ImGui::End();
     ImGui::Render();
@@ -166,6 +189,9 @@ int run(const Config& config) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, fbSize.x, fbSize.y);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    // CPU time ends here: glfwSwapBuffers is where GL waits for vsync / for the GPU to catch up.
+    lastCpuMs = float(cpuTimer.elapsed() * 1000.0);
 
     // GL: present. The driver handles buffering, vsync and CPU/GPU synchronisation behind this call.
     // VK: vkQueuePresentKHR after acquire/submit, with semaphores and fences managed by the app.
@@ -208,6 +234,8 @@ int main(int argc, char** argv) {
       log::error("unknown technique '{}' (see --help for the list)", config.technique);
       return 1;
     }
+    // GL capture needs librenderdoc *preloaded*: restart ourselves with LD_PRELOAD (see core/renderdoc.h).
+    if (config.renderdoc) renderdoc::preloadByReexec(argv);
     startRunLog("glint_gl", config, argc, argv);
     if (!config.assetDir.empty()) setAssetDir(config.assetDir);
     return run(config);

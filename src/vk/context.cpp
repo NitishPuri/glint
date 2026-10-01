@@ -194,6 +194,11 @@ Context::Context(const ContextDesc& desc) {
   VkPhysicalDeviceFeatures2 features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
   features.pNext = &features13;
   features.features.samplerAnisotropy = VK_TRUE;  // used from 03 on; every desktop GPU has it
+  // Pipeline statistics queries (vertex/fragment counts in the stats panel) are optional: enable if present.
+  VkPhysicalDeviceFeatures supported;
+  vkGetPhysicalDeviceFeatures(physicalDevice, &supported);
+  pipelineStatistics = supported.pipelineStatisticsQuery == VK_TRUE;
+  features.features.pipelineStatisticsQuery = supported.pipelineStatisticsQuery;
 
   const float priority = 1.0f;
   VkDeviceQueueCreateInfo queueInfo{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};

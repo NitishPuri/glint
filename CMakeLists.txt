@@ -44,18 +44,25 @@ add_library(glint_core STATIC
   src/core/gltf.cpp
   src/core/input.cpp
   src/core/log.cpp
+  src/core/renderdoc.cpp
   src/core/run_log.cpp
   src/core/ui.cpp
   src/core/window.cpp)
 target_include_directories(glint_core PUBLIC src)
+target_include_directories(glint_core SYSTEM PRIVATE external/renderdoc)
+set(GLINT_RENDERDOC_DIR "$ENV{HOME}/tools/renderdoc" CACHE PATH "RenderDoc install dir (lib/librenderdoc.so)")
 target_link_libraries(glint_core
   PUBLIC glfw glm::glm fmt::fmt imgui
-  PRIVATE stb tinyobjloader tinygltf arcball_camera glint_warnings)
+  PRIVATE stb tinyobjloader tinygltf arcball_camera glint_warnings ${CMAKE_DL_LIBS})
 add_dependencies(glint_core glint_git_info)
 target_compile_definitions(glint_core
   PUBLIC GLINT_ASSET_DIR="${PROJECT_SOURCE_DIR}/assets"
   # Per-run log files go here (gitignored).
   PRIVATE GLINT_LOG_DIR="${PROJECT_SOURCE_DIR}/logs"
+  # RenderDoc (--renderdoc): where librenderdoc lives (override at runtime with $RENDERDOC_DIR), and where
+  # captures go (gitignored).
+  PRIVATE GLINT_RENDERDOC_DIR="${GLINT_RENDERDOC_DIR}"
+  PRIVATE GLINT_CAPTURE_DIR="${PROJECT_SOURCE_DIR}/captures"
   # Stop <GLFW/glfw3.h> from pulling in the system GL header: core must stay API-free, and the GL
   # backend gets its declarations from glad instead.
   PUBLIC GLFW_INCLUDE_NONE)
@@ -66,7 +73,7 @@ add_library(imgui_backend_gl STATIC
   ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp)
 target_link_libraries(imgui_backend_gl PUBLIC imgui glfw OpenGL::GL)
 
-add_library(glint_gl_backend STATIC src/gl/debug.cpp src/gl/mesh.cpp src/gl/shader.cpp src/gl/texture.cpp)
+add_library(glint_gl_backend STATIC src/gl/debug.cpp src/gl/gpu_queries.cpp src/gl/mesh.cpp src/gl/shader.cpp src/gl/texture.cpp)
 target_link_libraries(glint_gl_backend
   PUBLIC glint_core glad OpenGL::GL imgui_backend_gl
   PRIVATE glint_warnings)
@@ -83,7 +90,8 @@ add_library(imgui_backend_vk STATIC
 target_link_libraries(imgui_backend_vk PUBLIC imgui glfw Vulkan::Vulkan)
 
 add_library(glint_vk_backend STATIC
-  src/vk/buffer.cpp src/vk/context.cpp src/vk/descriptors.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/image.cpp src/vk/mesh.cpp
+  src/vk/buffer.cpp src/vk/context.cpp src/vk/descriptors.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/gpu_queries.cpp
+  src/vk/image.cpp src/vk/mesh.cpp
   src/vk/pipeline.cpp src/vk/shader.cpp src/vk/swapchain.cpp src/vk/texture.cpp src/vk/upload.cpp)
 target_link_libraries(glint_vk_backend
   PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk
@@ -93,6 +101,7 @@ target_compile_definitions(glint_vk_backend PUBLIC GLINT_SHADER_DIR="${CMAKE_BIN
 
 add_executable(glint_vk src/app_vk/main.cpp)
 target_link_libraries(glint_vk PRIVATE glint_vk_backend glint_warnings)
+target_compile_definitions(glint_vk PRIVATE GLINT_BUILD_DIR="${CMAKE_BINARY_DIR}")
 
 # --- techniques --------------------------------------------------------------------------------
 # Each techniques/<name>/ has gl.cpp and/or vk.cpp. They are compiled straight into the executables, not

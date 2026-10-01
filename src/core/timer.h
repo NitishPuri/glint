@@ -41,6 +41,17 @@ class FrameTimeSummary {
   void clear() { m_ms.clear(); }
   size_t count() const { return m_ms.size(); }
 
+  // "mean 1.23 ms, p95 2.34 ms" (or "-" if empty): for secondary series like CPU/GPU time.
+  std::string meanP95() const {
+    if (m_ms.empty()) return "-";
+    std::vector<float> sorted = m_ms;
+    std::sort(sorted.begin(), sorted.end());
+    double sum = 0.0;
+    for (float ms : sorted) sum += ms;
+    const float p95 = sorted[std::min(sorted.size() - 1, size_t(double(sorted.size()) * 0.95))];
+    return fmt::format("mean {:.3f} ms, p95 {:.3f} ms", sum / double(sorted.size()), p95);
+  }
+
   // Empty string if no frames were recorded.
   std::string describe() const {
     if (m_ms.empty()) return {};

@@ -143,10 +143,11 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
 
 - [x] `--screenshot <technique> <out.png>` in both apps (GL `glReadPixels`, VK copy swapchain/offscreen image → host buffer)
       — done early (Phase 3/4) as `glint_<api> <technique> --screenshot out.png [--frames N]`
-- [ ] `tools/parity.py`: runs both apps per technique, diffs images, reports PSNR — catches convention bugs (Y flip, depth range, sRGB)
-- [ ] GPU timings: GL `GL_TIME_ELAPSED` queries vs VK timestamp queries (`timestampPeriod`), shown in the same ImGui stats panel
-- [ ] CPU frame time + draw-call count side by side
-- [ ] RenderDoc in-app capture button (`renderdoc_app.h`) for both apps
+- [x] `tools/parity.py`: runs both apps per technique, diffs images, reports PSNR — catches convention bugs (Y flip, depth range, sRGB)
+- [x] GPU timings: GL `GL_TIME_ELAPSED` queries vs VK timestamp queries (`timestampPeriod`), shown in the same ImGui stats panel
+- [x] CPU frame time + ~~draw-call count~~ **pipeline statistics** (vertices, primitives, VS/FS invocations) side by side —
+      counted by the GPU in both APIs, no per-call instrumentation of raw draws needed
+- [x] RenderDoc in-app capture button (`renderdoc_app.h`) for both apps — `--renderdoc`
 
 **Done when:** `tools/parity.py` passes for all techniques and the stats panel shows GPU ms for both APIs.
 
@@ -240,4 +241,7 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-10-02 | Large sample models downloaded at configure time (SHA256-pinned) into gitignored `assets/gltf/` | Keeps the repo small; `-DGLINT_DOWNLOAD_ASSETS=OFF` to skip |
 | 2026-10-02 | `core/gltf` decodes only images referenced by materials | FlightHelmet's unused ORM maps would cost ~80 MB RAM |
 | 2026-10-02 | Frame timer reset after a technique switch | Load time (5.8 s for 11 on VK) was counted as one frame and inflated that technique's mean frame time by ~2 ms |
+| 2026-10-02 | Pipeline statistics instead of a draw-call counter | GPU-side, symmetric (GL 4.6 core / VK query), no wrapping of raw draw calls |
+| 2026-10-02 | `--renderdoc`: GL re-execs itself with `LD_PRELOAD`; VK writes a fixed layer manifest + `VK_ADD_IMPLICIT_LAYER_PATH` | RenderDoc hooks GL by symbol interposition (needs preload), VK via a layer; the tarball's manifest has a build-machine path |
+| 2026-10-02 | `--fixed-dt`, and screenshot runs ignore camera input | Deterministic frames for `tools/parity.py`; a stray scroll had moved the camera in one comparison |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |
