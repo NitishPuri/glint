@@ -188,6 +188,9 @@ Context::Context(const ContextDesc& desc) {
   VkPhysicalDeviceVulkan13Features features13{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
   features13.dynamicRendering = VK_TRUE;
   features13.synchronization2 = VK_TRUE;
+  // glslc targeting Vulkan 1.3 compiles GLSL's `discard` to OpDemoteToHelperInvocation, which needs this
+  // feature (mandatory for 1.3 devices, but like every feature it must be enabled). Found by 11_gltf.
+  features13.shaderDemoteToHelperInvocation = VK_TRUE;
   VkPhysicalDeviceFeatures2 features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
   features.pNext = &features13;
   features.features.samplerAnisotropy = VK_TRUE;  // used from 03 on; every desktop GPU has it

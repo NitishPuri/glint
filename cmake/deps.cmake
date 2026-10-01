@@ -59,7 +59,13 @@ FetchContent_Declare(doctest
   URL_HASH SHA256=73381c7aa4dee704bd935609668cf41880ea7f19fa0504a200e13b74999c2d70
   SOURCE_SUBDIR _no_cmake)
 
-FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader arcball_camera doctest)
+# --- tinygltf v2.9.7 (the classic C++ API; v3 is a different, C API) ------------------------------
+FetchContent_Declare(tinygltf
+  URL https://github.com/syoyo/tinygltf/archive/refs/tags/v2.9.7.tar.gz
+  URL_HASH SHA256=bf92fe53b86302f9415e77504ecd81a58659292ed04dffec873f5c71665046a0
+  SOURCE_SUBDIR _no_cmake)
+
+FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader arcball_camera doctest tinygltf)
 
 # ImGui core only. Platform/renderer backends (imgui_impl_glfw + imgui_impl_opengl3 / imgui_impl_vulkan)
 # are compiled into each backend library, so each app only pulls in the one it uses.
@@ -88,6 +94,10 @@ target_include_directories(arcball_camera SYSTEM PUBLIC ${arcball_camera_SOURCE_
 if(NOT MSVC)
   target_link_libraries(arcball_camera PRIVATE m)
 endif()
+
+# Header-only (+ its bundled json.hpp); TINYGLTF_IMPLEMENTATION goes in core/gltf.cpp.
+add_library(tinygltf INTERFACE)
+target_include_directories(tinygltf SYSTEM INTERFACE ${tinygltf_SOURCE_DIR})
 
 add_library(doctest INTERFACE)
 target_include_directories(doctest SYSTEM INTERFACE ${doctest_SOURCE_DIR})

@@ -116,3 +116,31 @@ TEST_CASE("loadImage expands to RGBA and flips rows") {
   const size_t row = size_t(up.width) * 4;
   CHECK(std::equal(up.pixels.begin(), up.pixels.begin() + row, flipped.pixels.end() - row));
 }
+
+#include <filesystem>
+
+#include "core/gltf.h"
+
+TEST_CASE("loadGltf: FlightHelmet (downloaded at configure time)") {
+  const auto path = assetPath("gltf/FlightHelmet/FlightHelmet.gltf");
+  if (!std::filesystem::exists(path)) {
+    MESSAGE("FlightHelmet not downloaded (GLINT_DOWNLOAD_ASSETS=OFF?) - skipping");
+    return;
+  }
+  const ModelData model = loadGltf(path);
+  CHECK(model.primitives.size() == 6);
+  CHECK(model.materials.size() == 6);
+  CHECK(model.draws.size() == 6);
+  for (const GltfPrimitive& p : model.primitives) {
+    CHECK(p.mesh.indices.size() % 3 == 0);
+    CHECK(p.mesh.normals.size() == p.mesh.vertexCount());
+    CHECK(p.mesh.uvs.size() == p.mesh.vertexCount());
+    CHECK(p.mesh.tangents.size() == p.mesh.vertexCount());
+    for (uint32_t i : p.mesh.indices) REQUIRE(i < p.mesh.vertexCount());
+  }
+  for (const GltfMaterial& m : model.materials) {
+    REQUIRE(m.baseColorImage >= 0);
+    CHECK(model.images[size_t(m.baseColorImage)].width > 0);
+  }
+  CHECK(model.boundsMax.y > model.boundsMin.y);
+}

@@ -54,4 +54,6 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Blending | `glEnable(GL_BLEND)` any time | Pipeline state → a second pipeline | 05 |
 | Offset alignment for per-object UBO slices | `GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT` (+ `glBindBufferRange`) | `minUniformBufferOffsetAlignment` (+ dynamic offsets) — 4 on this AMD, 256 on NVIDIA | 09 |
 | Shader variants | `#define`s injected into GLSL, recompile per variant | Specialization constants (`constant_id`) on one SPIR-V, per pipeline | 10 |
+| Binding by update frequency | UBO binding point / texture units / loose uniforms — no grouping | Set 0 per frame, set 1 per material, push constants per draw | 11 |
+| `discard` | Just works | SPIR-V `OpDemoteToHelperInvocation` → enable `shaderDemoteToHelperInvocation` (1.3 feature) | 11 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

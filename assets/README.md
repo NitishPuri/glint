@@ -12,4 +12,6 @@ Copied from the two predecessor projects (no file names collided, nothing was de
 | `texture.jpg` | `Glint_vk/res` | vulkan-tutorial.com (texture mapping chapter) |
 | `viking_room.{obj,png}` | `Glint_vk/res` | vulkan-tutorial.com (model loading chapter); model by nigelgoh, CC BY 4.0 |
 
+| `gltf/FlightHelmet/*` | **downloaded at configure time** (`cmake/assets.cmake`), gitignored | KhronosGroup/glTF-Sample-Assets @ f36bfda, CC0 |
+
 The code finds this directory through the `GLINT_ASSET_DIR` compile definition.

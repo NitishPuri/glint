@@ -6,5 +6,6 @@ compile_commands.json
 imgui.ini
 log.txt
 logs/
+assets/gltf/
 *.spv
 captures/

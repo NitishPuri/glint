@@ -63,6 +63,8 @@ cmake --build build/debug
   (generated once, committed).
 - Shaders: GLSL `#version 460`. GL loads `.glsl` text at runtime (hot-reloadable). VK shaders are
   compiled to SPIR-V by `glslc` at build time into `build/<cfg>/shaders/`.
+- Large sample assets (glTF models) are downloaded at configure time into gitignored `assets/gltf/`
+  (`cmake/assets.cmake`, SHA256-pinned); `-DGLINT_DOWNLOAD_ASSETS=OFF` skips that.
 - Windows should keep working (MSVC + `find_package(Vulkan)`), but Linux is what's tested.
 
 ## Layout (target — see PLAN.md for when each part appears)

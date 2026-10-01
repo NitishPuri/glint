@@ -31,4 +31,6 @@ Logs: every run writes `logs/<app>_<date>_<time>.log` (commit, config, GPU, per-
 
 Shaders: GL loads `techniques/*/shaders/*.gl.*` at runtime and hot-reloads them when saved.
 
-Status: Phase 6 in progress — 01–10 on both backends, validation-clean. Next: 11_gltf.
+Status: Phase 6 done — 01–11 on both backends, validation-clean. Next: Phase 7 (comparison tooling).
+
+First configure downloads ~47 MB of glTF sample assets (FlightHelmet) into `assets/gltf/`; `-DGLINT_DOWNLOAD_ASSETS=OFF` skips it.

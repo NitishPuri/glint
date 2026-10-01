@@ -14,6 +14,7 @@ find_package(Vulkan REQUIRED)  # uses $VULKAN_SDK when set (source setup-env.sh 
 
 include(cmake/deps.cmake)
 include(cmake/shaders.cmake)
+include(cmake/assets.cmake)
 
 # Warnings for our own code only (third-party targets don't link this).
 add_library(glint_warnings INTERFACE)
@@ -40,6 +41,7 @@ add_library(glint_core STATIC
   src/core/assets.cpp
   src/core/camera.cpp
   src/core/config.cpp
+  src/core/gltf.cpp
   src/core/input.cpp
   src/core/log.cpp
   src/core/run_log.cpp
@@ -48,7 +50,7 @@ add_library(glint_core STATIC
 target_include_directories(glint_core PUBLIC src)
 target_link_libraries(glint_core
   PUBLIC glfw glm::glm fmt::fmt imgui
-  PRIVATE stb tinyobjloader arcball_camera glint_warnings)
+  PRIVATE stb tinyobjloader tinygltf arcball_camera glint_warnings)
 add_dependencies(glint_core glint_git_info)
 target_compile_definitions(glint_core
   PUBLIC GLINT_ASSET_DIR="${PROJECT_SOURCE_DIR}/assets"
@@ -105,7 +107,8 @@ set(GLINT_TECHNIQUES
   07_render_to_texture
   08_shadow_mapping
   09_dynamic_uniform_buffer
-  10_specialization_constants)
+  10_specialization_constants
+  11_gltf)
 # Shaders shared by several techniques (standard shading in 04, 05, 07).
 glint_compile_shaders(glint_vk ${PROJECT_SOURCE_DIR}/techniques/common/shaders)
 foreach(technique IN LISTS GLINT_TECHNIQUES)

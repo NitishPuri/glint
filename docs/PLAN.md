@@ -132,7 +132,7 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
 - [x] 09_dynamic_uniform_buffer ← VK:`samples/dynamic_uniform_buffer.*` | GL twin: `glBindBufferRange` with UBO offset alignment
       (05's VK path already uses `UNIFORM_BUFFER_DYNAMIC` for its two draws — 09 generalises it to many objects)
 - [x] 10_specialization_constants ← VK:`samples/specialization_constants.*` | GL twin: `#define` injection at compile time (+ ARB_gl_spirv specialization in Phase 8)
-- [ ] 11_gltf ← VK:`vks/vk_gltf_model.*` (Sascha Willems) — rewrite loader into `core/assets` (tinygltf → `MeshData` + materials), then both backends render it
+- [x] 11_gltf ← VK:`vks/vk_gltf_model.*` (Sascha Willems) — rewrite loader into `core/assets` (tinygltf → `MeshData` + materials), then both backends render it
 - [x] Retire Glint_vk's `vks/VulkanDevice.*` — not needed once `vk/context` exists (nothing ported; `vk/context` covers it)
 
 **Done when:** everything valuable from both old repos exists in glint. Old repos can be archived.
@@ -236,4 +236,7 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | Flipped viewport everywhere, incl. offscreen passes; readers flip v / negate y in the shadow matrix | One convention; the row-order difference is documented where it matters (07, 08) |
 | 2026-09-30 | 10 built from Sascha Willems' uber shader (Glint_vk had the shaders, not the code) | Glint_vk's "specialization_constants" sample was a copy of the dynamic UBO sample |
 | 2026-09-30 | ImGui calls only in `update()`/`ui()`, never in `render()`/`record()` | VK records after `ImGui::Render()`; drawing there crashed (10) |
+| 2026-10-02 | tinygltf **2.9.7** (not 3.x) | v3 is a new C API; 2.9 is the C++ API Sascha Willems' loader (and Glint_vk's `vks/`) uses |
+| 2026-10-02 | Large sample models downloaded at configure time (SHA256-pinned) into gitignored `assets/gltf/` | Keeps the repo small; `-DGLINT_DOWNLOAD_ASSETS=OFF` to skip |
+| 2026-10-02 | `core/gltf` decodes only images referenced by materials | FlightHelmet's unused ORM maps would cost ~80 MB RAM |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |
