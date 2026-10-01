@@ -6,6 +6,14 @@ a directional light or a perspective one for the "spotlight". Pass 2 renders fro
 each fragment's light-space depth with the map, with 4-tap Poisson PCF or a single tap. Both use the
 hardware's 2×2 compare filtering. The shadow map can be shown in the panel.
 
+## Read
+- [GG1 ch11 Shadow Map Antialiasing](https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing)
+  — percentage-closer filtering: the theory behind the 4-tap Poisson PCF here and the hardware 2×2 compare;
+  local CD: —
+- [GG1 ch14 Perspective Shadow Maps: Care and Feeding](https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-14-perspective-shadow-maps-care-and-feeding)
+  — why a single orthographic map runs out of resolution (the motivation for Phase 11's cascades); local CD: —
+- opengl-tutorial.org, tutorial 16 (the source of Glint_gl's version).
+
 ## GL path
 - Pass 1:
   - Depth-only: a `gl::Framebuffer` with a `GL_DEPTH_COMPONENT32F` texture and `glNamedFramebufferDrawBuffer(GL_NONE)`.

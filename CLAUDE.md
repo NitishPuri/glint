@@ -27,6 +27,13 @@ read `NOTES.md`, and understand every line and every difference.
     `// VK: clip-space Z is [0,1], GL is [-1,1] — hence camera.projection(aspect, ClipDepth::ZeroToOne)`.
   - Every technique ships a `NOTES.md` (see template in `docs/PLAN.md`).
 - Work in the phase order of `docs/PLAN.md`. Tick checkboxes there as things land. Don't jump ahead.
+- **Learning path (Phases 8–15) heads towards GPU Gems.** Every technique's `NOTES.md` has a **Read** section:
+  the GPU Gems chapter(s) (online link) and the local CD content in `/mnt/e/tree/graphics/nvidia/GPU-Gems`
+  (`GPU-Gems-{1,2}-CD-Content/<Part>/<Chapter>`, `GPU-Gems-3-CD-Content/content/<NN>`) — code, shaders, assets and
+  demos worth mining for implementation details (old D3D9/Cg/CUDA: read for the algorithm, don't port the API).
+- The owner's Obsidian vault mirrors the plan: `1_TOPICS/Tech/Tech Projects/Glint - Learning Path.md` and one
+  `Glint - Stage <N> - <name>.md` per phase (reading list + a Learnings section). When a technique lands, add its
+  learnings there too (obsidian-kb skill) and tick its reading items.
 
 ## Environment (as of 2026-09-29)
 
