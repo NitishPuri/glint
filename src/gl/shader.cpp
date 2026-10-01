@@ -26,7 +26,8 @@ std::filesystem::file_time_type modifiedTime(const std::filesystem::path& path) 
 
 }  // namespace
 
-Program::Program(std::initializer_list<std::string> relativePaths) {
+Program::Program(std::initializer_list<std::string> relativePaths, std::string defines)
+    : m_defines(std::move(defines)) {
   for (const std::string& relative : relativePaths) {
     const std::filesystem::path path = std::filesystem::path(GLINT_SHADER_DIR) / relative;
     m_stages.push_back({path, modifiedTime(path)});
@@ -41,7 +42,12 @@ GLuint Program::build() {
   };
 
   for (const Stage& stage : m_stages) {
-    const std::string source = readTextFile(stage.path);
+    std::string source = readTextFile(stage.path);
+    if (!m_defines.empty()) {
+      // After the first line (#version must come first); #line keeps error line numbers matching the file.
+      const size_t eol = source.find('\n');
+      if (eol != std::string::npos) source.insert(eol + 1, m_defines + "#line 2\n");
+    }
     const char* text = source.c_str();
     const GLuint shader = glCreateShader(stageFromExtension(stage.path));
     shaders.push_back(shader);

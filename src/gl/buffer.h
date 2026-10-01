@@ -43,9 +43,11 @@ class Buffer {
   void update(const void* data, size_t size, size_t offset = 0) {
     glNamedBufferSubData(m_id, GLintptr(offset), GLsizeiptr(size), data);
   }
+  // One value at offset 0. (No offset parameter on purpose: with one, update(ptr, size) would pick this
+  // template with T = pointer and upload the pointer itself — 09 hit exactly that.)
   template <typename T>
-  void update(const T& value, size_t offset = 0) {
-    update(&value, sizeof(T), offset);
+  void update(const T& value) {
+    update(&value, sizeof(T), 0);
   }
 
  private:

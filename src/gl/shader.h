@@ -28,7 +28,9 @@ namespace glint::gl {
 class Program {
  public:
   Program() = default;
-  Program(std::initializer_list<std::string> relativePaths);
+  // `defines` is inserted right after each file's #version line, e.g. "#define LIGHTING_MODEL 1\n" — GL's
+  // way of making variants of one source (10_specialization_constants). VK: specialization constants.
+  Program(std::initializer_list<std::string> relativePaths, std::string defines = {});
   ~Program() { glDeleteProgram(m_id); }
   Program(Program&& other) noexcept { swap(other); }
   Program& operator=(Program&& other) noexcept {
@@ -69,11 +71,13 @@ class Program {
   void swap(Program& other) noexcept {
     std::swap(m_id, other.m_id);
     std::swap(m_stages, other.m_stages);
+    std::swap(m_defines, other.m_defines);
     std::swap(m_checkTimer, other.m_checkTimer);
   }
 
   GLuint m_id = 0;
   std::vector<Stage> m_stages;
+  std::string m_defines;
   Timer m_checkTimer;
 };
 

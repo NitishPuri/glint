@@ -42,8 +42,8 @@ class IndexedMeshVK final : public vk::Technique {
     m_texture = vk::createTexture(ctx, loadImage(assetPath("suzanne.jpg")), true, "suzanne.jpg");
     m_sampler = vk::createSampler(device, {.name = "trilinear repeat"});
 
-    // Dynamic offsets must be multiples of minUniformBufferOffsetAlignment (RADV: 16 bytes, NVIDIA often
-    // 64 or 256). sizeof(shading::Uniforms) = 240, so each block is padded up to the next multiple.
+    // Dynamic offsets must be multiples of minUniformBufferOffsetAlignment (RADV here: 4 bytes; NVIDIA and
+    // many mobile GPUs: 64 or 256). Each block is padded up to the next multiple.
     const VkDeviceSize alignment = ctx.properties.limits.minUniformBufferOffsetAlignment;
     m_stride = (sizeof(shading::Uniforms) + alignment - 1) / alignment * alignment;
     log::debug("05 dynamic UBO: alignment {}, stride {}", alignment, m_stride);

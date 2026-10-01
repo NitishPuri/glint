@@ -103,7 +103,9 @@ set(GLINT_TECHNIQUES
   05_indexed_mesh
   06_normal_mapping
   07_render_to_texture
-  08_shadow_mapping)
+  08_shadow_mapping
+  09_dynamic_uniform_buffer
+  10_specialization_constants)
 # Shaders shared by several techniques (standard shading in 04, 05, 07).
 glint_compile_shaders(glint_vk ${PROJECT_SOURCE_DIR}/techniques/common/shaders)
 foreach(technique IN LISTS GLINT_TECHNIQUES)

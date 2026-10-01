@@ -129,11 +129,11 @@ Same order as Phase 3. For each: write `vk.cpp` raw-ish, reuse `vk/` helpers onl
 
 ## Phase 6 — Bring over Glint_vk-only samples (give them GL twins)
 
-- [ ] 09_dynamic_uniform_buffer ← VK:`samples/dynamic_uniform_buffer.*` | GL twin: `glBindBufferRange` with UBO offset alignment
+- [x] 09_dynamic_uniform_buffer ← VK:`samples/dynamic_uniform_buffer.*` | GL twin: `glBindBufferRange` with UBO offset alignment
       (05's VK path already uses `UNIFORM_BUFFER_DYNAMIC` for its two draws — 09 generalises it to many objects)
-- [ ] 10_specialization_constants ← VK:`samples/specialization_constants.*` | GL twin: `#define` injection at compile time (+ ARB_gl_spirv specialization in Phase 8)
+- [x] 10_specialization_constants ← VK:`samples/specialization_constants.*` | GL twin: `#define` injection at compile time (+ ARB_gl_spirv specialization in Phase 8)
 - [ ] 11_gltf ← VK:`vks/vk_gltf_model.*` (Sascha Willems) — rewrite loader into `core/assets` (tinygltf → `MeshData` + materials), then both backends render it
-- [ ] Retire Glint_vk's `vks/VulkanDevice.*` — not needed once `vk/context` exists
+- [x] Retire Glint_vk's `vks/VulkanDevice.*` — not needed once `vk/context` exists (nothing ported; `vk/context` covers it)
 
 **Done when:** everything valuable from both old repos exists in glint. Old repos can be archived.
 
@@ -234,4 +234,6 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | vk helpers after 03: descriptors (layout/pool/sets/writes, pipeline layout), `beginRendering`, `transitionDepthForRendering` | Written raw in 02–03 |
 | 2026-09-30 | Barriers before shader reads use `VK_ACCESS_2_SHADER_READ_BIT` | Sync validation reports RAW with `SHADER_SAMPLED_READ` only (07) |
 | 2026-09-30 | Flipped viewport everywhere, incl. offscreen passes; readers flip v / negate y in the shadow matrix | One convention; the row-order difference is documented where it matters (07, 08) |
+| 2026-09-30 | 10 built from Sascha Willems' uber shader (Glint_vk had the shaders, not the code) | Glint_vk's "specialization_constants" sample was a copy of the dynamic UBO sample |
+| 2026-09-30 | ImGui calls only in `update()`/`ui()`, never in `render()`/`record()` | VK records after `ImGui::Render()`; drawing there crashed (10) |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |

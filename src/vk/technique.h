@@ -35,13 +35,15 @@ class Technique {
   // Where the camera starts (and "Reset view" returns to). Same as the GL side.
   virtual void setupCamera(Camera& camera) { camera.setHome({4.0f, 3.0f, -3.0f}); }
 
-  // Animation, input, per-frame buffer updates. No command recording here.
+  // Animation, input, per-frame buffer updates, ImGui overlay drawing. No command recording here.
   virtual void update(float dt, Frame& frame) {
     (void)dt;
     (void)frame;
   }
 
   // Record this frame's commands: vkCmdBeginRendering on info.targetView ... vkCmdEndRendering.
+  // Runs *after* ImGui::Render() (the UI is built first, then everything is recorded), so no ImGui calls
+  // here — put them in update() or ui(). (GL's render() happens to run before the UI; don't rely on it.)
   virtual void record(VkCommandBuffer cmd, const FrameInfo& info) = 0;
 
   virtual void ui() {}

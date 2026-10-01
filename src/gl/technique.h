@@ -21,7 +21,8 @@ class Technique {
   // Where the camera starts (and "Reset view" returns to) for this technique. Default: Camera's default.
   virtual void setupCamera(Camera& camera) { camera.setHome({4.0f, 3.0f, -3.0f}); }
 
-  // Animation, input, shader hot reload. No GL draw calls here.
+  // Animation, input, shader hot reload, ImGui overlay drawing. No GL draw calls here.
+  // (Keep ImGui calls here or in ui(), never in render(): the VK app records after ImGui::Render().)
   virtual void update(float dt, Frame& frame) {
     (void)dt;
     (void)frame;

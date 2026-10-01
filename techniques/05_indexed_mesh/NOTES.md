@@ -14,8 +14,8 @@ just a field in the uniform block.
 
 ## VK path
 - **A dynamic uniform buffer.** There's one buffer per frame slot holding *both* draws' blocks, each at a
-  stride of `sizeof(Uniforms)` rounded up to `minUniformBufferOffsetAlignment` (16 on RADV; 64 or 256 on
-  other GPUs). The descriptor is `UNIFORM_BUFFER_DYNAMIC` with range = one block. Each draw passes its
+  stride of `sizeof(Uniforms)` rounded up to `minUniformBufferOffsetAlignment` (4 on RADV here; 64 or 256 on
+  other GPUs, e.g. NVIDIA). The descriptor is `UNIFORM_BUFFER_DYNAMIC` with range = one block. Each draw passes its
   own offset to `vkCmdBindDescriptorSets`. Both blocks are written *before* the command buffer runs, and the
   shader is unchanged.
 - **Transparency is a second pipeline** that differs only in `alphaBlend = true`.

@@ -12,7 +12,8 @@ VkPipeline createGraphicsPipeline(VkDevice device, const GraphicsPipelineDesc& d
                           loadShaderModule(device, desc.vertexShader), "main"};
   if (!desc.fragmentShader.empty()) {
     stages[stageCount++] = {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
-                            VK_SHADER_STAGE_FRAGMENT_BIT, loadShaderModule(device, desc.fragmentShader), "main"};
+                            VK_SHADER_STAGE_FRAGMENT_BIT, loadShaderModule(device, desc.fragmentShader), "main",
+                            desc.fragmentSpecialization};
   }
 
   VkPipelineVertexInputStateCreateInfo vertexInput{VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};

@@ -52,3 +52,6 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Updating in-use buffers | Allowed; driver copies/renames | Race: one buffer per frame in flight | 04 |
 | Per-draw data | Update the UBO between draws | Dynamic UBO: one buffer, `UNIFORM_BUFFER_DYNAMIC`, per-draw offset aligned to `minUniformBufferOffsetAlignment` (or push constants) | 05 |
 | Blending | `glEnable(GL_BLEND)` any time | Pipeline state → a second pipeline | 05 |
+| Offset alignment for per-object UBO slices | `GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT` (+ `glBindBufferRange`) | `minUniformBufferOffsetAlignment` (+ dynamic offsets) — 4 on this AMD, 256 on NVIDIA | 09 |
+| Shader variants | `#define`s injected into GLSL, recompile per variant | Specialization constants (`constant_id`) on one SPIR-V, per pipeline | 10 |
+| Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |
