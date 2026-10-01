@@ -356,6 +356,8 @@ void runApp(const Config& config) {
       technique.reset();
       current = *picked;
       technique = createTechnique(current, ctx, swapchain.format, camera);
+      // Don't count the new technique's load time (seconds for 11_gltf) as a frame in its summary.
+      frameTimer.reset();
     }
     if (lastFrame) window.requestClose();
     frameInFlight = (frameInFlight + 1) % vk::kFramesInFlight;

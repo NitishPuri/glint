@@ -176,6 +176,8 @@ int run(const Config& config) {
       technique.reset();  // destroy the old technique's GL objects first
       current = *picked;
       technique = createTechnique(current, camera);
+      // Don't count the new technique's load time (seconds for 11_gltf) as a frame in its summary.
+      frameTimer.reset();
     }
     if (lastFrame) window.requestClose();
   }

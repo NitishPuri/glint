@@ -239,4 +239,5 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-10-02 | tinygltf **2.9.7** (not 3.x) | v3 is a new C API; 2.9 is the C++ API Sascha Willems' loader (and Glint_vk's `vks/`) uses |
 | 2026-10-02 | Large sample models downloaded at configure time (SHA256-pinned) into gitignored `assets/gltf/` | Keeps the repo small; `-DGLINT_DOWNLOAD_ASSETS=OFF` to skip |
 | 2026-10-02 | `core/gltf` decodes only images referenced by materials | FlightHelmet's unused ORM maps would cost ~80 MB RAM |
+| 2026-10-02 | Frame timer reset after a technique switch | Load time (5.8 s for 11 on VK) was counted as one frame and inflated that technique's mean frame time by ~2 ms |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |
