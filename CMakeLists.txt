@@ -117,7 +117,8 @@ set(GLINT_TECHNIQUES
   08_shadow_mapping
   09_dynamic_uniform_buffer
   10_specialization_constants
-  11_gltf)
+  11_gltf
+  12_hdr_tonemapping)
 # Shaders shared by several techniques (standard shading in 04, 05, 07).
 glint_compile_shaders(glint_vk ${PROJECT_SOURCE_DIR}/techniques/common/shaders)
 foreach(technique IN LISTS GLINT_TECHNIQUES)

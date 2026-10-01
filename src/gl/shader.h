@@ -8,8 +8,10 @@
 //   program.set(0, mvp);                         // explicit-location uniform (glProgramUniform*, DSA)
 //
 // Paths are relative to GLINT_SHADER_DIR (the techniques/ folder in the source tree), and the stage comes
-// from the extension (.vert/.frag/.comp). The first build throws on errors; a failed *reload* logs the
-// error and keeps the last good program, so a typo while editing doesn't kill the app.
+// from the extension (.vert/.frag/.comp). `#include "file"` is resolved here (GL's compiler has no include
+// support; glslc does it for VK): relative to the including file, then techniques/common/shaders. That is
+// how shared GL/VK shaders pull in common/shaders/glint.glsl. The first build throws on errors; a failed
+// *reload* logs the error and keeps the last good program, so a typo while editing doesn't kill the app.
 // VK has no runtime GLSL compiler: its shaders are SPIR-V built by glslc, and a "reload" means rebuilding
 // the whole pipeline object.
 
@@ -71,12 +73,14 @@ class Program {
   void swap(Program& other) noexcept {
     std::swap(m_id, other.m_id);
     std::swap(m_stages, other.m_stages);
+    std::swap(m_includes, other.m_includes);
     std::swap(m_defines, other.m_defines);
     std::swap(m_checkTimer, other.m_checkTimer);
   }
 
   GLuint m_id = 0;
   std::vector<Stage> m_stages;
+  std::vector<Stage> m_includes;  // files pulled in by #include, also watched for hot reload
   std::string m_defines;
   Timer m_checkTimer;
 };

@@ -1,4 +1,5 @@
 #version 460
+#include "glint.glsl"
 
 // Standard shading, vertex stage. Lighting vectors are computed in camera space, where the eye is at 0.
 
@@ -6,9 +7,8 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inUv;
 
-// Same block as shading.gl.vert; GL finds it at binding point 0, VK at set 0 / binding 0 of the bound
-// descriptor set. (std140 is the default layout for uniform blocks in VK GLSL; spelled out for symmetry.)
-layout(std140, set = 0, binding = 0) uniform Shading {
+// Shared by GL and VK (see glint.glsl). The uniform block: GL binding point 0 / VK set 0, binding 0.
+UBO(0, 0) Shading {
   mat4 mvp;
   mat4 view;
   mat4 model;

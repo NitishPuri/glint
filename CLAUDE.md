@@ -70,6 +70,9 @@ cmake --build build/debug
   (generated once, committed).
 - Shaders: GLSL `#version 460`. GL loads `.glsl` text at runtime (hot-reloadable). VK shaders are
   compiled to SPIR-V by `glslc` at build time into `build/<cfg>/shaders/`.
+- From 12 on, shaders are **shared**: one `name.{vert,frag,comp}` for both APIs, `#include "glint.glsl"` for the
+  `UBO/SAMPLER/IMAGE/PUSH_CONSTANTS/VERTEX_ID` macros, `#ifdef VULKAN` for real API differences. `*.gl.*` / `*.vk.*`
+  files remain for techniques 01–11 (their per-API GLSL is part of the lesson).
 - Large sample assets (glTF models) are downloaded at configure time into gitignored `assets/gltf/`
   (`cmake/assets.cmake`, SHA256-pinned); `-DGLINT_DOWNLOAD_ASSETS=OFF` skips that.
 - Windows should keep working (MSVC + `find_package(Vulkan)`), but Linux is what's tested.

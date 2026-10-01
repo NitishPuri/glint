@@ -17,7 +17,7 @@ namespace glint::basic_shading {
 class BasicShadingGL final : public gl::Technique {
  public:
   void init() override {
-    m_program = gl::Program({"common/shaders/shading.gl.vert", "common/shaders/shading.gl.frag"});
+    m_program = gl::Program({"common/shaders/shading.vert", "common/shaders/shading.frag"});
     const MeshData suzanne = loadObj(assetPath("suzanne.obj"));  // flat: 2904 vertices, 968 triangles
     m_vertexCount = GLsizei(suzanne.vertexCount());
     m_mesh = gl::Mesh(suzanne, "suzanne");
@@ -53,14 +53,14 @@ class BasicShadingGL final : public gl::Technique {
     // Uniform buffer to binding point 0 (the `binding = 0` in the shader); texture + sampler to unit 0.
     // VK: both become entries of one descriptor set, bound with vkCmdBindDescriptorSets.
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_uniforms.id());
-    m_texture.bind(0);
-    m_sampler.bind(0);
+    m_texture.bind(1);  // unit 1: the shared shader's SAMPLER(0, 1) (VK: set 0, binding 1)
+    m_sampler.bind(1);
 
     // Non-indexed: glDrawArrays walks the vertex buffers in order, 3 vertices per triangle.
     m_mesh.vertexArray().bind();
     glDrawArrays(GL_TRIANGLES, 0, m_vertexCount);
 
-    glBindSampler(0, 0);
+    glBindSampler(1, 0);
   }
 
   void ui() override {

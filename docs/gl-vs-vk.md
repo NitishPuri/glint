@@ -60,4 +60,9 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Shader variants | `#define`s injected into GLSL, recompile per variant | Specialization constants (`constant_id`) on one SPIR-V, per pipeline | 10 |
 | Binding by update frequency | UBO binding point / texture units / loose uniforms — no grouping | Set 0 per frame, set 1 per material, push constants per draw | 11 |
 | `discard` | Just works | SPIR-V `OpDemoteToHelperInvocation` → enable `shaderDemoteToHelperInvocation` (1.3 feature) | 11 |
+| One shader source | Text + `#include` resolved by the app; no `VULKAN` macro | glslc (`-I`, predefines `VULKAN`); `#ifdef VULKAN` for per-API syntax | 12 |
+| sRGB textures | `GL_SRGB8_ALPHA8`: hardware decodes on sample | `VK_FORMAT_R8G8B8A8_SRGB` (same) | 12 |
+| sRGB output | `glEnable(GL_FRAMEBUFFER_SRGB)` on an sRGB-capable framebuffer | `_SRGB` swapchain format (or a mutable-format view) | 12 |
+| Float render target | `GL_RGBA16F` texture in an FBO | `R16G16B16A16_SFLOAT` image as attachment, barrier, then sampled | 12 |
+| Push constants | None — emulate with a small UBO rewritten per draw | `vkCmdPushConstants`, ≥128 bytes | 12 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

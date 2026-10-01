@@ -18,7 +18,7 @@ namespace glint::render_to_texture {
 class RenderToTextureGL final : public gl::Technique {
  public:
   void init() override {
-    m_sceneProgram = gl::Program({"common/shaders/shading.gl.vert", "common/shaders/shading.gl.frag"});
+    m_sceneProgram = gl::Program({"common/shaders/shading.vert", "common/shaders/shading.frag"});
     m_postProgram =
         gl::Program({"07_render_to_texture/shaders/fullscreen.gl.vert", "07_render_to_texture/shaders/post.gl.frag"});
     MeshData suzanne = loadObj(assetPath("suzanne.obj"));
@@ -67,8 +67,8 @@ class RenderToTextureGL final : public gl::Technique {
 
     m_sceneProgram.use();
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_sceneUniforms.id());
-    m_texture.bind(0);
-    m_meshSampler.bind(0);
+    m_texture.bind(1);  // unit 1: the shared shader's SAMPLER(0, 1) (VK: set 0, binding 1)
+    m_meshSampler.bind(1);
     m_mesh.draw();
 
     // --- pass 2: offscreen textures -> screen ------------------------------------------------------------

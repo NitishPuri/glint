@@ -17,7 +17,7 @@ namespace glint::indexed_mesh {
 class IndexedMeshGL final : public gl::Technique {
  public:
   void init() override {
-    m_program = gl::Program({"common/shaders/shading.gl.vert", "common/shaders/shading.gl.frag"});
+    m_program = gl::Program({"common/shaders/shading.vert", "common/shaders/shading.frag"});
     MeshData suzanne = loadObj(assetPath("suzanne.obj"));
     m_flatVertexCount = suzanne.vertexCount();
     indexMesh(suzanne);  // 2904 -> 590 vertices; 2904 indices
@@ -54,8 +54,8 @@ class IndexedMeshGL final : public gl::Technique {
 
     m_program.use();
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_uniforms.id());
-    m_texture.bind(0);
-    m_sampler.bind(0);
+    m_texture.bind(1);  // unit 1: the shared shader's SAMPLER(0, 1) (VK: set 0, binding 1)
+    m_sampler.bind(1);
 
     for (int instance = 0; instance < 2; ++instance) {
       const shading::Uniforms u = shading::makeUniforms(m_projection, m_view, model(instance), m_params.light,
@@ -69,7 +69,7 @@ class IndexedMeshGL final : public gl::Technique {
     }
 
     glDisable(GL_BLEND);
-    glBindSampler(0, 0);
+    glBindSampler(1, 0);
   }
 
   void ui() override {

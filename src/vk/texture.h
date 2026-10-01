@@ -12,9 +12,11 @@
 
 namespace glint::vk {
 
-// RGBA8 UNORM image in SHADER_READ_ONLY_OPTIMAL layout, with a full mip chain if `mipmaps`.
+// RGBA8 image in SHADER_READ_ONLY_OPTIMAL layout, with a full mip chain if `mipmaps`. `srgb`:
+// VK_FORMAT_R8G8B8A8_SRGB, so sampling decodes sRGB -> linear (and the mip blits filter in linear space).
 // Blocks until the upload is done.
-Image createTexture(const Context& ctx, const ImageData& image, bool mipmaps = true, std::string_view name = {});
+Image createTexture(const Context& ctx, const ImageData& image, bool mipmaps = true, std::string_view name = {},
+                    bool srgb = false);
 
 struct SamplerDesc {
   VkFilter filter = VK_FILTER_LINEAR;

@@ -1,4 +1,5 @@
 #version 460
+#include "glint.glsl"
 
 // Standard shading, fragment stage: ambient + diffuse (1/d^2 falloff) + specular (cos^5 of reflection angle).
 
@@ -8,7 +9,7 @@ layout(location = 2) in vec3 vNormalCamera;
 layout(location = 3) in vec3 vEyeDirCamera;
 layout(location = 4) in vec3 vLightDirCamera;
 
-layout(std140, set = 0, binding = 0) uniform Shading {
+UBO(0, 0) Shading {
   mat4 mvp;
   mat4 view;
   mat4 model;
@@ -17,8 +18,8 @@ layout(std140, set = 0, binding = 0) uniform Shading {
   vec4 material;
 } u;
 
-// GL: texture unit 0. VK: a combined image sampler at binding 1 of the same set.
-layout(set = 0, binding = 1) uniform sampler2D uDiffuse;
+// GL: texture unit 1 / VK: set 0, binding 1 (a combined image sampler).
+SAMPLER(0, 1) sampler2D uDiffuse;
 
 layout(location = 0) out vec4 outColor;
 

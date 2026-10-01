@@ -168,8 +168,8 @@ Reading: `GGn chN` = GPU Gems volume/chapter (online text linked); local CD code
 
 Baseline every later effect assumes: one shader source for both APIs, linear lighting in HDR, tone mapping, then the first multi-pass post effect.
 
-- [ ] **Shared shaders** — new API: one GLSL source per stage, `#ifdef VULKAN` binding macro; new idea: shader variants from one source
-- [ ] **12_hdr_tonemapping** — new API: float (RGBA16F) + sRGB formats; GL `GL_FRAMEBUFFER_SRGB` vs VK `_SRGB` swapchain; new idea: linear lighting, exposure, tone mapping
+- [x] **Shared shaders** — new API: one GLSL source per stage, `#ifdef VULKAN` binding macro; new idea: shader variants from one source
+- [x] **12_hdr_tonemapping** — new API: float (RGBA16F) + sRGB formats; GL `GL_FRAMEBUFFER_SRGB` vs VK `_SRGB` swapchain; new idea: linear lighting, exposure, tone mapping
       - Read: [GG3 ch24 The Importance of Being Linear](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-24-importance-being-linear) — the whole chapter: why gamma-space lighting is wrong, sRGB textures and framebuffers; local: —
 - [ ] **13_bloom** — new API: rendering into individual mip levels; long chains of passes and barriers; new idea: glow, color grading LUTs
       - Read: [GG1 ch21 Real-Time Glow](https://developer.nvidia.com/gpugems/gpugems/part-iv-image-processing/chapter-21-real-time-glow) — the glow pipeline (bright pass, separable blur, composite); local: —

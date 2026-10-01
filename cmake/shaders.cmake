@@ -3,7 +3,9 @@
 #
 #   glint_compile_shaders(<target> <dir>)
 #
-# Compiles every <dir>/*.vk.{vert,frag,comp} to ${CMAKE_BINARY_DIR}/shaders/<technique>/<name>.<stage>.spv,
+# Compiles every <dir>/*.vk.{vert,frag,comp} *and* every shared <dir>/*.{vert,frag,comp} (no .gl./.vk. in the
+# name: one source for both APIs, see techniques/common/shaders/glint.glsl) to
+# ${CMAKE_BINARY_DIR}/shaders/<technique>/<name>.<stage>.spv,
 # where <technique> is the directory above <dir> (techniques/08_shadow_mapping/shaders -> 08_shadow_mapping),
 # and makes <target> depend on them. Debug builds keep debug info (-g) so RenderDoc can show GLSL source.
 
@@ -17,7 +19,8 @@ function(glint_compile_shaders target dir)
   get_filename_component(technique "${technique_dir}" NAME)
   set(out_dir "${CMAKE_BINARY_DIR}/shaders/${technique}")
 
-  file(GLOB sources CONFIGURE_DEPENDS "${dir}/*.vk.vert" "${dir}/*.vk.frag" "${dir}/*.vk.comp")
+  file(GLOB sources CONFIGURE_DEPENDS "${dir}/*.vert" "${dir}/*.frag" "${dir}/*.comp")
+  list(FILTER sources EXCLUDE REGEX "\\.gl\\.[a-z]+$")  # GL-only sources are loaded as text at runtime
 
   set(outputs "")
   foreach(src IN LISTS sources)
@@ -30,7 +33,9 @@ function(glint_compile_shaders target dir)
     add_custom_command(
       OUTPUT "${spv}"
       COMMAND ${CMAKE_COMMAND} -E make_directory "${out_dir}"
+      # glslc defines VULKAN itself; -I finds glint.glsl for shared shaders' #include.
       COMMAND ${Vulkan_GLSLC_EXECUTABLE} --target-env=vulkan1.3 -Werror $<$<CONFIG:Debug>:-g>
+              -I ${PROJECT_SOURCE_DIR}/techniques/common/shaders
               -MD -MF "${dep}" -o "${spv}" "${src}"
       DEPENDS "${src}"
       DEPFILE "${dep}"  # tracks #include'd files

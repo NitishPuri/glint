@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "core/log.h"
 #include "vk/buffer.h"
 #include "vk/debug.h"
 #include "vk/upload.h"
@@ -32,8 +33,8 @@ void transitionMips(VkCommandBuffer cmd, VkImage image, uint32_t baseMip, uint32
 
 }  // namespace
 
-Image createTexture(const Context& ctx, const ImageData& image, bool mipmaps, std::string_view name) {
-  constexpr VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
+Image createTexture(const Context& ctx, const ImageData& image, bool mipmaps, std::string_view name, bool srgb) {
+  const VkFormat format = srgb ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
   const VkExtent2D extent{uint32_t(image.width), uint32_t(image.height)};
   uint32_t levels = 1;
   if (mipmaps) {
@@ -41,7 +42,7 @@ Image createTexture(const Context& ctx, const ImageData& image, bool mipmaps, st
     VkFormatProperties props;
     vkGetPhysicalDeviceFormatProperties(ctx.physicalDevice, format, &props);
     if (!(props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-      throw std::runtime_error("RGBA8 doesn't support linear blits");
+      throw std::runtime_error(fmt::format("{} doesn't support linear blits", string_VkFormat(format)));
     }
   }
 

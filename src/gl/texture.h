@@ -18,8 +18,9 @@ class Texture {
   Texture() = default;
   // Empty texture, e.g. a render target: GL_RGBA8, GL_DEPTH_COMPONENT32F, ...
   Texture(GLenum internalFormat, int width, int height, int levels = 1, std::string_view label = {});
-  // RGBA8 texture from an image, with a full mip chain if `mipmaps`.
-  explicit Texture(const ImageData& image, bool mipmaps = true, std::string_view label = {});
+  // RGBA8 texture from an image, with a full mip chain if `mipmaps`. `srgb`: GL_SRGB8_ALPHA8, so sampling
+  // decodes sRGB -> linear in hardware (color textures; not normal maps or data). VK: VK_FORMAT_R8G8B8A8_SRGB.
+  explicit Texture(const ImageData& image, bool mipmaps = true, std::string_view label = {}, bool srgb = false);
 
   ~Texture() { glDeleteTextures(1, &m_id); }
   Texture(Texture&& other) noexcept { swap(other); }
