@@ -65,4 +65,9 @@ Grown as techniques land. Each row should link to the technique where it first m
 | sRGB output | `glEnable(GL_FRAMEBUFFER_SRGB)` on an sRGB-capable framebuffer | `_SRGB` swapchain format (or a mutable-format view) | 12 |
 | Float render target | `GL_RGBA16F` texture in an FBO | `R16G16B16A16_SFLOAT` image as attachment, barrier, then sampled | 12 |
 | Push constants | None — emulate with a small UBO rewritten per draw | `vkCmdPushConstants`, ≥128 bytes | 12 |
+| Rendering into one mip level | `glTextureView` of that level (or `glNamedFramebufferTexture(..., level)`) | `VkImageView` with `baseMipLevel = i, levelCount = 1` | 13 |
+| Mip levels in different states | Nothing to track | Per-level layouts: barriers with a `subresourceRange` for the level being written/read | 13 |
+| Keeping attachment contents | Default: contents stay until `glClear` | Say so per pass: `loadOp = LOAD` (vs `CLEAR` / `DONT_CARE`) | 13 |
+| Updating a texture in use | `glTextureSubImage2D`; the driver protects in-flight frames | Staging per frame slot + `vkCmdCopyBufferToImage` + barriers inside the frame | 13 |
+| Format capabilities | Fixed required-renderable list (`R11F_G11F_B10F` is in it) | Query `vkGetPhysicalDeviceFormatProperties` (attachment, blend, linear filter) | 13 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

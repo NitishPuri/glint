@@ -1,5 +1,6 @@
 #version 460
 #include "glint.glsl"
+#include "color.glsl"  // linearToSrgb
 
 // HDR scene pass, fragment stage: everything in *linear* light, written unclamped to an RGBA16F target.
 
@@ -25,10 +26,6 @@ PUSH_CONSTANTS Draw {
 SAMPLER(0, 1) sampler2D uAlbedo;
 
 layout(location = 0) out vec4 outColor;
-
-vec3 linearToSrgb(vec3 c) {
-  return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
-}
 
 void main() {
   if (draw.emissive.a > 0.0) {  // light marker: just its (HDR) color

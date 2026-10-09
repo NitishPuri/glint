@@ -171,7 +171,7 @@ Baseline every later effect assumes: one shader source for both APIs, linear lig
 - [x] **Shared shaders** — new API: one GLSL source per stage, `#ifdef VULKAN` binding macro; new idea: shader variants from one source
 - [x] **12_hdr_tonemapping** — new API: float (RGBA16F) + sRGB formats; GL `GL_FRAMEBUFFER_SRGB` vs VK `_SRGB` swapchain; new idea: linear lighting, exposure, tone mapping
       - Read: [GG3 ch24 The Importance of Being Linear](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-24-importance-being-linear) — the whole chapter: why gamma-space lighting is wrong, sRGB textures and framebuffers; local: —
-- [ ] **13_bloom** — new API: rendering into individual mip levels; long chains of passes and barriers; new idea: glow, color grading LUTs
+- [x] **13_bloom** — new API: rendering into individual mip levels; long chains of passes and barriers; new idea: glow, color grading LUTs
       - Read: [GG1 ch21 Real-Time Glow](https://developer.nvidia.com/gpugems/gpugems/part-iv-image-processing/chapter-21-real-time-glow) — the glow pipeline (bright pass, separable blur, composite); local: —
       - Read: [GG1 ch22 Color Controls](https://developer.nvidia.com/gpugems/gpugems/part-iv-image-processing/chapter-22-color-controls) — color controls: the operations a grading LUT bakes in; local: `GPU-Gems-1-CD-Content/Image_Processing/Color_Controls` — readme only
       - Read: [GG2 ch24 Using Lookup Tables to Accelerate Color Transformations](https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-24-using-lookup-tables-accelerate-color) — 3D lookup tables for color transforms; local: —

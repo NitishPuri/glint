@@ -30,7 +30,7 @@ class HdrGL final : public gl::Technique {
   void init() override {
     m_sceneProgram = gl::Program({"12_hdr_tonemapping/shaders/scene.vert", "12_hdr_tonemapping/shaders/scene.frag"});
     m_tonemapProgram =
-        gl::Program({"12_hdr_tonemapping/shaders/fullscreen.vert", "12_hdr_tonemapping/shaders/tonemap.frag"});
+        gl::Program({"common/shaders/fullscreen.vert", "12_hdr_tonemapping/shaders/tonemap.frag"});
     MeshData room = loadObj(assetPath("room/room_thickwalls.obj"));
     indexMesh(room);
     m_room = gl::Mesh(room, "room");

@@ -25,7 +25,8 @@ struct GraphicsPipelineDesc {
   bool depthTest = true;
   bool depthWrite = true;
   VkCompareOp depthCompare = VK_COMPARE_OP_LESS;
-  bool alphaBlend = false;  // src * a + dst * (1 - a)
+  bool alphaBlend = false;     // src * a + dst * (1 - a)
+  bool additiveBlend = false;  // src + dst (13_bloom's upsample accumulation)
   bool depthBias = false;   // enable depth bias; values set per frame with vkCmdSetDepthBias
   // Values for the fragment shader's `layout(constant_id = N) const ...`, fixed at pipeline creation
   // (10_specialization_constants). GL's equivalent: #defines injected before compiling.

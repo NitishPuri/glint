@@ -78,7 +78,7 @@ class HdrVK final : public vk::Technique {
     m_scenePipeline = vk::createGraphicsPipeline(device, scene);
 
     vk::GraphicsPipelineDesc tonemap;
-    tonemap.vertexShader = "12_hdr_tonemapping/fullscreen.vert.spv";
+    tonemap.vertexShader = "common/fullscreen.vert.spv";
     tonemap.fragmentShader = "12_hdr_tonemapping/tonemap.frag.spv";
     tonemap.layout = m_tonemapLayout;
     tonemap.colorFormat = swapchainFormat;

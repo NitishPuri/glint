@@ -12,16 +12,18 @@ namespace glint::vk {
 struct RenderTarget {
   VkImageView color = VK_NULL_HANDLE;  // null: no color attachment (depth-only pass)
   glm::vec4 clearColor{0.1f, 0.1f, 0.1f, 1.0f};
+  bool loadColor = false;              // true: keep the existing contents (LOAD_OP_LOAD) instead of clearing
   VkImageView depth = VK_NULL_HANDLE;  // null: no depth attachment
   bool storeDepth = false;             // true if a later pass reads the depth (shadow map, depth view)
 };
 
-// Color in COLOR_ATTACHMENT_OPTIMAL, depth in DEPTH_ATTACHMENT_OPTIMAL; both cleared (depth to 1).
+// Color in COLOR_ATTACHMENT_OPTIMAL, depth in DEPTH_ATTACHMENT_OPTIMAL; both cleared (depth to 1) unless
+// loadColor.
 inline void beginRendering(VkCommandBuffer cmd, VkExtent2D extent, const RenderTarget& target) {
   VkRenderingAttachmentInfo color{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
   color.imageView = target.color;
   color.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  color.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  color.loadOp = target.loadColor ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
   color.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   color.clearValue.color = {{target.clearColor.r, target.clearColor.g, target.clearColor.b, target.clearColor.a}};
   VkRenderingAttachmentInfo depth{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
