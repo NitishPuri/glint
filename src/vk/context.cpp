@@ -69,7 +69,7 @@ bool hasDeviceExtension(VkPhysicalDevice gpu, const char* name) {
   return false;
 }
 
-// A queue family that can do graphics and present to our surface, or UINT32_MAX.
+// A queue family that can do graphics + compute and present to our surface, or UINT32_MAX.
 uint32_t findQueueFamily(VkPhysicalDevice gpu, VkSurfaceKHR surface) {
   uint32_t count = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(gpu, &count, nullptr);
@@ -78,7 +78,10 @@ uint32_t findQueueFamily(VkPhysicalDevice gpu, VkSurfaceKHR surface) {
   for (uint32_t i = 0; i < count; ++i) {
     VkBool32 present = VK_FALSE;
     vkGetPhysicalDeviceSurfaceSupportKHR(gpu, i, surface, &present);
-    if ((families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && present) return i;
+    // Graphics + compute on one queue (from 14 on, compute dispatches are recorded in the frame's command
+    // buffer). Every driver that has graphics has such a family; async compute would use a second queue.
+    constexpr VkQueueFlags needed = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+    if ((families[i].queueFlags & needed) == needed && present) return i;
   }
   return UINT32_MAX;
 }
@@ -123,7 +126,10 @@ Context::Context(const ContextDesc& desc) {
   if (desc.validation && !validation) {
     log::warn("VK_LAYER_KHRONOS_validation not found (source the Vulkan SDK's setup-env.sh); running without it");
   }
-  if (validation) layers.push_back("VK_LAYER_KHRONOS_validation");
+  if (validation) {
+    layers.push_back("VK_LAYER_KHRONOS_validation");
+    extensions.push_back(VK_EXT_LAYER_SETTINGS_EXTENSION_NAME);  // provided by the layer itself
+  }
 
   // Also check synchronisation (missing barriers, write-after-read races, ...): off by default in the layer,
   // and exactly the class of bug GL never lets you make.
@@ -131,9 +137,19 @@ Context::Context(const ContextDesc& desc) {
   VkValidationFeaturesEXT validationFeatures{VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT};
   validationFeatures.enabledValidationFeatureCount = 1;
   validationFeatures.pEnabledValidationFeatures = enabledFeatures;
+  // Shader accesses: without this setting, syncval does not see what a *shader* writes through a storage buffer
+  // or image descriptor, so a dispatch followed by a draw with no barrier at all passed silently (found in 14).
+  // With it, the layer reads the SPIR-V to learn which descriptors each shader reads/writes.
+  const VkBool32 enable = VK_TRUE;
+  const VkLayerSettingEXT setting{"VK_LAYER_KHRONOS_validation", "syncval_shader_accesses_heuristic",
+                                  VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &enable};
+  VkLayerSettingsCreateInfoEXT layerSettings{VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT};
+  layerSettings.settingCount = 1;
+  layerSettings.pSettings = &setting;
+  layerSettings.pNext = &validationFeatures;
   // Chained into instance creation, the messenger also reports problems in vkCreateInstance/vkDestroyInstance.
   VkDebugUtilsMessengerCreateInfoEXT messengerCreate = messengerInfo();
-  messengerCreate.pNext = &validationFeatures;
+  messengerCreate.pNext = &layerSettings;
 
   VkInstanceCreateInfo instanceInfo{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
   instanceInfo.pNext = validation ? &messengerCreate : nullptr;
@@ -150,7 +166,7 @@ Context::Context(const ContextDesc& desc) {
     auto create = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
         vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
     VK_CHECK(create(instance, &info, nullptr, &messenger));
-    log::info("validation: VK_LAYER_KHRONOS_validation + synchronization validation");
+    log::info("validation: VK_LAYER_KHRONOS_validation + synchronization validation (+ shader accesses)");
   }
 
   // --- surface -------------------------------------------------------------------------------------------

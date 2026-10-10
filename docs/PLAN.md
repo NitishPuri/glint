@@ -180,7 +180,7 @@ Baseline every later effect assumes: one shader source for both APIs, linear lig
 
 Compute shaders and the data-parallel building blocks every simulation and GPU-driven technique later needs.
 
-- [ ] **14_compute_particles** — new API: compute dispatch, SSBOs, compute -> vertex barriers (`glMemoryBarrier` vs `vkCmdPipelineBarrier2`); new idea: GPU simulation loop
+- [x] **14_compute_particles** — new API: compute dispatch, SSBOs, compute -> vertex barriers (`glMemoryBarrier` vs `vkCmdPipelineBarrier2`); new idea: GPU simulation loop
       - Read: [GG3 ch23 High-Speed, Off-Screen Particles](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles) — rendering many particles cheaply (off-screen, low-res) - for the drawing half; local: —
 - [ ] **15_prefix_sum** — new API: shared memory, subgroup operations, timing a compute pass; new idea: scan, stream compaction
       - Read: [GG3 ch39 Parallel Prefix Sum (Scan) with CUDA](https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda) — the work-efficient scan algorithm; ignore the CUDA syntax, the structure maps 1:1 to compute shaders; local: —

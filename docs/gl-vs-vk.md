@@ -70,4 +70,9 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Keeping attachment contents | Default: contents stay until `glClear` | Say so per pass: `loadOp = LOAD` (vs `CLEAR` / `DONT_CARE`) | 13 |
 | Updating a texture in use | `glTextureSubImage2D`; the driver protects in-flight frames | Staging per frame slot + `vkCmdCopyBufferToImage` + barriers inside the frame | 13 |
 | Format capabilities | Fixed required-renderable list (`R11F_G11F_B10F` is in it) | Query `vkGetPhysicalDeviceFormatProperties` (attachment, blend, linear filter) | 13 |
+| Compute pipeline | Program with one `GL_COMPUTE_SHADER` stage | `vkCreateComputePipelines`: one stage + layout; own bind point; dispatch outside rendering | 14 |
+| Storage buffers | `glBindBufferBase(GL_SHADER_STORAGE_BUFFER, n)`; any buffer, any role | `STORAGE_BUFFER` descriptor; `usage` must list every role (storage, vertex, ...) | 14 |
+| Compute → draw hazard | `glMemoryBarrier(bit for the *next use*)`, e.g. `GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT` | Buffer barrier `COMPUTE_SHADER/STORAGE_WRITE → VERTEX_ATTRIBUTE_INPUT/ATTRIBUTE_READ`, plus the cross-frame WAR one | 14 |
+| Point size | `gl_PointSize` only with `GL_PROGRAM_POINT_SIZE`, else `glPointSize` | `gl_PointSize` must be written; > 1 needs `largePoints` | 14 |
+| Primitive type | Argument of each draw call | Pipeline state (`topology`) | 14 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

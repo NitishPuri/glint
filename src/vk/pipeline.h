@@ -2,7 +2,7 @@
 
 // Graphics pipeline creation, as 01_triangle and 02_cube write it out raw. The desc lists only what
 // differs between our techniques; everything else is fixed and documented in pipeline.cpp:
-//   triangle list, fill, counter-clockwise front faces (with the flipped viewport, like GL),
+//   fill, counter-clockwise front faces (with the flipped viewport, like GL),
 //   1 sample, dynamic viewport + scissor + cull mode (+ depth bias if requested).
 //
 // It's a plain struct, not a builder: read the fields, read createGraphicsPipeline(), done.
@@ -19,6 +19,7 @@ struct GraphicsPipelineDesc {
   std::string vertexShader;    // relative to GLINT_SHADER_DIR, e.g. "02_cube/cube.vert.spv"
   std::string fragmentShader;  // empty: no fragment stage (depth-only pass)
   VertexInput vertexInput;     // empty: attribute-less draws (full-screen triangle from gl_VertexIndex)
+  VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;  // GL: the mode argument of each draw
   VkPipelineLayout layout = VK_NULL_HANDLE;
   VkFormat colorFormat = VK_FORMAT_UNDEFINED;  // UNDEFINED: no color attachment
   VkFormat depthFormat = VK_FORMAT_UNDEFINED;  // UNDEFINED: no depth attachment

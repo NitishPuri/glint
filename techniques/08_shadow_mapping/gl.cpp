@@ -94,8 +94,13 @@ class ShadowMappingGL final : public gl::Technique {
     m_shadowSampler.bind(1);
     m_mesh.draw();
 
+    // Leave no half-state behind: with the comparison sampler unbound but the depth texture still on unit 1
+    // and this program still current, the *next* draw (ImGui's) would see "depth texture + no compare mode +
+    // sampler2DShadow" — undefined behaviour that NVIDIA's driver reports and Mesa doesn't (found 2026-10-10).
     glBindSampler(0, 0);
     glBindSampler(1, 0);
+    glBindTextureUnit(1, 0);
+    glUseProgram(0);
   }
 
   void ui() override {

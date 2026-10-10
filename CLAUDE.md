@@ -45,9 +45,11 @@ read `NOTES.md`, and understand every line and every difference.
   Don't use other C++20 library features GCC 11 lacks (`std::format`, `<print>`, ranges `to`, `std::expected`).
 - GPUs:
   - AMD Radeon (Renoir iGPU): OpenGL 4.6 core (Mesa radeonsi), Vulkan 1.4 (RADV). **Primary target.**
-  - NVIDIA driver 580 is installed (hybrid laptop) but not exposed to Vulkan by default; use
-    `__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia` (GL) /
-    `__NV_PRIME_RENDER_OFFLOAD=1` (VK) to try it. Nice for comparing drivers, not required.
+  - NVIDIA RTX 3060 Laptop (driver 580). **Since 2026-10-10 the laptop is in `nvidia` graphics mode**
+    (`system76-power graphics`): GL *and* VK both run on the RTX by default (VK device scoring prefers
+    discrete). To run VK on RADV anyway: `VK_LOADER_DRIVERS_SELECT='*radeon*' ./glint_vk ...`. GL on the AMD
+    needs `hybrid` mode (+ reboot/re-login). Record which GPU a number came from (the log header says).
+    NVIDIA's GL driver reports undefined-behaviour warnings Mesa doesn't (found a real bug in 08).
   - llvmpipe (software Vulkan) is also listed — make sure device selection prefers discrete/integrated.
 - Vulkan: loader + headers 1.3.280 installed (`libvulkan-dev`). **Shader compiler and validation layers
   come from the LunarG SDK tarball** extracted into `~/vulkan-sdk` (no sudo; apt's versions are 1.3.204,

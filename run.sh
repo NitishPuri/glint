@@ -2,6 +2,7 @@
 # Run an app. Usage: ./run.sh <gl|vk> [technique] [-- extra args]
 #   ./run.sh vk 08_shadow_mapping
 # Set CFG=release to run the release build.
+# `export CFG=release` or `CFG=release ./run.sh ...` will work.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -18,6 +19,7 @@ if [[ -z "${VULKAN_SDK:-}" ]]; then
   [[ -n "$sdk_env" ]] && { set +u; source "$sdk_env" ""; set -u; }
 fi
 
+echo "Using $CFG backend" >&2
 exe="build/${CFG:-debug}/glint_$api"
 [[ -x "$exe" ]] || { echo "$exe not built — run ./build.sh first" >&2; exit 1; }
 exec "$exe" "$@"
