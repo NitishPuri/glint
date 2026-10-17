@@ -9,3 +9,6 @@ logs/
 assets/gltf/
 *.spv
 captures/
+
+# diagram tooling venv (tools/requirements.txt)
+tools/.venv/

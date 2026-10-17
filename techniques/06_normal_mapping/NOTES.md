@@ -5,6 +5,17 @@ Per-pixel normals from a tangent-space normal map, on the cylinder from opengl-t
 diffuse, normal and specular textures. The "normal map" checkbox switches to the flat interpolated normal
 for comparison.
 
+## Diagrams
+**Which space each vector lives in** (the vertex shader moves light and eye into tangent space, so the fragment
+shader can use the normal map's value directly):
+
+```mermaid
+flowchart LR
+    NM["normal map texel<br/>(tangent space, rgb·2−1)"] --> L["lighting<br/>(tangent space)"]
+    A["vertex: N, T (+w handedness)"] -->|"B = cross(N, T)·w"| TBN["TBN (camera space)"]
+    LC["light + eye dirs (camera space)"] -->|"× transpose(TBN)"| LT["light + eye dirs (tangent space)"] --> L
+```
+
 ## GL path
 - The mesh is `loadObj` → `indexMesh` (192 → 66 vertices) → `computeTangents`. Tangents are computed
   *after* indexing so that shared vertices average them.

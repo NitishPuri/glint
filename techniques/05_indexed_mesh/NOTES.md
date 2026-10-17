@@ -7,6 +7,16 @@ mesh is drawn **twice** with different model matrices and materials. Optional al
 you can see the draw order) replaces Glint_gl's separate `standard_shading_alpha.frag`: alpha is now
 just a field in the uniform block.
 
+## Diagrams
+```mermaid
+flowchart LR
+    O["suzanne.obj<br/>2904 corners"] -->|"indexMesh: merge identical vertices"| U["590 unique vertices<br/>+ 2904 indices"]
+    U --> VB["vertex buffer"] & IB["index buffer"]
+    VB & IB --> D1["draw 1: model A, material A"]
+    VB & IB --> D2["draw 2: model B, material B (+ alpha)"]
+    PD["per-draw uniforms<br/>GL: one UBO, overwritten between draws<br/>VK: one buffer, 2 aligned slices, dynamic offset per draw"] --> D1 & D2
+```
+
 ## GL path
 - `gl::Mesh` from the indexed `MeshData`, drawn with `glDrawElements`.
 - Two draws, and between them the same UBO is overwritten with `glNamedBufferSubData`.

@@ -7,6 +7,19 @@ so moving its slider **rebuilds that variant**, which is the price of "constant"
 `specializationconstants`. Glint_vk carried its shaders (`uber.vert/frag`), but its sample code never used
 them: its "specialization_constants" sample was a copy of the dynamic UBO one.
 
+## Diagrams
+```mermaid
+flowchart LR
+    subgraph GL
+        SRC["uber.gl.frag (text)"] -->|"#define LIGHTING_MODEL 0/1/2"| C1["compile ×3 at runtime"] --> P3["3 programs"]
+    end
+    subgraph VK
+        SRCV["uber.vk.frag"] -->|"glslc at build time"| SPV["1 SPIR-V module"]
+        SPV -->|"VkSpecializationInfo {model, desat} ×3"| PP["3 pipelines<br/>(driver folds constants, removes dead code)"]
+    end
+    UI["desaturation slider"] -.->|"GL: recompile program · VK: vkDeviceWaitIdle + rebuild pipeline"| P3 & PP
+```
+
 ## GL path
 - One GLSL source (`uber.gl.frag`) with `#if LIGHTING_MODEL == 0 / 1 / else` blocks.
 - `gl::Program` takes a `defines` string and inserts it after each stage's `#version` line, plus

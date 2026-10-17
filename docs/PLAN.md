@@ -307,6 +307,12 @@ One paragraph.
 - [GGn chN Title](online URL) — what to read it for; local CD: `GPU-Gems-n-CD-Content/...` (code/shaders/demo) or —
 - (other references: opengl-tutorial, Vulkan samples, papers)
 
+## Diagrams
+- A mermaid pass/data-flow graph: passes, the resources between them, and on each edge the GL vs VK sync
+  (`GL: nothing · VK: barrier X → Y`). Sequence diagrams for CPU/GPU interplay.
+- Figures where a picture beats words (curves, memory layouts, per-mip layouts, algorithm steps), *computed* by a
+  function in `tools/diagrams.py` into `techniques/<NN_name>/diagrams/*.svg`, embedded with `![...](diagrams/x.svg)`.
+
 ## GL path
 Objects created, per-frame calls, implicit state/sync the driver handles.
 

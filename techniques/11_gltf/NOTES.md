@@ -14,6 +14,22 @@ The lesson is **binding frequency**: how often each piece of data changes, and w
 | base color + normal texture | per material | texture units 0–1, rebound when the material changes | descriptor **set 1**, one per material, written once at load |
 | model matrix, color factor, alpha cutoff | per draw | 3 uniforms (`glProgramUniform*`) | **push constants**, 96 bytes (VK guarantees 128) |
 
+## Diagrams
+```mermaid
+flowchart LR
+    G["FlightHelmet.gltf + .bin + PNGs"] -->|"core/gltf (tinygltf)"| M["ModelData (CPU):<br/>primitives, materials, images, flattened draws"]
+    M --> GLU["GL upload: buffers, textures"] & VKU["VK upload: buffers, images, 1 descriptor set per material"]
+```
+
+**Binding frequency** — where each piece of data goes, by how often it changes:
+
+```mermaid
+flowchart TB
+    F["per frame: camera, light"] -->|"GL: UBO binding 0 · VK: set 0 (per frame slot)"| DRAW
+    MAT["per material: base color + normal texture"] -->|"GL: units 0–1, rebound on change · VK: set 1, written at load"| DRAW
+    PD["per draw: model matrix, color factor, alpha cutoff"] -->|"GL: glProgramUniform* · VK: push constants (96 B)"| DRAW["draw primitive"]
+```
+
 ## GL path
 - One `gl::Mesh` per primitive and one `gl::Texture` (with mips) per *used* image, plus 1×1 white and
   flat-normal stand-ins for missing textures.

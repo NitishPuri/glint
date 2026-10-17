@@ -6,6 +6,40 @@ attributes, an index buffer, and one indexed draw per frame, spun by a per-frame
 checkbox draws a second index range from the same buffer. It absorbs Glint_gl's `QuadScene`. Unlike the
 original, the transform corrects for the window's aspect ratio, so the quad stays square.
 
+## Diagrams
+**What GL does inside `glfwSwapBuffers`, and VK spells out** (one frame, `app_vk/main.cpp`):
+
+```mermaid
+sequenceDiagram
+    participant CPU
+    participant Q as GPU queue
+    participant SC as Swapchain
+    CPU->>CPU: vkWaitForFences(inFlight[slot])
+    CPU->>SC: vkAcquireNextImageKHR
+    SC-->>CPU: image i, signals imageAcquired[slot]
+    CPU->>CPU: vkResetFences + record: barrier UNDEFINED→COLOR_ATTACHMENT, draw, barrier →PRESENT_SRC
+    CPU->>Q: vkQueueSubmit2 (wait imageAcquired @ COLOR_ATTACHMENT_OUTPUT, signal renderDone[i] + inFlight[slot])
+    CPU->>SC: vkQueuePresentKHR (wait renderDone[i])
+    Note over CPU,SC: GL: glDrawElements(...) + glfwSwapBuffers()
+```
+
+**Objects created once** (GL creates the left column implicitly with the window):
+
+```mermaid
+flowchart LR
+    subgraph VK["VK: explicit, in vk::Context / Swapchain / technique"]
+        I[VkInstance] --> S[VkSurfaceKHR] --> PD[VkPhysicalDevice] --> D["VkDevice + VkQueue"]
+        D --> SW["VkSwapchainKHR + image views"]
+        D --> SM["VkShaderModule ×2 (SPIR-V)"] --> P[VkPipeline]
+        D --> PL[VkPipelineLayout] --> P
+        D --> B["VkBuffer + VkDeviceMemory ×2"]
+    end
+    subgraph GL["GL: what you create"]
+        PR["program (vert + frag, compiled at runtime)"]
+        VBO["VBO + EBO"] --> VAO["VAO (attribute layout)"]
+    end
+```
+
 ## GL path
 Written **raw**: no helpers, every GL call is in `gl.cpp`.
 - `init()`:
