@@ -37,6 +37,11 @@ struct GraphicsPipelineDesc {
 
 VkPipeline createGraphicsPipeline(VkDevice device, const GraphicsPipelineDesc& desc);
 
+// Compute pipeline: one shader + a layout, as 14_compute_particles writes it out raw. `specialization`: values for
+// the shader's `layout(constant_id = N)` constants (may be null).
+VkPipeline createComputePipeline(VkDevice device, const std::string& shader, VkPipelineLayout layout,
+                                 const std::string& name, const VkSpecializationInfo* specialization = nullptr);
+
 // Viewport covering `extent` with negative height (origin at the bottom edge), so +Y is up like GL; plus a
 // matching scissor. (01/02 spell this out.)
 void setFlippedViewport(VkCommandBuffer cmd, VkExtent2D extent);

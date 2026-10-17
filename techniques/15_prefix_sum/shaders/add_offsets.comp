@@ -1,0 +1,14 @@
+#version 460
+#include "glint.glsl"
+#include "common.glsl"
+
+// After the level above has been scanned, its value for block j is the sum of all blocks before j: add it to
+// every element of block j. One invocation per element.
+
+layout(local_size_x = 256) in;
+
+void main() {
+  uint i = gl_GlobalInvocationID.x;
+  if (i >= pc.counts.x) return;
+  data[pc.counts.y + i] += data[pc.counts.z + i / 512u];
+}

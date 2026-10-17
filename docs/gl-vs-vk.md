@@ -75,4 +75,9 @@ Grown as techniques land. Each row should link to the technique where it first m
 | Compute → draw hazard | `glMemoryBarrier(bit for the *next use*)`, e.g. `GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT` | Buffer barrier `COMPUTE_SHADER/STORAGE_WRITE → VERTEX_ATTRIBUTE_INPUT/ATTRIBUTE_READ`, plus the cross-frame WAR one | 14 |
 | Point size | `gl_PointSize` only with `GL_PROGRAM_POINT_SIZE`, else `glPointSize` | `gl_PointSize` must be written; > 1 needs `largePoints` | 14 |
 | Primitive type | Argument of each draw call | Pipeline state (`topology`) | 14 |
+| Subgroup operations | Extension `GL_KHR_shader_subgroup`; size/stages/features via `glGetIntegerv` | Core 1.1; `VkPhysicalDeviceSubgroupProperties` (size, stages, operations); same GLSL | 15 |
+| Compute → compute | `glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)` | `VkMemoryBarrier2` (global) or buffer barrier, `COMPUTE/STORAGE_WRITE → COMPUTE/STORAGE_READ\|WRITE` | 15 |
+| Timing GPU work | `glQueryCounter(GL_TIMESTAMP)`, poll `GL_QUERY_RESULT_AVAILABLE` | Timestamp query pool: reset in the command buffer, `vkCmdWriteTimestamp2`, read after the fence; × `timestampPeriod` | 15 |
+| Reading results back | `glCopyNamedBufferSubData` → `MAP_READ \| CLIENT_STORAGE` buffer → map (direct reads make NVIDIA migrate the buffer) | `vkCmdCopyBuffer` → `HOST_VISIBLE \| HOST_CACHED` buffer, `COPY → HOST` barrier, fence, read mapping | 15 |
+| Same descriptors, two pipeline kinds | Bindings are global | Bind the set at the compute *and* the graphics bind point | 15 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

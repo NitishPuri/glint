@@ -1,0 +1,17 @@
+#version 460
+#include "glint.glsl"
+#include "common.glsl"
+
+// Stream compaction: a selected point's exclusive scan value is its slot in the output, so every write lands in
+// a distinct place and the selected points keep their original order. No atomics, fully deterministic.
+
+layout(local_size_x = 256) in;
+
+void main() {
+  uint i = gl_GlobalInvocationID.x;
+  uint n = pc.counts.x;
+  if (i >= n) return;
+  uint slot = data[i];
+  if (flags[i] != 0u) compact[1u + slot] = i;
+  if (i == n - 1u) compact[0] = slot + flags[i];  // the total = last exclusive value + last flag
+}

@@ -1,0 +1,43 @@
+#version 460
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+#include "glint.glsl"
+#include "common.glsl"
+#include "scan_block.glsl"
+
+// The same block scan with subgroup operations. A subgroup is the set of invocations the hardware runs in
+// lockstep: 32 on NVIDIA (a warp), 64 or 32 on AMD (a wave). subgroupInclusiveAdd scans across it in
+// registers, with no shared memory and no barriers. The block then needs only one shared-memory step to
+// combine the per-subgroup totals (256 / 32 = 8 of them on NVIDIA).
+// GL: GL_KHR_shader_subgroup (an extension). VK: core since 1.1, but which operations work in which stages is
+// a device *property* (VkPhysicalDeviceSubgroupProperties), checked in vk.cpp.
+
+shared uint subgroupTotals[64];  // up to 256 / 4 subgroups (the smallest legal subgroup size)
+
+void main() {
+  uint t = gl_LocalInvocationID.x;
+  uint base = gl_WorkGroupID.x * 512u;
+  // Each thread owns two *adjacent* elements: thread t scans as one value a + b.
+  uint a = load(base + 2u * t);
+  uint b = load(base + 2u * t + 1u);
+  uint pair = a + b;
+  uint inclusive = subgroupInclusiveAdd(pair);
+  if (gl_SubgroupInvocationID == gl_SubgroupSize - 1u) subgroupTotals[gl_SubgroupID] = inclusive;
+  memoryBarrierShared();
+  barrier();
+
+  // The first subgroup scans the subgroup totals (gl_NumSubgroups <= gl_SubgroupSize for 256 threads).
+  if (gl_SubgroupID == 0u) {
+    uint lane = gl_SubgroupInvocationID;
+    uint total = lane < gl_NumSubgroups ? subgroupTotals[lane] : 0u;
+    uint before = subgroupExclusiveAdd(total);
+    if (lane < gl_NumSubgroups) subgroupTotals[lane] = before;
+    if (lane == gl_NumSubgroups - 1u) storeBlockSum(before + total);
+  }
+  memoryBarrierShared();
+  barrier();
+
+  uint exclusive = subgroupTotals[gl_SubgroupID] + inclusive - pair;
+  store(base + 2u * t, exclusive);
+  store(base + 2u * t + 1u, exclusive + a);
+}

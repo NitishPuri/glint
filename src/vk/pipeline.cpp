@@ -102,6 +102,19 @@ VkPipeline createGraphicsPipeline(VkDevice device, const GraphicsPipelineDesc& d
   return pipeline;
 }
 
+VkPipeline createComputePipeline(VkDevice device, const std::string& shader, VkPipelineLayout layout,
+                                 const std::string& name, const VkSpecializationInfo* specialization) {
+  VkComputePipelineCreateInfo info{VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+  info.stage = {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0, VK_SHADER_STAGE_COMPUTE_BIT,
+                loadShaderModule(device, shader), "main", specialization};
+  info.layout = layout;
+  VkPipeline pipeline = VK_NULL_HANDLE;
+  VK_CHECK(vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline));
+  vkDestroyShaderModule(device, info.stage.module, nullptr);
+  if (!name.empty()) debug::setName(device, VK_OBJECT_TYPE_PIPELINE, pipeline, name);
+  return pipeline;
+}
+
 void setFlippedViewport(VkCommandBuffer cmd, VkExtent2D extent) {
   const VkViewport viewport{0.0f, float(extent.height), float(extent.width), -float(extent.height), 0.0f, 1.0f};
   vkCmdSetViewport(cmd, 0, 1, &viewport);

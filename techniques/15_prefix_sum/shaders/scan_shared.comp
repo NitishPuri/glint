@@ -1,0 +1,57 @@
+#version 460
+#include "glint.glsl"
+#include "common.glsl"
+#include "scan_block.glsl"
+
+// Work-efficient exclusive scan of one 512-element block in shared memory: GPU Gems 3 ch39, Example 39-2
+// (Blelloch 1990). 256 threads, 2 elements each, two phases over a balanced binary tree:
+//   up-sweep (reduce): after log2(512) = 9 steps the last element holds the block's total
+//   down-sweep:        clear the root, then push partial sums back down; every element ends up holding the
+//                      sum of everything before it
+// O(n) adds in total (the naive Hillis-Steele scan does O(n log n)). Not done here: the chapter's padding
+// against shared-memory bank conflicts (Section 39.2.3) — measure it in the timings if you add it.
+
+shared uint temp[512];
+
+void main() {
+  uint t = gl_LocalInvocationID.x;
+  uint base = gl_WorkGroupID.x * 512u;
+  temp[t] = load(base + t);
+  temp[t + 256u] = load(base + t + 256u);
+
+  uint offset = 1u;
+  for (uint d = 256u; d > 0u; d >>= 1u) {  // up-sweep
+    // Every thread must see the previous step's shared writes before it reads: barrier() waits for the whole
+    // workgroup, memoryBarrierShared() makes the shared-memory writes visible. Same in GL and VK.
+    memoryBarrierShared();
+    barrier();
+    if (t < d) {
+      uint a = offset * (2u * t + 1u) - 1u;
+      uint b = offset * (2u * t + 2u) - 1u;
+      temp[b] += temp[a];
+    }
+    offset <<= 1u;
+  }
+
+  if (t == 0u) {
+    storeBlockSum(temp[511]);
+    temp[511] = 0u;  // exclusive scan: the root's "everything before" is nothing
+  }
+
+  for (uint d = 1u; d < 512u; d <<= 1u) {  // down-sweep
+    offset >>= 1u;
+    memoryBarrierShared();
+    barrier();
+    if (t < d) {
+      uint a = offset * (2u * t + 1u) - 1u;
+      uint b = offset * (2u * t + 2u) - 1u;
+      uint left = temp[a];
+      temp[a] = temp[b];
+      temp[b] += left;
+    }
+  }
+  memoryBarrierShared();
+  barrier();
+  store(base + t, temp[t]);
+  store(base + t + 256u, temp[t + 256u]);
+}
