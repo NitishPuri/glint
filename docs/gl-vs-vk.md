@@ -33,11 +33,11 @@ writes" (shader storage/image writes, atomics). The VK equivalent of each bit's 
 | `GL_ELEMENT_ARRAY_BARRIER_BIT` | `INDEX_INPUT` | `INDEX_READ` | |
 | `GL_COMMAND_BARRIER_BIT` | `DRAW_INDIRECT` | `INDIRECT_COMMAND_READ` | (18) |
 | `GL_UNIFORM_BARRIER_BIT` | the reading shader stage | `UNIFORM_READ` | |
-| `GL_TEXTURE_FETCH_BARRIER_BIT` | the reading shader stage | `SHADER_SAMPLED_READ` (Glint uses `SHADER_READ`) | (16) |
-| `GL_SHADER_IMAGE_ACCESS_BARRIER_BIT` | the accessing shader stage | `SHADER_STORAGE_READ \| WRITE` (image) | (16) |
+| `GL_TEXTURE_FETCH_BARRIER_BIT` | the reading shader stage | `SHADER_SAMPLED_READ` (Glint uses `SHADER_READ`) | 16 |
+| `GL_SHADER_IMAGE_ACCESS_BARRIER_BIT` | the accessing shader stage | `SHADER_STORAGE_READ \| WRITE` (image) | |
 | `GL_SHADER_STORAGE_BARRIER_BIT` | the accessing shader stage | `SHADER_STORAGE_READ \| WRITE` | 15 |
 | `GL_BUFFER_UPDATE_BARRIER_BIT` | `COPY` | `TRANSFER_READ \| WRITE` | 15 |
-| `GL_TEXTURE_UPDATE_BARRIER_BIT`, `GL_PIXEL_BUFFER_BARRIER_BIT` | `COPY` | `TRANSFER_READ \| WRITE` | |
+| `GL_TEXTURE_UPDATE_BARRIER_BIT`, `GL_PIXEL_BUFFER_BARRIER_BIT` | `COPY` | `TRANSFER_READ \| WRITE` | 16 |
 | `GL_FRAMEBUFFER_BARRIER_BIT` | `COLOR_ATTACHMENT_OUTPUT`, fragment tests | attachment read/write | |
 
 Everything *not* written through storage buffers/images (render targets, copies, uploads) GL synchronizes by
@@ -131,4 +131,8 @@ itself. VK doesn't distinguish: every hazard is yours, including write-after-rea
 | Timing GPU work | `glQueryCounter(GL_TIMESTAMP)`, poll `GL_QUERY_RESULT_AVAILABLE` | Timestamp query pool: reset in the command buffer, `vkCmdWriteTimestamp2`, read after the fence; × `timestampPeriod` | 15 |
 | Reading results back | `glCopyNamedBufferSubData` → `MAP_READ \| CLIENT_STORAGE` buffer → map (direct reads make NVIDIA migrate the buffer) | `vkCmdCopyBuffer` → `HOST_VISIBLE \| HOST_CACHED` buffer, `COPY → HOST` barrier, fence, read mapping | 15 |
 | Same descriptors, two pipeline kinds | Bindings are global | Bind the set at the compute *and* the graphics bind point | 15 |
+| Storage images | `glBindImageTexture(unit, tex, level, layered, layer, access, format)`; image units ≠ texture units | `STORAGE_IMAGE` descriptor (no sampler); image must be in `GENERAL` while accessed | 16 |
+| 3D textures | `GL_TEXTURE_3D` + `glTextureStorage3D` | `imageType = 3D`, `extent.depth`, `VK_IMAGE_VIEW_TYPE_3D` | 16 |
+| Compute writes → sampling | `glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT)` | Image barrier `GENERAL → SHADER_READ_ONLY`, `COMPUTE/STORAGE_WRITE → FRAGMENT/SHADER_READ` | 16 |
+| Third wrap axis | `GL_TEXTURE_WRAP_R` (separate parameter; easy to forget) | `addressModeW` | 16 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

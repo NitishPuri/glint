@@ -1,0 +1,27 @@
+#version 460
+#include "glint.glsl"
+#include "noise.glsl"
+
+// One invocation per voxel: compute the four noises and *store* them. A storage image is written with
+// imageStore at integer coordinates — no sampler, no filtering, no render target. The format in the layout
+// qualifier must match the image's (rgba16f).
+// GL: glBindImageTexture(unit 0, tex, level 0, layered = GL_TRUE, ...) — image units are their own namespace.
+// VK: a STORAGE_IMAGE descriptor; the image must be in the GENERAL layout while it's written.
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 4) in;  // = kGroup in params.h
+
+IMAGE(0, 0, rgba16f) writeonly image3D uNoise;
+
+PUSH_CONSTANTS Generate {
+  uvec4 dims;   // x = extent, y = octaves, z = period, w = Worley cells
+  vec4 params;  // x = gain, y = z offset, z = seed
+} pc;
+
+void main() {
+  ivec3 v = ivec3(gl_GlobalInvocationID);
+  int extent = int(pc.dims.x);
+  if (any(greaterThanEqual(v, ivec3(extent)))) return;
+  int period = int(pc.dims.z);
+  vec3 p = (vec3(v) + 0.5) / float(extent) * float(period) + vec3(0.0, 0.0, pc.params.y);  // = samplePosition()
+  imageStore(uNoise, v, noiseChannels(p, period, int(pc.dims.y), pc.params.x, int(pc.dims.w), uint(pc.params.z)));
+}

@@ -12,3 +12,4 @@ captures/
 
 # diagram tooling venv (tools/requirements.txt)
 tools/.venv/
+__pycache__/

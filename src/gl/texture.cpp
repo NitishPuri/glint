@@ -39,6 +39,9 @@ Sampler::Sampler(GLenum minFilter, GLenum magFilter, GLenum wrap, std::string_vi
   glSamplerParameteri(m_id, GL_TEXTURE_MAG_FILTER, GLint(magFilter));
   glSamplerParameteri(m_id, GL_TEXTURE_WRAP_S, GLint(wrap));
   glSamplerParameteri(m_id, GL_TEXTURE_WRAP_T, GLint(wrap));
+  // R = the third coordinate, used by 3D textures (16_noise). Unset, it stays GL_REPEAT whatever `wrap` says —
+  // VK's createSampler always set addressModeW.
+  glSamplerParameteri(m_id, GL_TEXTURE_WRAP_R, GLint(wrap));
   setLabel(GL_SAMPLER, m_id, label);
 }
 

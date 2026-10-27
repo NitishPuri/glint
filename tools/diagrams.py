@@ -490,6 +490,138 @@ def scan_levels():
     return fig
 
 
+# --- 16 ---------------------------------------------------------------------------------------------------------
+# A numpy port of techniques/16_noise/shaders/noise.glsl (same permutation file, same gradient table, same fade).
+
+def perlin_permutation():
+    text = (ROOT / "techniques/16_noise/shaders/permutation.inc").read_text()
+    body = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("//"))
+    perm = np.array([int(v) for v in body.replace("\n", "").split(",")])
+    assert sorted(perm) == list(range(256))
+    return perm
+
+
+GRAD = np.array([(1, 1, 0), (-1, 1, 0), (1, -1, 0), (-1, -1, 0), (1, 0, 1), (-1, 0, 1), (1, 0, -1), (-1, 0, -1),
+                 (0, 1, 1), (0, -1, 1), (0, 1, -1), (0, -1, -1), (1, 1, 0), (0, -1, 1), (-1, 1, 0), (0, -1, -1)],
+                dtype=float)
+
+
+def fade(t):
+    return t * t * t * (t * (t * 6 - 15) + 10)
+
+
+def inoise(p, period, perm):
+    """p: (..., 3) array of points. Same lattice wrap and corner hashing as noise.glsl."""
+    i0 = np.floor(p).astype(int)
+    f = p - np.floor(p)
+    u = fade(f)
+    a, b = i0 % period, (i0 + 1) % period
+
+    def corner(cx, cy, cz, off):
+        h = perm[(perm[(perm[cx & 255] + cy) & 255] + cz) & 255] & 15
+        return np.sum(GRAD[h] * (f - off), axis=-1)
+
+    lerp = lambda x, y, t: x + (y - x) * t  # noqa: E731
+    c = {}
+    for dz in (0, 1):
+        for dy in (0, 1):
+            for dx in (0, 1):
+                cx = (a if dx == 0 else b)[..., 0]
+                cy = (a if dy == 0 else b)[..., 1]
+                cz = (a if dz == 0 else b)[..., 2]
+                c[dx, dy, dz] = corner(cx, cy, cz, np.array([dx, dy, dz], float))
+    x00 = lerp(c[0, 0, 0], c[1, 0, 0], u[..., 0])
+    x10 = lerp(c[0, 1, 0], c[1, 1, 0], u[..., 0])
+    x01 = lerp(c[0, 0, 1], c[1, 0, 1], u[..., 0])
+    x11 = lerp(c[0, 1, 1], c[1, 1, 1], u[..., 0])
+    return lerp(lerp(x00, x10, u[..., 1]), lerp(x01, x11, u[..., 1]), u[..., 2])
+
+
+def slice_points(n, period, z):
+    ys, xs = np.mgrid[0:n, 0:n]
+    return np.stack([(xs + 0.5) / n * period, (ys + 0.5) / n * period, np.full((n, n), z)], axis=-1)
+
+
+@figure("noise_fade", "techniques/16_noise/diagrams/noise_fade.svg")
+def noise_fade():
+    """GG1 ch5's argument: the old interpolant's 2nd derivative jumps at cell borders, the new one's doesn't."""
+    t = np.linspace(0, 1, 200)
+    old, new = 3 * t**2 - 2 * t**3, fade(t)
+    curves = [(old, 6 * t - 6 * t**2, 6 - 12 * t, "1985: 3t² − 2t³", "#a0aec0"),
+              (new, 30 * t**4 - 60 * t**3 + 30 * t**2, 120 * t**3 - 180 * t**2 + 60 * t,
+               "2002: 6t⁵ − 15t⁴ + 10t³", VK_COLOR)]
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.3))
+    for value, d1, d2, label, color in curves:
+        for ax, y in zip(axes, (value, d1, d2)):
+            ax.plot(t, y, color=color, label=label)
+    for ax, title in zip(axes, ["fade(t)", "1st derivative", "2nd derivative"]):
+        ax.set_title(title)
+        ax.set_xlabel("t (position inside a lattice cell)")
+        ax.axhline(0, color="#e2e8f0", lw=0.8)
+    axes[2].annotate("old: ±6 at t = 0 and 1 → jumps at\nevery cell border (creases in normals)",
+                     xy=(0.0, 6), xytext=(0.18, 3.5), fontsize=8, arrowprops=dict(arrowstyle="->", color="#718096"))
+    axes[0].legend(fontsize=8, frameon=False)
+    fig.suptitle("16: why \"improved\" noise — GPU Gems 1 ch5 (Perlin)", fontsize=11, y=1.03)
+    return fig
+
+
+@figure("noise_lattice", "techniques/16_noise/diagrams/noise_lattice.svg")
+def noise_lattice():
+    """1D gradient noise: a random slope at each lattice point, blended by fade. Zero at every lattice point."""
+    perm = perlin_permutation()
+    cells = 8
+    slopes = perm[np.arange(cells + 1) % cells] / 127.5 - 1.0  # periodic: slope(8) = slope(0)
+    x = np.linspace(0, cells, 800, endpoint=False)
+    i = np.floor(x).astype(int)
+    f = x - i
+    y = (slopes[i] * f) + (slopes[i + 1] * (f - 1) - slopes[i] * f) * fade(f)
+    fig, ax = plt.subplots(figsize=(11, 3))
+    ax.plot(x, y, color=VK_COLOR, label="noise(x)")
+    for k in range(cells + 1):
+        ax.plot([k - 0.3, k + 0.3], [-0.3 * slopes[k], 0.3 * slopes[k]], color="#2f855a", lw=2,
+                label="random gradient at a lattice point" if k == 0 else None)
+        ax.plot(k, 0, "o", color="#2f855a", ms=4)
+    ax.axhline(0, color="#e2e8f0", lw=0.8)
+    ax.set_xticks(range(cells + 1))
+    ax.set_xlabel("x (lattice cells; period 8: the curve at 8 continues exactly as at 0)")
+    ax.legend(fontsize=8, frameon=False, loc="upper right")
+    ax.set_title("gradient noise in 1D: each cell blends the two neighbouring slopes with fade(t); "
+                 "3D does the same with 8 corners", fontsize=10)
+    return fig
+
+
+@figure("noise_octaves", "techniques/16_noise/diagrams/noise_octaves.svg")
+def noise_octaves():
+    """z = 0.5 slices of the texture's channels, computed with the numpy port (period 4, gain 0.5)."""
+    perm = perlin_permutation()
+    n, period, octaves, gain = 96, 4, 5, 0.5
+    pts = slice_points(n, period, 0.5)
+    layers = [inoise(pts * 2**o, period * 2**o, perm) for o in range(octaves)]
+    fbm = sum(layer * 0.5 * gain**o for o, layer in enumerate(layers))
+    turb = sum(np.abs(layer) * gain**o for o, layer in enumerate(layers))
+    ridged, prev = np.zeros_like(fbm), np.ones_like(fbm)
+    for o, layer in enumerate(layers):
+        r = (1 - np.abs(layer)) ** 2
+        ridged += r * 0.5 * gain**o * prev
+        prev = r
+    panels = [(layers[o], f"octave {o + 1}: period {period * 2**o}", -1, 1) for o in range(3)]
+    panels += [(np.clip(0.5 + 0.7 * fbm, 0, 1), "R: fBm (5 octaves)", 0, 1),
+               (np.clip(turb * 0.6, 0, 1), "G: turbulence Σ|noise|", 0, 1),
+               (np.clip(ridged, 0, 1), "B: ridged multifractal", 0, 1)]
+    fig, axes = plt.subplots(2, 3, figsize=(10, 4.4))
+    for ax, (img, title, lo, hi) in zip(axes.flat, panels):
+        ax.imshow(np.tile(img, (1, 2)), cmap="gray", vmin=lo, vmax=hi, origin="lower", interpolation="nearest")
+        ax.axvline(n - 0.5, color=VK_COLOR, lw=0.8, ls="--")
+        ax.set_title(title, fontsize=9)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    fig.suptitle("16: octaves add up to fBm (top: single octaves, each double the frequency, half the amplitude).\n"
+                 "Each panel shows the texture twice side by side (dashed line): no seam — the lattice wraps.\n"
+                 "The grid-aligned look of a single octave is real: the 12 gradients lie along cube edges (simplex "
+                 "noise reduces it).", fontsize=9, y=1.04)
+    return fig
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("names", nargs="*", help="figures to build (default: all)")
