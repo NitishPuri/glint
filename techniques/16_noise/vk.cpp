@@ -63,7 +63,7 @@ class NoiseVK final : public vk::Technique {
     m_generatePipeline =
         vk::createComputePipeline(device, "16_noise/generate.comp.spv", m_generateLayout, "16 generate noise");
     vk::GraphicsPipelineDesc display;
-    display.vertexShader = "16_noise/screen.vert.spv";
+    display.vertexShader = "common/screen.vert.spv";
     display.fragmentShader = "16_noise/display.frag.spv";
     display.layout = m_displayLayout;
     display.colorFormat = swapchainFormat;

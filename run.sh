@@ -19,7 +19,7 @@ if [[ -z "${VULKAN_SDK:-}" ]]; then
   [[ -n "$sdk_env" ]] && { set +u; source "$sdk_env" ""; set -u; }
 fi
 
-echo "Using $CFG backend" >&2
+echo "Using ${CFG:-debug} backend" >&2
 exe="build/${CFG:-debug}/glint_$api"
 [[ -x "$exe" ]] || { echo "$exe not built — run ./build.sh first" >&2; exit 1; }
 exec "$exe" "$@"

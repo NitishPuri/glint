@@ -28,7 +28,7 @@ class NoiseGL final : public gl::Technique {
 
   void init() override {
     m_generateProgram = gl::Program({"16_noise/shaders/generate.comp"});
-    m_displayProgram = gl::Program({"16_noise/shaders/screen.vert", "16_noise/shaders/display.frag"});
+    m_displayProgram = gl::Program({"common/shaders/screen.vert", "16_noise/shaders/display.frag"});
     // REPEAT on S, T *and R*: the noise tiles in all three directions. (gl::Sampler sets R since 16; before, a
     // CLAMP sampler would have clamped only two axes of a 3D texture. VK's sampler always set addressModeW.)
     m_sampler = gl::Sampler(GL_LINEAR, GL_LINEAR, GL_REPEAT, "trilinear repeat (3D)");

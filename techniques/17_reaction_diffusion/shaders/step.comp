@@ -1,0 +1,22 @@
+#version 460
+#include "glint.glsl"
+
+// One Gray-Scott step, the compute way: read the *source* image, write the *other* one. In place would be wrong:
+// a cell's neighbours would sometimes already hold the new value and sometimes the old, depending on scheduling.
+// GL: image units 0 (src) and 1 (dst). VK: STORAGE_IMAGE descriptors, both images stay in GENERAL — no layout
+// changes between steps, just a memory barrier.
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+IMAGE(0, 0, rgba32f) readonly image2D uSrc;
+IMAGE(0, 1, rgba32f) writeonly image2D uDst;
+
+vec2 fetchSim(ivec2 texel) { return imageLoad(uSrc, texel).xy; }
+
+#include "rd.glsl"
+
+void main() {
+  ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+  if (any(greaterThanEqual(p, pc.size.xy))) return;
+  imageStore(uDst, p, rdStep(p));
+}

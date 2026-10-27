@@ -122,7 +122,8 @@ set(GLINT_TECHNIQUES
   13_bloom
   14_compute_particles
   15_prefix_sum
-  16_noise)
+  16_noise
+  17_reaction_diffusion)
 # Shaders shared by several techniques (standard shading in 04, 05, 07).
 glint_compile_shaders(glint_vk ${PROJECT_SOURCE_DIR}/techniques/common/shaders)
 foreach(technique IN LISTS GLINT_TECHNIQUES)

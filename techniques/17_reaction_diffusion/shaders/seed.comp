@@ -1,0 +1,21 @@
+#version 460
+#include "glint.glsl"
+#include "common.glsl"
+
+// Reset: write the initial state into the image that the first step will read.
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+IMAGE(0, 1, rgba32f) writeonly image2D uDst;  // same set layout as step.comp (binding 0 unused)
+
+PUSH_CONSTANTS Step {
+  ivec4 size;
+  vec4 params;
+  vec4 brush;
+} pc;
+
+void main() {
+  ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+  if (any(greaterThanEqual(p, pc.size.xy))) return;
+  imageStore(uDst, p, seedValue(p));
+}

@@ -1,0 +1,47 @@
+#version 460
+#include "glint.glsl"
+
+// Total amount of v on the grid — a parallel *reduction* (GPU Gems 2 ch31's other demo, gpgpu_reductions; there it
+// took log2(n) render passes, each halving a texture). Here, two dispatches:
+//   pass 0: each 16x16 workgroup sums its 256 cells in shared memory (8 halving steps) → partials[group]
+//   pass 1: one workgroup sums all partials → result[slot]
+// result is host-visible and read back a few frames later without waiting (gl.cpp: fences, vk.cpp: frame fence).
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+SAMPLER(0, 0) sampler2D uSim;  // the current state, read-only (same descriptor as the display pass)
+
+SSBO(1, 0) Partials { float partials[]; };
+SSBO(1, 1) Result { float result[]; };
+
+PUSH_CONSTANTS Reduce {
+  uvec4 info;  // x, y = grid size, z = pass, w = result slot
+} pc;
+
+shared float sums[256];
+
+void main() {
+  uint t = gl_LocalInvocationIndex;
+  uint groups = gl_NumWorkGroups.x * gl_NumWorkGroups.y;
+  float value = 0.0;
+  if (pc.info.z == 0u) {
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (p.x < int(pc.info.x) && p.y < int(pc.info.y)) value = texelFetch(uSim, p, 0).y;
+  } else {
+    uint count = ((pc.info.x + 15u) / 16u) * ((pc.info.y + 15u) / 16u);  // pass 0's group count
+    for (uint i = t; i < count; i += 256u) value += partials[i];
+  }
+  sums[t] = value;
+  for (uint stride = 128u; stride > 0u; stride >>= 1u) {
+    memoryBarrierShared();
+    barrier();
+    if (t < stride) sums[t] += sums[t + stride];
+  }
+  if (t == 0u) {
+    if (pc.info.z == 0u) {
+      partials[gl_WorkGroupID.y * gl_NumWorkGroups.x + gl_WorkGroupID.x] = sums[0];
+    } else {
+      result[pc.info.w] = sums[0];
+    }
+  }
+}

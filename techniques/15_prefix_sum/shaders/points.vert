@@ -5,7 +5,7 @@
 
 // Mode 0: every point, dimmed. Mode 1: the compacted list — vertex k draws compact[1 + k], colored by k / count.
 // The CPU doesn't know the count (it's on the GPU), so mode 1 is drawn with N vertices and the ones past the
-// count are clipped. An *indirect* draw (18_gpu_culling) takes the count straight from the buffer instead.
+// count are clipped. An *indirect* draw (19_gpu_culling) takes the count straight from the buffer instead.
 // This vertex shader reads a storage buffer the compute passes wrote: GL GL_SHADER_STORAGE_BARRIER_BIT, VK
 // VERTEX_SHADER + SHADER_STORAGE_READ (14 read its buffer as vertex *attributes* instead).
 

@@ -10,8 +10,8 @@ A barrier says "after *these stages* did *these accesses*, before *those stages*
 ```mermaid
 flowchart LR
     subgraph G["graphics (one draw flows left to right)"]
-        DI["DRAW_INDIRECT<br/>indirect args (18)"] --> VI["VERTEX_INPUT<br/>INDEX_INPUT + VERTEX_ATTRIBUTE_INPUT"]
-        VI --> VS["VERTEX_SHADER"] --> TS["TESSELLATION_*_SHADER<br/>(19)"] --> GS["GEOMETRY_SHADER"]
+        DI["DRAW_INDIRECT<br/>indirect args (19)"] --> VI["VERTEX_INPUT<br/>INDEX_INPUT + VERTEX_ATTRIBUTE_INPUT"]
+        VI --> VS["VERTEX_SHADER"] --> TS["TESSELLATION_*_SHADER<br/>(20)"] --> GS["GEOMETRY_SHADER"]
         GS --> RS(["rasterizer<br/>fixed function"]) --> EF["EARLY_FRAGMENT_TESTS<br/>depth/stencil"]
         EF --> FS["FRAGMENT_SHADER"] --> LF["LATE_FRAGMENT_TESTS"] --> CO["COLOR_ATTACHMENT_OUTPUT<br/>blend + write"]
     end
@@ -31,7 +31,7 @@ writes" (shader storage/image writes, atomics). The VK equivalent of each bit's 
 |---|---|---|---|
 | `GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT` | `VERTEX_ATTRIBUTE_INPUT` | `VERTEX_ATTRIBUTE_READ` | 14 |
 | `GL_ELEMENT_ARRAY_BARRIER_BIT` | `INDEX_INPUT` | `INDEX_READ` | |
-| `GL_COMMAND_BARRIER_BIT` | `DRAW_INDIRECT` | `INDIRECT_COMMAND_READ` | (18) |
+| `GL_COMMAND_BARRIER_BIT` | `DRAW_INDIRECT` | `INDIRECT_COMMAND_READ` | (19) |
 | `GL_UNIFORM_BARRIER_BIT` | the reading shader stage | `UNIFORM_READ` | |
 | `GL_TEXTURE_FETCH_BARRIER_BIT` | the reading shader stage | `SHADER_SAMPLED_READ` (Glint uses `SHADER_READ`) | 16 |
 | `GL_SHADER_IMAGE_ACCESS_BARRIER_BIT` | the accessing shader stage | `SHADER_STORAGE_READ \| WRITE` (image) | |
@@ -39,6 +39,8 @@ writes" (shader storage/image writes, atomics). The VK equivalent of each bit's 
 | `GL_BUFFER_UPDATE_BARRIER_BIT` | `COPY` | `TRANSFER_READ \| WRITE` | 15 |
 | `GL_TEXTURE_UPDATE_BARRIER_BIT`, `GL_PIXEL_BUFFER_BARRIER_BIT` | `COPY` | `TRANSFER_READ \| WRITE` | 16 |
 | `GL_FRAMEBUFFER_BARRIER_BIT` | `COLOR_ATTACHMENT_OUTPUT`, fragment tests | attachment read/write | |
+| `GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT` | `HOST` | `HOST_READ` (then wait on a fence) | 17 |
+| `GL_SHADER_IMAGE_ACCESS_BARRIER_BIT` (between image passes) | `COMPUTE_SHADER` | `SHADER_STORAGE_READ \| WRITE` | 17 |
 
 Everything *not* written through storage buffers/images (render targets, copies, uploads) GL synchronizes by
 itself. VK doesn't distinguish: every hazard is yours, including write-after-read (14's cross-frame barrier).
@@ -135,4 +137,9 @@ itself. VK doesn't distinguish: every hazard is yours, including write-after-rea
 | 3D textures | `GL_TEXTURE_3D` + `glTextureStorage3D` | `imageType = 3D`, `extent.depth`, `VK_IMAGE_VIEW_TYPE_3D` | 16 |
 | Compute writes → sampling | `glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT)` | Image barrier `GENERAL → SHADER_READ_ONLY`, `COMPUTE/STORAGE_WRITE → FRAGMENT/SHADER_READ` | 16 |
 | Third wrap axis | `GL_TEXTURE_WRAP_R` (separate parameter; easy to forget) | `addressModeW` | 16 |
+| Ping-pong render-to-texture | Two FBOs; nothing to synchronize | Both images change layout every step (`SHADER_READ_ONLY` ↔ `COLOR_ATTACHMENT`) | 17 |
+| Ping-pong storage images | `glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)` per step | Images stay in `GENERAL`; a memory-only barrier per step | 17 |
+| Readback without stalling | Persistent coherent mapping + `GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT` + `glFenceSync`, poll with `glClientWaitSync(..., 0)` | `HOST_VISIBLE` buffer per frame slot, barrier → `HOST`, read after the frame fence | 17 |
+| Float32 formats | RGBA32F filterable, RG32F image load/store: guaranteed | Linear filtering optional (query); `rg32f` storage needs `shaderStorageImageExtendedFormats` | 17 |
+| `texelFetch` on a 1-level texture | Still needs a complete texture (non-mipmap min filter) | No completeness rules: the view is what it is | 17 |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

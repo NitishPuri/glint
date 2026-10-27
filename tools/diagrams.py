@@ -622,6 +622,104 @@ def noise_octaves():
     return fig
 
 
+# --- 17 ---------------------------------------------------------------------------------------------------------
+
+def gray_scott(F, k, n=80, steps=2500):
+    """The same model as techniques/17_reaction_diffusion/shaders/rd.glsl (9-point Laplacian, Du 1, Dv 0.5, dt 1),
+    vectorized over a small torus, from a centered seed square."""
+    u, v = np.ones((n, n)), np.zeros((n, n))
+    rng = np.random.default_rng(1)
+    s = slice(n // 2 - 6, n // 2 + 6)
+    u[s, s], v[s, s] = 0.5, 0.25 + 0.05 * rng.random((12, 12))
+    for _ in range(steps):
+        def lap(a):
+            edges = np.roll(a, 1, 0) + np.roll(a, -1, 0) + np.roll(a, 1, 1) + np.roll(a, -1, 1)
+            corners = sum(np.roll(np.roll(a, dy, 0), dx, 1) for dy in (1, -1) for dx in (1, -1))
+            return -a + 0.2 * edges + 0.05 * corners
+        uvv = u * v * v
+        u, v = (np.clip(u + lap(u) - uvv + F * (1 - u), 0, 1), np.clip(v + 0.5 * lap(v) + uvv - (F + k) * v, 0, 1))
+    return u - v
+
+
+@figure("rd_parameter_map", "techniques/17_reaction_diffusion/diagrams/rd_parameter_map.svg")
+def rd_parameter_map():
+    """Pearson's map, computed: a small simulation per (F, k) cell; the presets from params.h marked."""
+    presets = {"coral": (0.0545, 0.062), "mitosis": (0.0367, 0.0649), "spots": (0.035, 0.065), "maze": (0.029, 0.057),
+               "worms": (0.078, 0.061), "holes": (0.039, 0.058)}
+    Fs = np.linspace(0.02, 0.08, 7)
+    ks = np.linspace(0.055, 0.067, 7)
+    fig, axes = plt.subplots(len(Fs), len(ks), figsize=(9, 9.3))
+    for i, F in enumerate(Fs[::-1]):
+        for j, k in enumerate(ks):
+            ax = axes[i, j]
+            ax.imshow(gray_scott(F, k), cmap="GnBu_r", vmin=0, vmax=1, interpolation="nearest")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            if j == 0:
+                ax.set_ylabel(f"F {F:.3f}", fontsize=8)
+            if i == len(Fs) - 1:
+                ax.set_xlabel(f"k {k:.3f}", fontsize=8)
+    listed = ", ".join(f"{n} ({F}, {k})" for n, (F, k) in presets.items())
+    fig.suptitle("17: Gray-Scott after 2500 steps from one seed, per (F, k) — Pearson's map, simulated with "
+                 f"rd.glsl's model.\nPresets in params.h: {listed}", fontsize=9)
+    return fig
+
+
+@figure("rd_stencil", "techniques/17_reaction_diffusion/diagrams/rd_stencil.svg")
+def rd_stencil():
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.6))
+    for ax, (title, w) in zip(axes, [("GPU Gems 2 ch31 (rd.cg): 5-point, average of 4", [[0, .25, 0], [.25, -1, .25],
+                                                                                          [0, .25, 0]]),
+                                      ("Glint (Karl Sims): 9-point, more isotropic", [[.05, .2, .05], [.2, -1, .2],
+                                                                                      [.05, .2, .05]])]):
+        w = np.array(w)
+        ax.imshow(w, cmap="RdBu", vmin=-1, vmax=1)
+        for (r, c), val in np.ndenumerate(w):
+            ax.text(c, r, f"{val:g}", ha="center", va="center", fontsize=11)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(title, fontsize=9)
+    fig.suptitle("17: the Laplacian ∇² as a stencil — each cell reads its neighbours, which is why a step can't "
+                 "run in place", fontsize=10)
+    return fig
+
+
+@figure("rd_pingpong", "techniques/17_reaction_diffusion/diagrams/rd_pingpong.svg")
+def rd_pingpong():
+    """What each path records for 4 steps, replayed from vk.cpp's layout tracker: A/B roles, layouts, barriers."""
+    steps = 4
+    fig, axes = plt.subplots(2, 1, figsize=(11, 4.6))
+    for ax, (title, path) in zip(axes, [("compute: images stay in GENERAL — barriers are memory-only", 0),
+                                        ("fragment (2005): roles swap → both images change layout every step", 1)]):
+        layout = {"A": "GENERAL", "B": "UNDEFINED"}
+        cur = "A"
+        x = 0
+        for s in range(steps):
+            src, dst = cur, ("B" if cur == "A" else "A")
+            want = ({src: "GENERAL", dst: "GENERAL"} if path == 0
+                    else {src: "SHADER_READ_ONLY", dst: "COLOR_ATTACHMENT"})
+            changed = [i for i in "AB" if layout[i] != want[i]]
+            short = {"GENERAL": "GENERAL", "SHADER_READ_ONLY": "READ_ONLY", "COLOR_ATTACHMENT": "ATTACHMENT",
+                     "UNDEFINED": "UNDEFINED"}
+            ax.add_patch(Rectangle((x, 0.1), 0.75, 0.8, fc="#fed7d7" if changed else "#e2e8f0", ec="#c53030"))
+            text = ("\n".join(f"{i}: {short[layout[i]]}\n → {short[want[i]]}" for i in changed) if changed
+                    else "memory\nonly")
+            ax.text(x + 0.375, 0.5, "barrier\n" + text, ha="center", va="center", fontsize=6.5)
+            layout.update(want)
+            x += 0.85
+            ax.add_patch(Rectangle((x, 0.1), 1.0, 0.8, fc="#fbd38d" if path == 0 else "#90cdf4", ec="#4a5568"))
+            ax.text(x + 0.5, 0.5, f"step {s + 1}\nread {src}, write {dst}", ha="center", va="center", fontsize=8)
+            x += 1.15
+            cur = dst
+        ax.set_xlim(-0.1, x)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
+        ax.set_title(title, fontsize=9, loc="left")
+    fig.suptitle("17: ping-pong between images A and B (GL records no barriers on the fragment path, and "
+                 "glMemoryBarrier on the compute path)", fontsize=10)
+    return fig
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("names", nargs="*", help="figures to build (default: all)")

@@ -190,6 +190,10 @@ Compute shaders and the data-parallel building blocks every simulation and GPU-d
       - Read: [GG1 ch5 Implementing Improved Perlin Noise](https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-5-implementing-improved-perlin-noise) — Ken Perlin's improved noise, explained by its author; local: —
       - Read: [GG2 ch26 Implementing Improved Perlin Noise](https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-26-implementing-improved-perlin-noise) — the shader implementation (local .fx); local: `GPU-Gems-2-CD-Content/High-Quality_Rendering/Ch_26_Implementing_Improved_Perlin_Noise` — .fx shaders
 
+- [x] **17_reaction_diffusion** — new API: ping-pong storage images (neighbour reads can't update in place), many dispatches + barriers per frame, mouse input into compute; also the 2005 way (fragment shader + render-to-texture feedback) as a toggle; new idea: PDE on a grid (Gray-Scott), parallel reduction
+      - Read: [GG2 ch31 Mapping Computational Concepts to GPUs](https://developer.nvidia.com/gpugems/gpugems2/part-iv-general-purpose-computation-gpus-primer/chapter-31-mapping-computational) — §31.3–31.5: streams/kernels/feedback, and its "simple example", Gray-Scott reaction-diffusion; local: `GPU-Gems-2-CD-Content/General-Purpose_Computation_on_GPUs_A_Primer/Ch_31_Mapping_Computational_Concepts_to_GPUs/DEMOS/OpenGL/src/gpgpu_reactiondiffusion` (rd.cg + C++) and `gpgpu_reductions`
+      - Read: Karl Sims, *Reaction-Diffusion Tutorial* (karlsims.com/rd.html) and Pearson 1993 *Complex Patterns in a Simple System* — the (F, k) parameter map
+
 - [ ] **VMA** (moved here from Phase 5/8): swap `vk::Buffer`/`vk::Image` internals once compute
       buffers multiply; NOTES on what it decides (memory type, sub-allocation, dedicated allocations).
 
@@ -197,32 +201,32 @@ Compute shaders and the data-parallel building blocks every simulation and GPU-d
 
 Drawing a lot: instancing, GPU-driven culling with indirect draws, tessellated terrain.
 
-- [ ] **17_grass** — new API: instancing (`glVertexAttribDivisor` vs `VK_VERTEX_INPUT_RATE_INSTANCE`); new idea: procedural vegetation + wind
+- [ ] **18_grass** — new API: instancing (`glVertexAttribDivisor` vs `VK_VERTEX_INPUT_RATE_INSTANCE`); new idea: procedural vegetation + wind
       - Read: [GG1 ch7 Rendering Countless Blades of Waving Grass](https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-7-rendering-countless-blades-waving-grass) — **the target chapter**: blade geometry, density, wind animation; local: `GPU-Gems-1-CD-Content/Natural_Effects/Grass` — demo only (zip)
       - Read: [GG3 ch6 GPU-Generated Procedural Wind Animations for Trees](https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-6-gpu-generated-procedural-wind-animations-trees) — GPU-generated procedural wind (local source); local: `GPU-Gems-3-CD-Content/content/06` — C++ source
       - Read: [GG3 ch16 Vegetation Procedural Animation and Shading in Crysis](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-16-vegetation-procedural-animation-and-shading-crysis) — vegetation animation in Crysis (for ideas); local: `GPU-Gems-3-CD-Content/content/16` — video only
-- [ ] **18_gpu_culling** — new API: indirect draws (`glMultiDrawElementsIndirect` vs `vkCmdDrawIndexedIndirectCount`), occlusion queries; new idea: GPU-driven rendering
+- [ ] **19_gpu_culling** — new API: indirect draws (`glMultiDrawElementsIndirect` vs `vkCmdDrawIndexedIndirectCount`), occlusion queries; new idea: GPU-driven rendering
       - Read: [GG1 ch29 Efficient Occlusion Culling](https://developer.nvidia.com/gpugems/gpugems/part-v-performance-and-practicalities/chapter-29-efficient-occlusion-culling) — occlusion culling fundamentals; local: —
       - Read: [GG2 ch6 Hardware Occlusion Queries Made Useful](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-6-hardware-occlusion-queries-made-useful) — hardware occlusion queries made useful (local source); local: `GPU-Gems-2-CD-Content/Geometric_Complexity/Ch_06_Hardware_Occlusion_Queries_Made_Useful` — C++ source
-- [ ] **19_terrain** — new API: tessellation control/evaluation shaders (both APIs); new idea: distance-based LOD terrain
+- [ ] **20_terrain** — new API: tessellation control/evaluation shaders (both APIs); new idea: distance-based LOD terrain
       - Read: [GG2 ch2 Terrain Rendering Using GPU-Based Geometry Clipmaps](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-2-terrain-rendering-using-gpu-based-geometry) — geometry clipmaps (local shaders) - we do a simplified, tessellation-based version; local: `GPU-Gems-2-CD-Content/Geometric_Complexity/Ch_02_Terrain_Rendering_using_GPU-Based_Geometry_Clipmaps` — .fx shaders
 
 ## Phase 11 — Lighting toolbox
 
 Cubemaps and image-based lighting, deferred shading, ambient occlusion, better shadows.
 
-- [ ] **20_environment** — new API: cubemaps, render-to-cubemap, prefiltering in compute; new idea: image-based lighting
+- [ ] **21_environment** — new API: cubemaps, render-to-cubemap, prefiltering in compute; new idea: image-based lighting
       - Read: [GG1 ch19 Image-Based Lighting](https://developer.nvidia.com/gpugems/gpugems/part-iii-materials/chapter-19-image-based-lighting) — **target**: image-based lighting; local: `GPU-Gems-1-CD-Content/Materials/Image_Based_Lighting` — FX Composer project only
       - Read: [GG2 ch10 Real-Time Computation of Dynamic Irradiance Environment Maps](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-10-real-time-computation-dynamic) — irradiance environment maps in real time (local source); local: `GPU-Gems-2-CD-Content/Shading_Lighting_and_Shadows/Ch_10_Real-Time_Computation_of_Dynamic_Irradiance_Environment_Maps` — C++ + .fx source, cubemaps
       - Read: [GG3 ch20 GPU-Based Importance Sampling](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-20-gpu-based-importance-sampling) — GPU importance sampling for glossy reflections (local source); local: `GPU-Gems-3-CD-Content/content/20` — C++ + Cg source
-- [ ] **21_deferred** — new API: multiple render targets (MRT); new idea: deferred shading, many lights
+- [ ] **22_deferred** — new API: multiple render targets (MRT); new idea: deferred shading, many lights
       - Read: [GG2 ch9 Deferred Shading in S.T.A.L.K.E.R.](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-9-deferred-shading-stalker) — **target**: deferred shading in S.T.A.L.K.E.R.; local: —
       - Read: [GG3 ch19 Deferred Shading in Tabula Rasa](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-19-deferred-shading-tabula-rasa) — deferred shading in Tabula Rasa (what changed three years later); local: —
-- [ ] **22_ssao** — new API: (reuse of the G-buffer); new idea: screen-space ambient occlusion
+- [ ] **23_ssao** — new API: (reuse of the G-buffer); new idea: screen-space ambient occlusion
       - Read: [GG3 ch12 High-Quality Ambient Occlusion](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-12-high-quality-ambient-occlusion) — **target**: high-quality AO (local GLSL); local: `GPU-Gems-3-CD-Content/content/12` — C++ + **GLSL** source
       - Read: [GG1 ch17 Ambient Occlusion](https://developer.nvidia.com/gpugems/gpugems/part-iii-materials/chapter-17-ambient-occlusion) — classic AO background; local: —
       - Read: [GG2 ch14 Dynamic Ambient Occlusion and Indirect Lighting](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-14-dynamic-ambient-occlusion-and) — dynamic AO and indirect lighting (local source); local: `GPU-Gems-2-CD-Content/Shading_Lighting_and_Shadows/Ch_14_Dynamic_Ambient_Occlusion_and_Indirect_Lighting` — C++ source + models
-- [ ] **23_shadows_plus** — new API: layered rendering / array textures; new idea: cascades, omni and soft shadows
+- [ ] **24_shadows_plus** — new API: layered rendering / array textures; new idea: cascades, omni and soft shadows
       - Read: [GG1 ch11 Shadow Map Antialiasing](https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing) — shadow map antialiasing (PCF) - also the theory behind 08; local: —
       - Read: [GG1 ch12 Omnidirectional Shadow Mapping](https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-12-omnidirectional-shadow-mapping) — omnidirectional (cube) shadow maps (local shaders); local: `GPU-Gems-1-CD-Content/Lighting_and_Shadows/Omni_Shadow_Mapping` — .fx shaders + scene
       - Read: [GG3 ch10 Parallel-Split Shadow Maps on Programmable GPUs](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-10-parallel-split-shadow-maps-programmable-gpus) — **target**: parallel-split (cascaded) shadow maps (local GLSL); local: `GPU-Gems-3-CD-Content/content/10` — C++ + **GLSL** source
@@ -233,14 +237,14 @@ Cubemaps and image-based lighting, deferred shading, ambient occlusion, better s
 
 The first wave of GPU Gems chapters proper: water, light scattering, cinematic post effects.
 
-- [ ] **24_water** — new API: (reuse: noise, terrain, environment); new idea: Gerstner waves, reflections, caustics
+- [ ] **25_water** — new API: (reuse: noise, terrain, environment); new idea: Gerstner waves, reflections, caustics
       - Read: [GG1 ch1 Effective Water Simulation from Physical Models](https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models) — **target**: effective water simulation (local source); local: `GPU-Gems-1-CD-Content/Natural_Effects/Water_Simulation` — C++ + .fx source
       - Read: [GG1 ch2 Rendering Water Caustics](https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-2-rendering-water-caustics) — rendering water caustics (local source); local: `GPU-Gems-1-CD-Content/Natural_Effects/Caustics` — C++ source
       - Read: [GG2 ch18 Using Vertex Texture Displacement for Realistic Water Rendering](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-18-using-vertex-texture-displacement) — vertex texture displacement for water (local source); local: `GPU-Gems-2-CD-Content/Shading_Lighting_and_Shadows/Ch_18_Using_Vertex_Texture_Displacement_for_Realistic_Water_Rendering` — C++ + Cg source, height data
-- [ ] **25_light_scattering** — new API: (reuse: HDR, post chain); new idea: god rays, atmosphere
+- [ ] **26_light_scattering** — new API: (reuse: HDR, post chain); new idea: god rays, atmosphere
       - Read: [GG3 ch13 Volumetric Light Scattering as a Post-Process](https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-13-volumetric-light-scattering-post-process) — **target**: volumetric light scattering as a post-process; local: `GPU-Gems-3-CD-Content/content/13` — demo .exe + movie only
       - Read: [GG2 ch16 Accurate Atmospheric Scattering](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-16-accurate-atmospheric-scattering) — accurate atmospheric scattering (local **GLSL**); local: `GPU-Gems-2-CD-Content/Shading_Lighting_and_Shadows/Ch_16_Accurate_Atmospheric_Scattering` — C++ + **GLSL** source
-- [ ] **26_post_stack** — new API: (reuse: depth, velocity buffers); new idea: motion blur, depth of field
+- [ ] **27_post_stack** — new API: (reuse: depth, velocity buffers); new idea: motion blur, depth of field
       - Read: [GG3 ch27 Motion Blur as a Post-Processing Effect](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-27-motion-blur-post-processing-effect) — motion blur as a post-process; local: —
       - Read: [GG3 ch28 Practical Post-Process Depth of Field](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-28-practical-post-process-depth-field) — practical post-process depth of field; local: —
       - Read: [GG1 ch23 Depth of Field: A Survey of Techniques](https://developer.nvidia.com/gpugems/gpugems/part-iv-image-processing/chapter-23-depth-field-survey-techniques) — depth of field survey; local: `GPU-Gems-1-CD-Content/Image_Processing/Depth_of_Field` — demo .exe only
@@ -249,17 +253,17 @@ The first wave of GPU Gems chapters proper: water, light scattering, cinematic p
 
 GPU simulation, the bridge to [[Physics Engine - Glide]].
 
-- [ ] **27_fluids_2d** — new API: (reuse: compute, storage images); new idea: Stable Fluids
+- [ ] **28_fluids_2d** — new API: (reuse: compute, storage images); new idea: Stable Fluids
       - Read: [GG1 ch38 Fast Fluid Dynamics Simulation on the GPU](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu) — **target**: fast fluid dynamics (local full source: Flo); local: `GPU-Gems-1-CD-Content/Beyond_Triangles/Fluids` — full Cg + C++ source (Flo)
-- [ ] **28_nbody_boids** — new API: (reuse: compute, scan); GPU sort; new idea: N-body, boids, spatial hashing
+- [ ] **29_nbody_boids** — new API: (reuse: compute, scan); GPU sort; new idea: N-body, boids, spatial hashing
       - Read: [GG3 ch31 Fast N-Body Simulation with CUDA](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-31-fast-n-body-simulation-cuda) — **target**: fast N-body with shared-memory tiling (local CUDA); local: `GPU-Gems-3-CD-Content/content/31` — CUDA + C++ source
       - Read: [GG2 ch46 Improved GPU Sorting](https://developer.nvidia.com/gpugems/gpugems2/part-vi-simulation-and-numerical-algorithms/chapter-46-improved-gpu-sorting) — improved GPU sorting (local source); local: `GPU-Gems-2-CD-Content/Simulation_and_Numerical_Algorithms/Ch_46_Improved_GPU_Sorting` — C++ + shader source
       - Read: [GG3 ch32 Broad-Phase Collision Detection with CUDA](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-32-broad-phase-collision-detection-cuda) — broad-phase collision detection (for the spatial hash); local: —
-- [ ] **29_sph_rigid** — new API: (reuse); new idea: SPH fluid, particle-based rigid bodies
+- [ ] **30_sph_rigid** — new API: (reuse); new idea: SPH fluid, particle-based rigid bodies
       - Read: [GG3 ch29 Real-Time Rigid Body Simulation on GPUs](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-29-real-time-rigid-body-simulation-gpus) — real-time rigid body simulation on GPUs; local: `GPU-Gems-3-CD-Content/content/29` — demo binaries only
       - Read: [GG3 ch32 Broad-Phase Collision Detection with CUDA](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-32-broad-phase-collision-detection-cuda) — broad phase; local: —
       - Read: [GG3 ch33 LCP Algorithms for Collision Detection Using CUDA](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-33-lcp-algorithms-collision-detection-using-cuda) — LCP algorithms for collision detection (advanced); local: —
-- [ ] **30_fluids_3d** — new API: (reuse: 3D textures); new idea: 3D fluid + volume rendering
+- [ ] **31_fluids_3d** — new API: (reuse: 3D textures); new idea: 3D fluid + volume rendering
       - Read: [GG3 ch30 Real-Time Simulation and Rendering of 3D Fluids](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-30-real-time-simulation-and-rendering-3d-fluids) — real-time simulation and rendering of 3D fluids; local: `GPU-Gems-3-CD-Content/content/30` — zipped demo + video
       - Read: [GG1 ch39 Volume Rendering Techniques](https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-39-volume-rendering-techniques) — volume rendering techniques; local: —
 
@@ -267,12 +271,12 @@ GPU simulation, the bridge to [[Physics Engine - Glide]].
 
 Geometry generated on the GPU: marching cubes, relief mapping, signed distance fields.
 
-- [ ] **31_marching_cubes** — new API: (reuse: compaction + indirect draws); new idea: procedural terrain from 3D noise
+- [ ] **32_marching_cubes** — new API: (reuse: compaction + indirect draws); new idea: procedural terrain from 3D noise
       - Read: [GG3 ch1 Generating Complex Procedural Terrains Using the GPU](https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-1-generating-complex-procedural-terrains-using-gpu) — **target**: procedural terrains (local full source - geometry shaders; we use compute); local: `GPU-Gems-3-CD-Content/content/01` — full demo source: **geometry-shader marching cubes** (.vsh/.gsh/.psh)
-- [ ] **32_relief_mapping** — new API: (reuse); new idea: per-pixel displacement
+- [ ] **33_relief_mapping** — new API: (reuse); new idea: per-pixel displacement
       - Read: [GG2 ch8 Per-Pixel Displacement Mapping with Distance Functions](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions) — per-pixel displacement with distance functions (local source); local: `GPU-Gems-2-CD-Content/Geometric_Complexity/Ch_08_Per-Pixel_Displacement_Mapping_with_Distance_Functions` — C++ source + textures
       - Read: [GG3 ch18 Relaxed Cone Stepping for Relief Mapping](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-18-relaxed-cone-stepping-relief-mapping) — relaxed cone stepping for relief mapping (local source); local: `GPU-Gems-3-CD-Content/content/18` — C++ + .fx source
-- [ ] **33_sdf_raymarching** — new API: (reuse); new idea: SDF scenes, soft shadows, AO
+- [ ] **34_sdf_raymarching** — new API: (reuse); new idea: SDF scenes, soft shadows, AO
       - Read: [GG2 ch8 Per-Pixel Displacement Mapping with Distance Functions](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions) — distance functions; local: `GPU-Gems-2-CD-Content/Geometric_Complexity/Ch_08_Per-Pixel_Displacement_Mapping_with_Distance_Functions` — C++ source + textures
       - Read: [GG3 ch34 Signed Distance Fields Using Single-Pass GPU Scan Conversion of Tetrahedra](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-34-signed-distance-fields-using-single-pass-gpu) — signed distance fields via scan conversion; local: —
 
@@ -280,8 +284,8 @@ Geometry generated on the GPU: marching cubes, relief mapping, signed distance f
 
 Features the Cezanne iGPU doesn't have; needs the NVIDIA GPU working under PRIME.
 
-- [ ] **mesh_shaders** — new API: `VK_EXT_mesh_shader` (GL: `GL_NV_mesh_shader`); new idea: meshlets + culling (vs 18)
-- [ ] **ray_query** — new API: `VK_KHR_ray_query`, acceleration structures; new idea: ray-traced shadows/AO (vs 22-23), path tracer
+- [ ] **mesh_shaders** — new API: `VK_EXT_mesh_shader` (GL: `GL_NV_mesh_shader`); new idea: meshlets + culling (vs 19)
+- [ ] **ray_query** — new API: `VK_KHR_ray_query`, acceleration structures; new idea: ray-traced shadows/AO (vs 23-24), path tracer
 
 - [ ] **Prerequisite:** get the RTX 3060 working under PRIME (Vulkan doesn't list it yet; `nvidia-smi` fails).
 

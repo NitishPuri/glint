@@ -17,7 +17,7 @@ The CPU only sends 48 bytes of constants per frame. Reset / pause / count / forc
   renders them into a low-resolution off-screen target and upsamples, with care at depth edges.
   - Here the particles are 1-pixel additive points, so it doesn't apply yet; the RADV number below shows where
     the cost goes instead.
-  - The chapter becomes relevant once particles grow into sprites (25_light_scattering, 27_fluids_2d smoke).
+  - The chapter becomes relevant once particles grow into sprites (26_light_scattering, 28_fluids_2d smoke).
   - Local CD: — (online only)
 - Jarzynski & Olano, *Hash Functions for GPU Rendering* (JCGT 2020): the PCG hash used for per-particle
   randomness.

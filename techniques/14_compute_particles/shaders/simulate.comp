@@ -3,7 +3,7 @@
 
 // One invocation per particle: read it from the storage buffer, integrate one time step, write it back in
 // place. No particle reads another, so in-place update is safe (no ping-pong buffers needed). That changes
-// with interactions (28_nbody_boids).
+// with interactions (29_nbody_boids).
 
 layout(local_size_x = 256) in;  // = kWorkgroupSize. 256 threads per group: a multiple of AMD's 64-wide and
                                 // NVIDIA's 32-wide hardware threads (wave / warp).
