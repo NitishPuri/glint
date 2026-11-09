@@ -3,11 +3,14 @@
 // Move-only VkImage + VkDeviceMemory + one VkImageView, as 02_cube creates its depth buffer raw
 // (vkCreateImage, vkGetImageMemoryRequirements, vkAllocateMemory, vkBindImageMemory, vkCreateImageView).
 // Always DEVICE_LOCAL, optimal tiling, 2D. Contents and layout are the caller's business.
+// Memory: raw (its own VkDeviceMemory) or VMA (a range of a shared block, or a *dedicated* block when the driver
+// prefers one — typical for render targets), chosen by the Context (vk/memory.h).
 
 #include <string_view>
 #include <utility>
 
 #include "vk/context.h"
+#include "vk/memory.h"
 
 namespace glint::vk {
 
@@ -45,6 +48,9 @@ class Image {
     std::swap(m_device, other.m_device);
     std::swap(m_image, other.m_image);
     std::swap(m_memory, other.m_memory);
+    std::swap(m_allocator, other.m_allocator);
+    std::swap(m_allocation, other.m_allocation);
+    std::swap(m_rawBytes, other.m_rawBytes);
     std::swap(m_view, other.m_view);
     std::swap(m_format, other.m_format);
     std::swap(m_extent, other.m_extent);
@@ -53,7 +59,10 @@ class Image {
 
   VkDevice m_device = VK_NULL_HANDLE;
   VkImage m_image = VK_NULL_HANDLE;
-  VkDeviceMemory m_memory = VK_NULL_HANDLE;
+  VkDeviceMemory m_memory = VK_NULL_HANDLE;    // raw path
+  VmaAllocator m_allocator = VK_NULL_HANDLE;    // VMA path
+  VmaAllocation m_allocation = VK_NULL_HANDLE;
+  VkDeviceSize m_rawBytes = 0;
   VkImageView m_view = VK_NULL_HANDLE;
   VkFormat m_format = VK_FORMAT_UNDEFINED;
   VkExtent2D m_extent{};

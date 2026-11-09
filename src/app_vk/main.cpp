@@ -33,6 +33,7 @@
 #include "vk/context.h"
 #include "vk/debug.h"
 #include "vk/frame.h"
+#include "vk/memory.h"
 #include "vk/gpu_queries.h"
 #include "vk/swapchain.h"
 #include "vk/technique.h"
@@ -137,7 +138,7 @@ void runApp(const Config& config) {
                  .api = GraphicsApi::Vulkan});
 
   // GL: context + function pointers in two lines. VK: instance, validation, surface, GPU choice, device, queue.
-  vk::Context ctx({.window = window.handle(), .validation = config.validation});
+  vk::Context ctx({.window = window.handle(), .validation = config.validation, .vma = config.vma});
   const glm::ivec2 fb = window.framebufferSize();
   vk::Swapchain swapchain(ctx, {uint32_t(fb.x), uint32_t(fb.y)}, config.vsync);
   vk::Frames frames(ctx);
@@ -178,6 +179,9 @@ void runApp(const Config& config) {
     if (summary.count() == 0) return;
     log::info("summary  {}: {}, validation issues {}; cpu {}; gpu {}", current, summary.describe(),
               vk::Context::validationIssueCount() - issuesAtStart, cpuSummary.meanP95(), gpuSummary.meanP95());
+    // While the technique still exists: what its buffers and images cost in device memory (vk/memory.h).
+    log::info("memory   {}: {}", current, vk::memoryReport(ctx));
+    if (!config.vmaStats.empty()) vk::writeVmaStats(ctx, config.vmaStats);
     summary.clear();
     cpuSummary.clear();
     gpuSummary.clear();

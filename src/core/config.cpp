@@ -36,6 +36,10 @@ Config parseArgs(int argc, const char* const* argv) {
       config.logFile = value();
     } else if (arg == "--renderdoc") {
       config.renderdoc = true;
+    } else if (arg == "--no-vma") {
+      config.vma = false;
+    } else if (arg == "--vma-stats") {
+      config.vmaStats = value();
     } else if (arg == "--no-log-file") {
       config.writeLogFile = false;
     } else if (arg == "--frames") {
@@ -72,6 +76,8 @@ std::string usage(const char* exe) {
       "  --no-log-file      console only\n"
       "  --assets DIR       asset directory (default: the repo's assets/)\n"
       "  --renderdoc        load RenderDoc's in-app API: F12 / panel button captures a frame\n"
+      "  --no-vma           VK: allocate buffers/images raw, one vkAllocateMemory each (default: VMA)\n"
+      "  --vma-stats FILE   VK: write VMA's JSON statistics when a technique is unloaded\n"
       "  --frames N         quit after N frames\n"
       "  --screenshot FILE  save the last frame to FILE (PNG) and quit (after 60 frames unless --frames)\n"
       "  --fixed-dt S       advance animations by exactly S seconds per frame (deterministic screenshots)\n"

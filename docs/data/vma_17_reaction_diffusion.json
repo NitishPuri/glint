@@ -1,0 +1,207 @@
+{
+  "General": {
+    "API": "Vulkan", 
+    "apiVersion": "1.4.312", 
+    "GPU": "NVIDIA GeForce RTX 3060 Laptop GPU", 
+    "deviceType": 2, 
+    "maxMemoryAllocationCount": 4294967295, 
+    "bufferImageGranularity": 1024, 
+    "nonCoherentAtomSize": 64, 
+    "memoryHeapCount": 2, 
+    "memoryTypeCount": 6
+  }, 
+  "Total": {
+    "BlockCount": 5, 
+    "BlockBytes": 109051904, 
+    "AllocationCount": 5, 
+    "AllocationBytes": 8406032, 
+    "UnusedRangeCount": 3, 
+    "AllocationSizeMin": 16, 
+    "AllocationSizeMax": 4194304, 
+    "UnusedRangeSizeMin": 33538048, 
+    "UnusedRangeSizeMax": 33554416
+  }, 
+  "MemoryInfo": {
+    "Heap 0": {
+      "Flags": ["DEVICE_LOCAL"], 
+      "Size": 6442450944, 
+      "Budget": {
+        "BudgetBytes": 5153960755, 
+        "UsageBytes": 75497472
+      }, 
+      "Stats": {
+        "BlockCount": 4, 
+        "BlockBytes": 75497472, 
+        "AllocationCount": 4, 
+        "AllocationBytes": 8405008, 
+        "UnusedRangeCount": 2, 
+        "AllocationSizeMin": 16, 
+        "AllocationSizeMax": 4194304, 
+        "UnusedRangeSizeMin": 33538048, 
+        "UnusedRangeSizeMax": 33554416
+      }, 
+      "MemoryPools": {
+        "Type 1": {
+          "Flags": ["DEVICE_LOCAL"], 
+          "Stats": {
+            "BlockCount": 3, 
+            "BlockBytes": 41943040, 
+            "AllocationCount": 3, 
+            "AllocationBytes": 8404992, 
+            "UnusedRangeCount": 1, 
+            "AllocationSizeMin": 16384, 
+            "AllocationSizeMax": 4194304
+          }
+        }, 
+        "Type 2": {
+          "Flags": ["DEVICE_LOCAL"], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 5": {
+          "Flags": ["DEVICE_LOCAL", "HOST_VISIBLE", "HOST_COHERENT"], 
+          "Stats": {
+            "BlockCount": 1, 
+            "BlockBytes": 33554432, 
+            "AllocationCount": 1, 
+            "AllocationBytes": 16, 
+            "UnusedRangeCount": 1
+          }
+        }
+      }
+    }, 
+    "Heap 1": {
+      "Flags": [], 
+      "Size": 24775842816, 
+      "Budget": {
+        "BudgetBytes": 19820674252, 
+        "UsageBytes": 33554432
+      }, 
+      "Stats": {
+        "BlockCount": 1, 
+        "BlockBytes": 33554432, 
+        "AllocationCount": 1, 
+        "AllocationBytes": 1024, 
+        "UnusedRangeCount": 1
+      }, 
+      "MemoryPools": {
+        "Type 0": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 3": {
+          "Flags": ["HOST_VISIBLE", "HOST_COHERENT"], 
+          "Stats": {
+            "BlockCount": 1, 
+            "BlockBytes": 33554432, 
+            "AllocationCount": 1, 
+            "AllocationBytes": 1024, 
+            "UnusedRangeCount": 1
+          }
+        }, 
+        "Type 4": {
+          "Flags": ["HOST_VISIBLE", "HOST_COHERENT", "HOST_CACHED"], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }
+      }
+    }
+  }, 
+  "DefaultPools": {
+    "Type 0": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 1": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 0, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 33538048, 
+          "Allocations": 1, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 16384, "Usage": 32, "Name": "17 reduction partials"}, 
+            {"Offset": 16384, "Type": "FREE", "Size": 33538048}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+        {"Type": "IMAGE_OPTIMAL", "Size": 4194304, "Usage": 29, "Name": "17 state A"}, 
+        {"Type": "IMAGE_OPTIMAL", "Size": 4194304, "Usage": 29, "Name": "17 state B"}
+      ]
+    }, 
+    "Type 2": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 3": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 1, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 33553408, 
+          "Allocations": 1, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 1024, "Usage": 2, "Name": "17 readback"}, 
+            {"Offset": 1024, "Type": "FREE", "Size": 33553408}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 4": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 5": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 1, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 33554416, 
+          "Allocations": 1, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 16, "Usage": 32, "Name": "17 reduction results (mapped)"}, 
+            {"Offset": 16, "Type": "FREE", "Size": 33554416}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }
+  }, 
+  "CustomPools": {
+  }
+}

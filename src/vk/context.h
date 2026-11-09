@@ -8,6 +8,7 @@
 
 #include <string>
 
+#include "vk/memory.h"
 #include "vk/vk.h"
 
 struct GLFWwindow;
@@ -17,6 +18,7 @@ namespace glint::vk {
 struct ContextDesc {
   GLFWwindow* window = nullptr;
   bool validation = true;  // VK_LAYER_KHRONOS_validation + synchronization validation
+  bool vma = true;         // false (--no-vma): vk::Buffer / vk::Image allocate raw, one VkDeviceMemory each
 };
 
 class Context {
@@ -36,6 +38,8 @@ class Context {
   uint32_t queueFamily = 0;  // one family for graphics + present (true on every desktop GPU we target)
   VkQueue queue = VK_NULL_HANDLE;
   bool pipelineStatistics = false;  // the pipelineStatisticsQuery feature is enabled
+  // Null with --no-vma. vk::Buffer / vk::Image use it when set; techniques that allocate raw on purpose ignore it.
+  VmaAllocator allocator = VK_NULL_HANDLE;
 
   // Index of a memory type allowed by `typeBits` (from vkGet*MemoryRequirements) that has all `flags`.
   // Throws if there is none. (01_triangle spells this loop out once; everything else calls this.)

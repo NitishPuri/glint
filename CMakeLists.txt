@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(glint LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)  # GCC 11: -std=c++23 = partial C++23 (see CLAUDE.md "C++ standard")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -89,12 +89,16 @@ add_library(imgui_backend_vk STATIC
   ${GLINT_IMGUI_BACKEND_DIR}/imgui_impl_vulkan.cpp)
 target_link_libraries(imgui_backend_vk PUBLIC imgui glfw Vulkan::Vulkan)
 
+# VMA's implementation, compiled once, without our warning flags (third-party code).
+add_library(vma_impl STATIC src/vk/vma.cpp)
+target_link_libraries(vma_impl PUBLIC vma Vulkan::Vulkan)
+
 add_library(glint_vk_backend STATIC
   src/vk/buffer.cpp src/vk/context.cpp src/vk/descriptors.cpp src/vk/debug.cpp src/vk/frame.cpp src/vk/gpu_queries.cpp
-  src/vk/image.cpp src/vk/mesh.cpp
+  src/vk/image.cpp src/vk/memory.cpp src/vk/mesh.cpp
   src/vk/pipeline.cpp src/vk/shader.cpp src/vk/swapchain.cpp src/vk/texture.cpp src/vk/upload.cpp)
 target_link_libraries(glint_vk_backend
-  PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk
+  PUBLIC glint_core Vulkan::Vulkan imgui_backend_vk vma_impl
   PRIVATE glint_warnings)
 # VK loads precompiled SPIR-V from the build tree (see cmake/shaders.cmake).
 target_compile_definitions(glint_vk_backend PUBLIC GLINT_SHADER_DIR="${CMAKE_BINARY_DIR}/shaders")

@@ -142,4 +142,5 @@ itself. VK doesn't distinguish: every hazard is yours, including write-after-rea
 | Readback without stalling | Persistent coherent mapping + `GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT` + `glFenceSync`, poll with `glClientWaitSync(..., 0)` | `HOST_VISIBLE` buffer per frame slot, barrier → `HOST`, read after the frame fence | 17 |
 | Float32 formats | RGBA32F filterable, RG32F image load/store: guaranteed | Linear filtering optional (query); `rg32f` storage needs `shaderStorageImageExtendedFormats` | 17 |
 | `texelFetch` on a 1-level texture | Still needs a complete texture (non-mipmap min filter) | No completeness rules: the view is what it is | 17 |
+| Memory allocation | Driver decides; `glNamedBufferStorage` flags are hints, buffers may migrate later | App decides: memory type, sub-allocation, dedicated or not — usually via VMA (`docs/vma.md`), raw = one `vkAllocateMemory` each | VMA |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

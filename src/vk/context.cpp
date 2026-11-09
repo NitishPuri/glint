@@ -1,5 +1,7 @@
 #include "vk/context.h"
 
+#include <vk_mem_alloc.h>
+
 // GLFW only declares glfwCreateWindowSurface if <vulkan/vulkan.h> came first (vk/context.h includes it).
 #include <GLFW/glfw3.h>
 
@@ -234,10 +236,28 @@ Context::Context(const ContextDesc& desc) {
 
   debug::setName(device, VK_OBJECT_TYPE_QUEUE, queue, "main queue");
   log::info("device     {}", deviceDescription());
+
+  // --- VMA ------------------------------------------------------------------------------------------------
+  // It needs the same three handles every allocation decision depends on, and the API version (1.3: it can use
+  // core 1.1 dedicated-allocation queries and 1.2 buffer-device-address without extensions). Vulkan functions
+  // come from the linked loader (VMA_STATIC_VULKAN_FUNCTIONS).
+  if (desc.vma) {
+    VmaAllocatorCreateInfo info{};
+    info.physicalDevice = physicalDevice;
+    info.device = device;
+    info.instance = instance;
+    info.vulkanApiVersion = VK_API_VERSION_1_3;
+    VK_CHECK(vmaCreateAllocator(&info, &allocator));
+    log::info("memory     VMA (vk::Buffer / vk::Image sub-allocate from shared blocks)");
+  } else {
+    log::info("memory     raw vkAllocateMemory per vk::Buffer / vk::Image (--no-vma)");
+  }
 }
 
 Context::~Context() {
-  // Children before parents: device before instance, surface and messenger before instance.
+  // Children before parents: allocator before device, device before instance, surface and messenger before instance.
+  // (VMA asserts here if any allocation is still alive: a leak check for free.)
+  if (allocator) vmaDestroyAllocator(allocator);
   vkDestroyDevice(device, nullptr);
   vkDestroySurfaceKHR(instance, surface, nullptr);
   if (messenger) {

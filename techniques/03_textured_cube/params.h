@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 namespace glint::textured_cube {
 
@@ -31,12 +32,12 @@ inline bool paramsUi(Params& p) {
     }
     ImGui::EndCombo();
   }
-  int filter = int(p.filter);
-  ImGui::RadioButton("nearest", &filter, int(Filter::Nearest));
+  int filter = std::to_underlying(p.filter);
+  ImGui::RadioButton("nearest", &filter, std::to_underlying(Filter::Nearest));
   ImGui::SameLine();
-  ImGui::RadioButton("linear", &filter, int(Filter::Linear));
+  ImGui::RadioButton("linear", &filter, std::to_underlying(Filter::Linear));
   ImGui::SameLine();
-  ImGui::RadioButton("trilinear (mips)", &filter, int(Filter::Trilinear));
+  ImGui::RadioButton("trilinear (mips)", &filter, std::to_underlying(Filter::Trilinear));
   p.filter = Filter(filter);
   ImGui::SliderFloat("rotation", &p.rotationSpeed, -180.0f, 180.0f, "%.0f deg/s");
   return changed;

@@ -3,6 +3,7 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "core/camera.h"
 #include "core/input.h"
@@ -82,10 +83,10 @@ void statsSection(const FrameStats& stats, const GpuStats& gpu, const char* api,
 
 void cameraSection(Camera& camera) {
   if (!ImGui::CollapsingHeader("Camera")) return;
-  int mode = int(camera.mode);
-  ImGui::RadioButton("Arcball", &mode, int(Camera::Mode::Arcball));
+  int mode = std::to_underlying(camera.mode);
+  ImGui::RadioButton("Arcball", &mode, std::to_underlying(Camera::Mode::Arcball));
   ImGui::SameLine();
-  ImGui::RadioButton("Fly", &mode, int(Camera::Mode::Fly));
+  ImGui::RadioButton("Fly", &mode, std::to_underlying(Camera::Mode::Fly));
   camera.mode = Camera::Mode(mode);
   ImGui::TextDisabled(camera.mode == Camera::Mode::Arcball ? "RMB rotate, MMB pan, wheel zoom"
                                                            : "RMB look, WASD move, Q/E down/up, Shift fast");

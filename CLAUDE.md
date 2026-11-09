@@ -45,8 +45,8 @@ read `NOTES.md`, and understand every line and every difference.
   `! sudo apt install ...` when packages are needed.
 - Repo lives on an NTFS mount (`/mnt/e/...`): builds are slower than on ext4; file modes show as 755;
   keep `core.filemode=false`. Line endings are LF (`.gitattributes` enforces it).
-- Compiler: **GCC 11.4** → **no `std::format`**. Use `{fmt}` everywhere (`fmt::format`, `fmt::print`).
-  Don't use other C++20 library features GCC 11 lacks (`std::format`, `<print>`, ranges `to`, `std::expected`).
+- Compiler: **GCC 11.4**, built as **C++23** (`-std=c++23`, which GCC 11 only partly implements, see
+  [C++ standard](#c-standard)). No `std::format`/`<print>` yet: use `{fmt}` everywhere (`fmt::format`, `fmt::print`).
 - GPUs:
   - **NVIDIA RTX 3060 Laptop (driver 580): primary target since 2026-10-10.** The laptop is in `nvidia`
     graphics mode (`system76-power graphics`): GL *and* VK both run on the RTX by default (VK device scoring prefers
@@ -92,6 +92,7 @@ glint/
   docs/
     PLAN.md               step-by-step migration + integration plan (source of truth for progress)
     gl-vs-vk.md           running cheat-sheet of API differences, grown as techniques land
+    vma.md                what VMA decides (memory types, blocks, dedicated allocations), measured
   cmake/                  deps.cmake (FetchContent), shaders.cmake (glslc rules)
   external/glad/          generated GL loader
   src/
@@ -125,7 +126,9 @@ glint/
   A dual-window side-by-side mode is a later phase.
 - Vulkan style: **Vulkan 1.3 core, dynamic rendering (`vkCmdBeginRendering`) + synchronization2**, no
   `VkRenderPass`/`VkFramebuffer` objects (render passes get one explicit NOTES.md entry explaining the
-  legacy model). Raw `vkAllocateMemory` first; VMA is introduced deliberately in a later phase.
+  legacy model). Memory: since 2026-10-27 `vk::Buffer`/`vk::Image` allocate through **VMA** (`docs/vma.md`);
+  `--no-vma` gives the raw one-`vkAllocateMemory`-per-resource path. Raw allocation code inside a technique
+  (01, 02, 16) stays raw on purpose: it's the lesson there.
 - Clip-space conventions: VK asks the shared camera for `ClipDepth::ZeroToOne` (`glm::perspectiveRH_ZO`) and
   flips Y via negative viewport height (VK_KHR_maintenance1, core in 1.1), so the same camera code produces the
   same image. No global `GLM_FORCE_DEPTH_ZERO_TO_ONE`: it would change what `glm::perspective` means per
@@ -155,10 +158,43 @@ glint/
 
 ## Conventions
 
-- C++20 (GCC 11 subset), `.clang-format` (Google, 2-space, 120 cols). Namespaces `glint`, `glint::gl`, `glint::vk`.
+- C++23 (whatever the current GCC implements, see below), `.clang-format` (Google, 2-space, 120 cols). Namespaces `glint`, `glint::gl`, `glint::vk`.
 - Files: `snake_case.cpp/.h`. Types `PascalCase`, functions `camelCase`, members `m_camelCase`.
 - Errors: `VK_CHECK(expr)` aborts with file/line + `string_VkResult`; GL errors come via `KHR_debug` callback.
 - Logging: `glint::log::info/warn/error` on top of fmt. Every run also writes `logs/<app>_<date>_<time>.log`
   (gitignored) with a header (commit, build, args, config, GPU) and per-technique `summary` lines — compare
   those across runs for regressions. `--log FILE` / `--no-log-file` override.
 - Commit per technique-backend (`techniques/05_vbo_indexing: vk`), small and reviewable.
+
+## C++ standard
+
+The project builds as **C++23** (`CMAKE_CXX_STANDARD 23`, extensions off). **New and touched code uses the
+C++23 (and C++20) idiom whenever the toolchain supports it**, as long as it reads at least as clearly as the old
+form (code is for reading). Don't sweep untouched files just to modernise them; convert the code you are editing.
+
+What the compiler supports is checked, not assumed. Probe it with feature-test macros (`<version>`, `__cpp_lib_*`)
+before using a new feature, and update this table when the toolchain changes.
+
+| Feature | Use it for | GCC |
+|---|---|---|
+| `std::to_underlying(e)` | enum → int (ImGui radio buttons, indexing tables by an enum); not `int(e)`/`static_cast` | 11 ✅ |
+| `str.contains(x)`, `starts_with`/`ends_with` (C++20) | instead of `find(...) != npos` / `compare(pos, n, ...) == 0` | 11 ✅ |
+| `map.contains(k)` (C++20) | instead of `find(k) != end()` | 11 ✅ |
+| `0uz` / `1uz` | `size_t` literals, e.g. `std::max(n, 1uz)` instead of `size_t{1}` | 11 ✅ |
+| `[x] mutable { ... }` | lambdas with specifiers no longer need `()` | 11 ✅ |
+| `std::unreachable()` | after an exhaustive `switch` over an enum, instead of a dummy `return` | 12 |
+| `std::expected<T, E>` | fallible loaders/creators (shader compile, file load) instead of throw-or-bool | 12 |
+| monadic `optional` (`and_then`, `transform`, `or_else`) | chaining lookups that may fail | 12 |
+| `if consteval`, `std::byteswap`, `std::move_only_function` | as needed | 12 |
+| `views::zip`, `views::enumerate`, `views::chunk`, `views::stride`, `views::cartesian_product` | parallel arrays (positions/normals/uvs in `MeshData`), indexed loops | 13 |
+| `static operator()`, `[[assume(expr)]]`, `std::format` | as needed (keep `{fmt}` until `<print>` too) | 13 |
+| `std::print`/`println`, `ranges::to<std::vector>()`, deducing `this` | logging/CLI output, materialising views, CRTP-free helpers | 14 |
+
+✅ = available on the current toolchain (GCC 11.4). Rows without ✅ need a GCC upgrade first. Once one lands,
+update the "GCC" column and the Environment section, and from then on use those features in new code. Rules
+that don't depend on the compiler:
+
+- Don't mix `{fmt}` and `std::format` in one codebase: keep `{fmt}` until `std::print` is available
+  everywhere (GCC 14, MSVC 19.37+), then switch in one commit.
+- MSVC (`/std:c++latest`) and libstdc++ differ per feature. A feature used in `src/core/` must exist on both.
+

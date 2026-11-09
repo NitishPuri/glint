@@ -1,0 +1,273 @@
+{
+  "General": {
+    "API": "Vulkan", 
+    "apiVersion": "1.4.312", 
+    "GPU": "NVIDIA GeForce RTX 3060 Laptop GPU", 
+    "deviceType": 2, 
+    "maxMemoryAllocationCount": 4294967295, 
+    "bufferImageGranularity": 1024, 
+    "nonCoherentAtomSize": 64, 
+    "memoryHeapCount": 2, 
+    "memoryTypeCount": 6
+  }, 
+  "Total": {
+    "BlockCount": 5, 
+    "BlockBytes": 301989888, 
+    "AllocationCount": 45, 
+    "AllocationBytes": 196003648, 
+    "UnusedRangeCount": 7, 
+    "AllocationSizeMin": 128, 
+    "AllocationSizeMax": 22371328, 
+    "UnusedRangeSizeMin": 448, 
+    "UnusedRangeSizeMax": 33554432
+  }, 
+  "MemoryInfo": {
+    "Heap 0": {
+      "Flags": ["DEVICE_LOCAL"], 
+      "Size": 6442450944, 
+      "Budget": {
+        "BudgetBytes": 5153960755, 
+        "UsageBytes": 268435456
+      }, 
+      "Stats": {
+        "BlockCount": 4, 
+        "BlockBytes": 268435456, 
+        "AllocationCount": 45, 
+        "AllocationBytes": 196003648, 
+        "UnusedRangeCount": 6, 
+        "AllocationSizeMin": 128, 
+        "AllocationSizeMax": 22371328, 
+        "UnusedRangeSizeMin": 448, 
+        "UnusedRangeSizeMax": 33554176
+      }, 
+      "MemoryPools": {
+        "Type 1": {
+          "Flags": ["DEVICE_LOCAL"], 
+          "Stats": {
+            "BlockCount": 3, 
+            "BlockBytes": 234881024, 
+            "AllocationCount": 43, 
+            "AllocationBytes": 196003392, 
+            "UnusedRangeCount": 5, 
+            "AllocationSizeMin": 512, 
+            "AllocationSizeMax": 22371328, 
+            "UnusedRangeSizeMin": 448, 
+            "UnusedRangeSizeMax": 22366208
+          }
+        }, 
+        "Type 2": {
+          "Flags": ["DEVICE_LOCAL"], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 5": {
+          "Flags": ["DEVICE_LOCAL", "HOST_VISIBLE", "HOST_COHERENT"], 
+          "Stats": {
+            "BlockCount": 1, 
+            "BlockBytes": 33554432, 
+            "AllocationCount": 2, 
+            "AllocationBytes": 256, 
+            "UnusedRangeCount": 1, 
+            "AllocationSizeMin": 128, 
+            "AllocationSizeMax": 128
+          }
+        }
+      }
+    }, 
+    "Heap 1": {
+      "Flags": [], 
+      "Size": 24775842816, 
+      "Budget": {
+        "BudgetBytes": 19820674252, 
+        "UsageBytes": 33554432
+      }, 
+      "Stats": {
+        "BlockCount": 1, 
+        "BlockBytes": 33554432, 
+        "AllocationCount": 0, 
+        "AllocationBytes": 0, 
+        "UnusedRangeCount": 1
+      }, 
+      "MemoryPools": {
+        "Type 0": {
+          "Flags": [], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }, 
+        "Type 3": {
+          "Flags": ["HOST_VISIBLE", "HOST_COHERENT"], 
+          "Stats": {
+            "BlockCount": 1, 
+            "BlockBytes": 33554432, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 1
+          }
+        }, 
+        "Type 4": {
+          "Flags": ["HOST_VISIBLE", "HOST_COHERENT", "HOST_CACHED"], 
+          "Stats": {
+            "BlockCount": 0, 
+            "BlockBytes": 0, 
+            "AllocationCount": 0, 
+            "AllocationBytes": 0, 
+            "UnusedRangeCount": 0
+          }
+        }
+      }
+    }
+  }, 
+  "DefaultPools": {
+    "Type 0": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 1": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 0, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 1792448, 
+          "Allocations": 34, 
+          "UnusedRanges": 3, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 125664, "Usage": 130, "Name": "gltf primitive 0 positions"}, 
+            {"Offset": 125664, "Type": "BUFFER", "Size": 125664, "Usage": 130, "Name": "gltf primitive 0 normals"}, 
+            {"Offset": 251328, "Type": "BUFFER", "Size": 83776, "Usage": 130, "Name": "gltf primitive 0 uvs"}, 
+            {"Offset": 335104, "Type": "BUFFER", "Size": 167552, "Usage": 130, "Name": "gltf primitive 0 tangents"}, 
+            {"Offset": 502656, "Type": "BUFFER", "Size": 236160, "Usage": 66, "Name": "gltf primitive 0 indices"}, 
+            {"Offset": 738816, "Type": "BUFFER", "Size": 163664, "Usage": 130, "Name": "gltf primitive 1 positions"}, 
+            {"Offset": 902480, "Type": "BUFFER", "Size": 163664, "Usage": 130, "Name": "gltf primitive 1 normals"}, 
+            {"Offset": 1066144, "Type": "BUFFER", "Size": 109104, "Usage": 130, "Name": "gltf primitive 1 uvs"}, 
+            {"Offset": 1175248, "Type": "BUFFER", "Size": 218208, "Usage": 130, "Name": "gltf primitive 1 tangents"}, 
+            {"Offset": 1393456, "Type": "BUFFER", "Size": 290144, "Usage": 66, "Name": "gltf primitive 1 indices"}, 
+            {"Offset": 1683600, "Type": "BUFFER", "Size": 56112, "Usage": 130, "Name": "gltf primitive 2 positions"}, 
+            {"Offset": 1739712, "Type": "BUFFER", "Size": 56112, "Usage": 130, "Name": "gltf primitive 2 normals"}, 
+            {"Offset": 1795824, "Type": "BUFFER", "Size": 37408, "Usage": 130, "Name": "gltf primitive 2 uvs"}, 
+            {"Offset": 1833232, "Type": "BUFFER", "Size": 74816, "Usage": 130, "Name": "gltf primitive 2 tangents"}, 
+            {"Offset": 1908048, "Type": "BUFFER", "Size": 97632, "Usage": 66, "Name": "gltf primitive 2 indices"}, 
+            {"Offset": 2005680, "Type": "BUFFER", "Size": 163632, "Usage": 130, "Name": "gltf primitive 3 positions"}, 
+            {"Offset": 2169312, "Type": "BUFFER", "Size": 163632, "Usage": 130, "Name": "gltf primitive 3 normals"}, 
+            {"Offset": 2332944, "Type": "BUFFER", "Size": 109088, "Usage": 130, "Name": "gltf primitive 3 uvs"}, 
+            {"Offset": 2442032, "Type": "BUFFER", "Size": 218176, "Usage": 130, "Name": "gltf primitive 3 tangents"}, 
+            {"Offset": 2660208, "Type": "BUFFER", "Size": 241152, "Usage": 66, "Name": "gltf primitive 3 indices"}, 
+            {"Offset": 2901360, "Type": "BUFFER", "Size": 150416, "Usage": 130, "Name": "gltf primitive 4 positions"}, 
+            {"Offset": 3051776, "Type": "BUFFER", "Size": 150416, "Usage": 130, "Name": "gltf primitive 4 normals"}, 
+            {"Offset": 3202192, "Type": "BUFFER", "Size": 100272, "Usage": 130, "Name": "gltf primitive 4 uvs"}, 
+            {"Offset": 3302464, "Type": "BUFFER", "Size": 200544, "Usage": 130, "Name": "gltf primitive 4 tangents"}, 
+            {"Offset": 3503008, "Type": "BUFFER", "Size": 262752, "Usage": 66, "Name": "gltf primitive 4 indices"}, 
+            {"Offset": 3765760, "Type": "BUFFER", "Size": 5232, "Usage": 130, "Name": "gltf primitive 5 positions"}, 
+            {"Offset": 3770992, "Type": "BUFFER", "Size": 5232, "Usage": 130, "Name": "gltf primitive 5 normals"}, 
+            {"Offset": 3776224, "Type": "BUFFER", "Size": 3488, "Usage": 130, "Name": "gltf primitive 5 uvs"}, 
+            {"Offset": 3779712, "Type": "BUFFER", "Size": 6976, "Usage": 130, "Name": "gltf primitive 5 tangents"}, 
+            {"Offset": 3786688, "Type": "BUFFER", "Size": 8832, "Usage": 66, "Name": "gltf primitive 5 indices"}, 
+            {"Offset": 3795520, "Type": "FREE", "Size": 448}, 
+            {"Offset": 3795968, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 0"}, 
+            {"Offset": 26167296, "Type": "IMAGE_OPTIMAL", "Size": 5594112, "Usage": 7, "Name": "gltf image 12"}, 
+            {"Offset": 31761408, "Type": "IMAGE_OPTIMAL", "Size": 512, "Usage": 7, "Name": "white"}, 
+            {"Offset": 31761920, "Type": "FREE", "Size": 512}, 
+            {"Offset": 31762432, "Type": "IMAGE_OPTIMAL", "Size": 512, "Usage": 7, "Name": "flat normal"}, 
+            {"Offset": 31762944, "Type": "FREE", "Size": 1791488}
+          ]
+        }, 
+        "2": {
+          "MapRefCount": 0, 
+          "TotalBytes": 134217728, 
+          "UnusedBytes": 14718976, 
+          "Allocations": 7, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 5"}, 
+            {"Offset": 22371328, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 6"}, 
+            {"Offset": 44742656, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 8"}, 
+            {"Offset": 67113984, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 9"}, 
+            {"Offset": 89485312, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 11"}, 
+            {"Offset": 111856640, "Type": "IMAGE_OPTIMAL", "Size": 5594112, "Usage": 7, "Name": "gltf image 14"}, 
+            {"Offset": 117450752, "Type": "IMAGE_OPTIMAL", "Size": 2048000, "Usage": 32, "Name": "11 depth"}, 
+            {"Offset": 119498752, "Type": "FREE", "Size": 14718976}
+          ]
+        }, 
+        "1": {
+          "MapRefCount": 0, 
+          "TotalBytes": 67108864, 
+          "UnusedBytes": 22366208, 
+          "Allocations": 2, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 2"}, 
+            {"Offset": 22371328, "Type": "IMAGE_OPTIMAL", "Size": 22371328, "Usage": 7, "Name": "gltf image 3"}, 
+            {"Offset": 44742656, "Type": "FREE", "Size": 22366208}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 2": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 3": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 0, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 33554432, 
+          "Allocations": 0, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "FREE", "Size": 33554432}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 4": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }, 
+    "Type 5": {
+      "PreferredBlockSize": 268435456, 
+      "Blocks": {
+        "0": {
+          "MapRefCount": 2, 
+          "TotalBytes": 33554432, 
+          "UnusedBytes": 33554176, 
+          "Allocations": 2, 
+          "UnusedRanges": 1, 
+          "Suballocations": [
+            {"Offset": 0, "Type": "BUFFER", "Size": 128, "Usage": 16, "Name": "11 frame 0"}, 
+            {"Offset": 128, "Type": "BUFFER", "Size": 128, "Usage": 16, "Name": "11 frame 1"}, 
+            {"Offset": 256, "Type": "FREE", "Size": 33554176}
+          ]
+        }
+      }, 
+      "DedicatedAllocations": [
+      ]
+    }
+  }, 
+  "CustomPools": {
+  }
+}

@@ -14,6 +14,7 @@ side. Exit code 1 if any technique is below --min-psnr (or failed to run).
   tools/parity.py                         # all techniques, Debug build
   tools/parity.py 07_render_to_texture    # just one
   tools/parity.py --build build/release --min-psnr 35
+  tools/parity.py --vk-args=--no-vma      # extra arguments for the VK app only
 """
 
 import argparse
@@ -31,9 +32,9 @@ def techniques(app):
     return names
 
 
-def run(app, technique, png, args):
+def run(app, technique, png, args, extra=()):
     cmd = [str(app), technique, "--size", args.size, "--fixed-dt", str(args.fixed_dt), "--frames", str(args.frames),
-           "--screenshot", str(png), "--no-log-file"]
+           "--screenshot", str(png), "--no-log-file", *extra]
     result = subprocess.run(cmd, capture_output=True, text=True)
     # Exit 2 = rendered fine but the debug layer reported issues: still worth comparing, but flag it.
     return result.returncode, result.stdout + result.stderr
@@ -58,6 +59,7 @@ def main():
     parser.add_argument("--frames", type=int, default=30, help="frames to run before the screenshot")
     parser.add_argument("--min-psnr", type=float, default=30.0, help="pass threshold in dB")
     parser.add_argument("--fuzz", default="2%", help="per-pixel tolerance for the differing-pixel count")
+    parser.add_argument("--vk-args", default="", help="extra arguments for glint_vk, e.g. --vk-args=--no-vma")
     args = parser.parse_args()
 
     build = Path(args.build)
@@ -72,7 +74,7 @@ def main():
         pngs = {api: out / f"{t}_{api}.png" for api in ("gl", "vk")}
         codes = {}
         for api, app in (("gl", gl), ("vk", vk)):
-            codes[api], log = run(app, t, pngs[api], args)
+            codes[api], log = run(app, t, pngs[api], args, args.vk_args.split() if api == "vk" else ())
             if not pngs[api].exists() or codes[api] not in (0, 2):
                 print(f"{t:30} {'-':>8} {'-':>8}  FAIL ({api} exited {codes[api]})\n{log[-800:]}")
                 failed += 1

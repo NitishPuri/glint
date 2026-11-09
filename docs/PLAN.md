@@ -194,8 +194,9 @@ Compute shaders and the data-parallel building blocks every simulation and GPU-d
       - Read: [GG2 ch31 Mapping Computational Concepts to GPUs](https://developer.nvidia.com/gpugems/gpugems2/part-iv-general-purpose-computation-gpus-primer/chapter-31-mapping-computational) — §31.3–31.5: streams/kernels/feedback, and its "simple example", Gray-Scott reaction-diffusion; local: `GPU-Gems-2-CD-Content/General-Purpose_Computation_on_GPUs_A_Primer/Ch_31_Mapping_Computational_Concepts_to_GPUs/DEMOS/OpenGL/src/gpgpu_reactiondiffusion` (rd.cg + C++) and `gpgpu_reductions`
       - Read: Karl Sims, *Reaction-Diffusion Tutorial* (karlsims.com/rd.html) and Pearson 1993 *Complex Patterns in a Simple System* — the (F, k) parameter map
 
-- [ ] **VMA** (moved here from Phase 5/8): swap `vk::Buffer`/`vk::Image` internals once compute
-      buffers multiply; NOTES on what it decides (memory type, sub-allocation, dedicated allocations).
+- [x] **VMA** (moved here from Phase 5/8): `vk::Buffer`/`vk::Image` allocate through VMA by default, `--no-vma`
+      keeps the raw path; per-technique `memory` log line, `--vma-stats` JSON, `parity.py --vk-args`. What it decides
+      (memory type, sub-allocation, dedicated allocations, block growth), measured: `docs/vma.md`.
 
 ## Phase 10 — Geometry throughput
 
@@ -370,6 +371,7 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-09-30 | Dynamic cull mode (`VK_DYNAMIC_STATE_CULL_MODE`) in every pipeline | Core in 1.3; mirrors GL's per-frame `glEnable(GL_CULL_FACE)` without extra pipelines |
 | 2026-09-30 | Staging uploads even though RADV/APU has DEVICE_LOCAL+HOST_VISIBLE memory | Portable path; the APU shortcut is documented in 02's NOTES |
 | 2026-09-30 | VMA deferred past 03, then moved to Phase 8 | Raw allocation behind vk::Buffer/Image stayed short and readable through 08 |
+| 2026-10-27 | VMA in vk::Buffer/Image after 17, raw path kept as `--no-vma` | Compare both on the same techniques; raw code inside 01/02/16 stays the lesson |
 | 2026-09-30 | vk helpers after 03: descriptors (layout/pool/sets/writes, pipeline layout), `beginRendering`, `transitionDepthForRendering` | Written raw in 02–03 |
 | 2026-09-30 | Barriers before shader reads use `VK_ACCESS_2_SHADER_READ_BIT` | Sync validation reports RAW with `SHADER_SAMPLED_READ` only (07) |
 | 2026-09-30 | Flipped viewport everywhere, incl. offscreen passes; readers flip v / negate y in the shadow matrix | One convention; the row-order difference is documented where it matters (07, 08) |
@@ -385,3 +387,4 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-10-02 | Phases 8–15: the learning path towards GPU Gems (vault: *Glint - Learning Path* + one note per stage) | Incremental: ≤1 new API concept + ≤1 new idea per technique; Gems chapters only after their prerequisites |
 | 2026-10-02 | Every NOTES.md gets a **Read** section (GPU Gems chapter + local CD path) | Read the chapter while reviewing the technique; local CD code at `/mnt/e/tree/graphics/nvidia/GPU-Gems` |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |
+| 2026-11-09 | `CMAKE_CXX_STANDARD 23`; new code uses C++23 idioms the toolchain supports (table in CLAUDE.md) | GCC 11 already gives `to_underlying`, `string::contains`, `uz`; flipping now means a GCC upgrade unlocks the rest without a migration step |

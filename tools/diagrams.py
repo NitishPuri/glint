@@ -720,6 +720,51 @@ def rd_pingpong():
     return fig
 
 
+# --- VMA (docs/vma.md) ------------------------------------------------------------------------------------------
+# Drawn from VMA's own JSON statistics (glint_vk <technique> --vma-stats FILE), committed under docs/data/.
+
+@figure("vma_blocks", "docs/diagrams/vma_blocks.svg")
+def vma_blocks():
+    import json
+    dumps = [("11_gltf", "docs/data/vma_11_gltf.json"), ("17_reaction_diffusion",
+                                                           "docs/data/vma_17_reaction_diffusion.json")]
+    colors = {"BUFFER": "#90cdf4", "IMAGE_OPTIMAL": "#fbd38d", "FREE": "#f7fafc"}
+    rows = []  # (technique, label, total bytes, [(type, size, name)])
+    for technique, path in dumps:
+        d = json.loads((ROOT / path).read_text())
+        flags = {}
+        for heap in d["MemoryInfo"].values():
+            for t, pool in heap["MemoryPools"].items():
+                flags[t] = "+".join(f.replace("HOST_", "H_").replace("DEVICE_LOCAL", "DEVICE") for f in pool["Flags"])
+        for t, pool in d["DefaultPools"].items():
+            for b, block in pool.get("Blocks", {}).items():
+                subs = [(s["Type"], s["Size"], s.get("Name", "")) for s in block["Suballocations"]]
+                rows.append((technique, f"{t} [{flags[t] or 'host'}] block {b}", block["TotalBytes"], subs))
+            for a in pool.get("DedicatedAllocations", []):
+                rows.append((technique, f"{t} [{flags[t]}] dedicated", a["Size"], [(a["Type"], a["Size"],
+                                                                                   a.get("Name", ""))]))
+    scale = max(r[2] for r in rows)
+    fig, ax = plt.subplots(figsize=(11, 0.42 * len(rows) + 1.4))
+    for i, (technique, label, total, subs) in enumerate(rows):
+        y = len(rows) - 1 - i
+        x = 0
+        for kind, size, name in subs:
+            ax.add_patch(Rectangle((x / scale, y + 0.15), size / scale, 0.7, fc=colors[kind], ec="#a0aec0", lw=0.3))
+            x += size
+        used = [s for s in subs if s[0] != "FREE"]
+        summary = (f"{len(used)} allocations" if len(used) != 1 else used[0][2]) + f", {total / 2**20:.0f} MB"
+        ax.text(-0.01, y + 0.5, f"{technique}: {label}", ha="right", va="center", fontsize=7.5)
+        ax.text(total / scale + 0.01, y + 0.5, summary, va="center", fontsize=7.5)
+    handles = [Rectangle((0, 0), 1, 1, fc=c, ec="#a0aec0") for c in colors.values()]
+    ax.legend(handles, ["buffer", "image (optimal tiling)", "free"], loc="lower right", fontsize=8, frameon=False)
+    ax.set_xlim(0, 1.25)
+    ax.set_ylim(0, len(rows))
+    ax.axis("off")
+    ax.set_title("VMA: VkDeviceMemory blocks and what lives in them (width ∝ bytes; from --vma-stats on the RTX 3060)"
+                 "\nraw (--no-vma) would be one VkDeviceMemory per coloured rectangle", fontsize=10)
+    return fig
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("names", nargs="*", help="figures to build (default: all)")

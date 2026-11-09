@@ -65,7 +65,16 @@ FetchContent_Declare(tinygltf
   URL_HASH SHA256=bf92fe53b86302f9415e77504ecd81a58659292ed04dffec873f5c71665046a0
   SOURCE_SUBDIR _no_cmake)
 
-FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader arcball_camera doctest tinygltf)
+# --- Vulkan Memory Allocator v3.3.0 (header-only; one TU compiles it: src/vk/vma.cpp) -----------------------
+FetchContent_Declare(vma
+  URL https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/archive/refs/tags/v3.3.0.tar.gz
+  URL_HASH SHA256=c4f6bbe6b5a45c2eb610ca9d231158e313086d5b1a40c9922cb42b597419b14e
+  SOURCE_SUBDIR _no_cmake)
+
+FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader arcball_camera doctest tinygltf vma)
+
+add_library(vma INTERFACE)
+target_include_directories(vma SYSTEM INTERFACE ${vma_SOURCE_DIR}/include)
 
 # ImGui core only. Platform/renderer backends (imgui_impl_glfw + imgui_impl_opengl3 / imgui_impl_vulkan)
 # are compiled into each backend library, so each app only pulls in the one it uses.

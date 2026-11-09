@@ -34,7 +34,7 @@ class Registry {
     }
   }
 
-  bool contains(std::string_view name) const { return m_factories.find(name) != m_factories.end(); }
+  bool contains(std::string_view name) const { return m_factories.contains(name); }
 
   // nullptr if the name is unknown.
   std::unique_ptr<T> create(std::string_view name) const {

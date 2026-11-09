@@ -3,6 +3,7 @@
 // Startup settings from the command line, shared by both apps:
 //   glint_vk [technique] [--size WxH] [--no-vsync] [--validation|--no-validation] [--log FILE] [--assets DIR]
 //            [--frames N] [--screenshot FILE] [--fixed-dt S] [--no-log-file] [--renderdoc]
+//            [--no-vma] [--vma-stats FILE]
 
 #include <string>
 
@@ -26,6 +27,8 @@ struct Config {
   std::string screenshot;   // non-empty: save the last frame as PNG before quitting (camera input is ignored)
   float fixedDt = 0.0f;     // > 0: every frame advances the simulation by exactly this many seconds
   bool renderdoc = false;   // load RenderDoc's in-app API (before the window/context/instance exist)
+  bool vma = true;          // VK only: vk::Buffer / vk::Image allocate through VMA (--no-vma: raw, one each)
+  std::string vmaStats;     // VK only: write VMA's JSON statistics here when a technique is unloaded
   bool showHelp = false;
 };
 
