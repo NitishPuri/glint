@@ -387,4 +387,6 @@ LOC gl vs vk, GPU ms on RADV (gl/vk).
 | 2026-10-02 | Phases 8–15: the learning path towards GPU Gems (vault: *Glint - Learning Path* + one note per stage) | Incremental: ≤1 new API concept + ≤1 new idea per technique; Gems chapters only after their prerequisites |
 | 2026-10-02 | Every NOTES.md gets a **Read** section (GPU Gems chapter + local CD path) | Read the chapter while reviewing the technique; local CD code at `/mnt/e/tree/graphics/nvidia/GPU-Gems` |
 | 2026-09-29 | ImGui backends in their own libs (`imgui_backend_gl/vk`) | Each app links only its renderer backend; our warnings don't apply to third-party code |
-| 2026-11-09 | `CMAKE_CXX_STANDARD 23`; new code uses C++23 idioms the toolchain supports (table in CLAUDE.md) | GCC 11 already gives `to_underlying`, `string::contains`, `uz`; flipping now means a GCC upgrade unlocks the rest without a migration step |
+| 2026-11-09 | C++23 on GCC 14 (primary) + Clang 20 (second compiler, clangd, clang-tidy), picked by `CMakePresets.json` | GCC 11 had almost no C++23 library; Clang 18 can't compile libstdc++ 14's `<expected>`. Idiom table in CLAUDE.md |
+| 2026-11-09 | Dropped `{fmt}` for `std::format`/`std::print` | Available on every supported compiler now; one dependency less |
+| 2026-11-09 | `std::expected` for failures that are a normal outcome (shader hot reload), exceptions for fatal ones | A typo while editing a shader isn't exceptional; a missing GPU is |

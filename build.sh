@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Configure + build. Usage: ./build.sh [debug|release]   (default: debug)
+# Configure + build. Usage: ./build.sh [debug|release|clang-debug]   (default: debug)
+# Each is a preset in CMakePresets.json (compiler + build type), built into build/<preset>.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 cfg="${1:-debug}"
 case "$cfg" in
-  debug) type=Debug ;;
-  release) type=Release ;;
-  *) echo "usage: $0 [debug|release]" >&2; exit 1 ;;
+  debug|release|clang-debug) ;;
+  *) echo "usage: $0 [debug|release|clang-debug]" >&2; exit 1 ;;
 esac
 
 # glslc + validation layers come from the LunarG SDK, not apt.
@@ -17,5 +17,5 @@ if [[ -z "${VULKAN_SDK:-}" ]]; then
   [[ -n "$sdk_env" ]] && { set +u; source "$sdk_env" ""; set -u; }
 fi
 
-cmake -S . -B "build/$cfg" -G Ninja -DCMAKE_BUILD_TYPE="$type"
-cmake --build "build/$cfg"
+cmake --preset "$cfg"
+cmake --build --preset "$cfg"

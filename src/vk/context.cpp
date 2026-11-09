@@ -272,7 +272,7 @@ uint32_t Context::findMemoryType(uint32_t typeBits, VkMemoryPropertyFlags flags)
   for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i) {
     if ((typeBits & (1u << i)) && (memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) return i;
   }
-  throw std::runtime_error(fmt::format("no memory type with flags {}", string_VkMemoryPropertyFlags(flags)));
+  throw std::runtime_error(std::format("no memory type with flags {}", string_VkMemoryPropertyFlags(flags)));
 }
 
 std::string Context::deviceDescription() const {
@@ -280,7 +280,7 @@ std::string Context::deviceDescription() const {
   VkPhysicalDeviceProperties2 props{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
   props.pNext = &driver;
   vkGetPhysicalDeviceProperties2(physicalDevice, &props);
-  return fmt::format("{}, {} {}, Vulkan {}.{}.{}", properties.deviceName, driver.driverName, driver.driverInfo,
+  return std::format("{}, {} {}, Vulkan {}.{}.{}", properties.deviceName, driver.driverName, driver.driverInfo,
                      VK_API_VERSION_MAJOR(properties.apiVersion), VK_API_VERSION_MINOR(properties.apiVersion),
                      VK_API_VERSION_PATCH(properties.apiVersion));
 }

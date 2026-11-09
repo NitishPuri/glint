@@ -1,0 +1,37 @@
+# clang-tidy for glint. Run on changed files (see CLAUDE.md "Tooling"):
+#   run-clang-tidy-20 -p build/debug -quiet 'src/|techniques/|tests/'
+#
+# The modernize-* checks are how the "C++ standard" rule in CLAUDE.md is enforced: they flag the pre-C++20/23
+# spelling of things (find != npos, printf-style output, hand-rolled loops) in code being edited.
+# Disabled checks are style choices this codebase makes on purpose, not oversights:
+#   use-trailing-return-type     `auto f() -> int` everywhere is noise
+#   avoid-c-arrays               fixed GL/VK-facing arrays (`char info[4096]`, clear values) read better raw
+#   use-nodiscard                would land on every getter
+#   use-designated-initializers  VK code relies on `VkFooCreateInfo info{VK_STRUCTURE_TYPE_...}` + member assignment,
+#                                which shows each field being set (the lesson)
+#   easily-swappable-parameters  graphics APIs are all (uint32_t, uint32_t, ...)
+#   enum-size                    enums stay `int`-backed: std::to_underlying feeds ImGui's int* widgets
+#   narrowing-conversions        float/int conversions in shader-math code are intentional; -Wall covers the rest
+#   magic-numbers etc.           readability-* is opted into one check at a time
+Checks: >
+  -*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-use-nodiscard,
+  -modernize-use-designated-initializers,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  performance-*,
+  -performance-enum-size,
+  readability-container-contains,
+  readability-container-size-empty,
+  readability-redundant-string-cstr,
+  readability-use-std-min-max
+CheckOptions:
+  modernize-use-std-print.ReplacementPrintFunction: std::print
+  modernize-use-std-print.ReplacementPrintlnFunction: std::println
+# Our headers only; third-party headers (glm, imgui, VMA, tinygltf) are reached through _deps/ and external/.
+HeaderFilterRegex: '/(src|techniques|tests)/'
+WarningsAsErrors: ''

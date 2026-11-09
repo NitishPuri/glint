@@ -24,7 +24,7 @@ namespace {
 // SPIR-V produced by glslc at build time (cmake/shaders.cmake). GL compiles GLSL text at runtime instead.
 VkShaderModule loadShaderModule(VkDevice device, const std::string& path) {
   std::ifstream file(path, std::ios::binary | std::ios::ate);
-  if (!file) throw std::runtime_error(fmt::format("cannot open {} (built by glslc?)", path));
+  if (!file) throw std::runtime_error(std::format("cannot open {} (built by glslc?)", path));
   std::vector<char> code(size_t(file.tellg()));
   file.seekg(0);
   file.read(code.data(), std::streamsize(code.size()));

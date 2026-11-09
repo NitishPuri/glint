@@ -179,7 +179,7 @@ class BloomGL final : public gl::Technique {
       GLuint& view = m_levelViews[size_t(i)];
       glGenTextures(1, &view);
       glTextureView(view, GL_TEXTURE_2D, m_bloom.id(), GL_R11F_G11F_B10F, GLuint(i), 1, 0, 1);
-      const std::string label = fmt::format("13 bloom level {}", i);
+      const std::string label = std::format("13 bloom level {}", i);
       glObjectLabel(GL_TEXTURE, view, -1, label.c_str());
 
       GLuint& fbo = m_levelFbos[size_t(i)];
@@ -188,7 +188,7 @@ class BloomGL final : public gl::Technique {
       glObjectLabel(GL_FRAMEBUFFER, fbo, -1, label.c_str());
       const GLenum status = glCheckNamedFramebufferStatus(fbo, GL_FRAMEBUFFER);
       if (status != GL_FRAMEBUFFER_COMPLETE) {
-        throw std::runtime_error(fmt::format("{} incomplete: 0x{:x}", label, status));
+        throw std::runtime_error(std::format("{} incomplete: 0x{:x}", label, status));
       }
     }
   }

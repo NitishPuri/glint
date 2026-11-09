@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <print>
 
 #include "core/log.h"
 
@@ -33,9 +34,9 @@ void preloadByReexec(char** argv) {
   const std::string library = installDir() + "/lib/librenderdoc.so";
   setenv("LD_PRELOAD", library.c_str(), 1);
   setenv("GLINT_RENDERDOC_REEXEC", "1", 1);
-  fmt::print("RenderDoc: restarting with LD_PRELOAD={}\n", library);
+  std::println("RenderDoc: restarting with LD_PRELOAD={}", library);
   execv("/proc/self/exe", argv);  // only returns on failure
-  fmt::print(stderr, "RenderDoc: re-exec failed; GL frames can't be captured\n");
+  std::println(stderr, "RenderDoc: re-exec failed; GL frames can't be captured");
 #else
   (void)argv;  // Windows: in-app LoadLibrary works for GL too
 #endif

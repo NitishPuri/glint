@@ -45,7 +45,7 @@ class BasicShadingVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_ubo[i] = vk::Buffer(ctx, sizeof(shading::Uniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            fmt::format("04 ubo {}", i));
+                            std::format("04 ubo {}", i));
       vk::writeBuffer(device, m_sets[i], 0, m_ubo[i].handle(), sizeof(shading::Uniforms));
       vk::writeImage(device, m_sets[i], 1, m_texture.view(), m_sampler);
     }

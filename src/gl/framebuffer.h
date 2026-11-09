@@ -51,7 +51,7 @@ class Framebuffer {
   void checkComplete() const {
     const GLenum status = glCheckNamedFramebufferStatus(m_id, GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-      throw std::runtime_error(fmt::format("framebuffer {} incomplete: 0x{:x}", m_id, status));
+      throw std::runtime_error(std::format("framebuffer {} incomplete: 0x{:x}", m_id, status));
     }
   }
 

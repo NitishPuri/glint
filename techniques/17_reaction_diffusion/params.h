@@ -5,7 +5,7 @@
 // kernel (shaders/rd.glsl): compute (storage images) and fragment (render-to-texture feedback, the 2005 way).
 // Each frame a reduction sums v over the grid; the totals come back to the CPU a few frames late, never stalling.
 
-#include <fmt/format.h>
+#include <format>
 #include <imgui.h>
 
 #include <algorithm>
@@ -169,7 +169,7 @@ inline std::string verifyBlock(const glm::vec4* texels, const Params& p, int ste
   }
   float activity = 0;  // how far the block is from the untouched state: proves the check is looking at something
   for (const glm::vec2& e : expected) activity = std::max(activity, e.y);
-  return fmt::format("{} ({} path): {}² block at ({}, {}) after {} steps vs the C++ reference: max error {:.2e} "
+  return std::format("{} ({} path): {}² block at ({}, {}) after {} steps vs the C++ reference: max error {:.2e} "
                      "(max v there {:.3f})",
                      worst < 1e-4f && activity > 0.05f ? "OK" : "FAIL", path == 0 ? "compute" : "fragment", kCheckBlock,
                      origin.x, origin.y, steps, worst, activity);

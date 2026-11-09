@@ -1,6 +1,6 @@
 #include "core/config.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <cstdio>
 #include <cstdlib>
@@ -14,7 +14,7 @@ Config parseArgs(int argc, const char* const* argv) {
   for (int i = 1; i < argc; ++i) {
     const std::string_view arg = argv[i];
     auto value = [&]() -> std::string {
-      if (i + 1 >= argc) throw std::invalid_argument(fmt::format("{} needs a value", arg));
+      if (i + 1 >= argc) throw std::invalid_argument(std::format("{} needs a value", arg));
       return argv[++i];
     };
 
@@ -24,7 +24,7 @@ Config parseArgs(int argc, const char* const* argv) {
       const std::string size = value();
       if (std::sscanf(size.c_str(), "%dx%d", &config.width, &config.height) != 2 || config.width <= 0 ||
           config.height <= 0) {
-        throw std::invalid_argument(fmt::format("--size expects WxH, got '{}'", size));
+        throw std::invalid_argument(std::format("--size expects WxH, got '{}'", size));
       }
     } else if (arg == "--no-vsync") {
       config.vsync = false;
@@ -54,18 +54,18 @@ Config parseArgs(int argc, const char* const* argv) {
     } else if (arg == "--assets") {
       config.assetDir = value();
     } else if (!arg.empty() && arg[0] == '-') {
-      throw std::invalid_argument(fmt::format("unknown option '{}'", arg));
+      throw std::invalid_argument(std::format("unknown option '{}'", arg));
     } else if (config.technique.empty()) {
       config.technique = arg;
     } else {
-      throw std::invalid_argument(fmt::format("unexpected argument '{}'", arg));
+      throw std::invalid_argument(std::format("unexpected argument '{}'", arg));
     }
   }
   return config;
 }
 
 std::string usage(const char* exe) {
-  return fmt::format(
+  return std::format(
       "usage: {} [technique] [options]\n"
       "  technique          e.g. 01_triangle (default: the first one)\n"
       "  --size WxH         window size (default 1600x900)\n"

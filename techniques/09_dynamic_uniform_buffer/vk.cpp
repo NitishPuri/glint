@@ -45,9 +45,9 @@ class DynamicUboVK final : public vk::Technique {
     constexpr VkMemoryPropertyFlags host = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_cameraUbo[i] = vk::Buffer(ctx, sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, host,
-                                  fmt::format("09 camera {}", i));
+                                  std::format("09 camera {}", i));
       m_objectUbo[i] = vk::Buffer(ctx, m_stride * kObjects, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, host,
-                                  fmt::format("09 objects {}", i));
+                                  std::format("09 objects {}", i));
       vk::writeBuffer(device, m_sets[i], 0, m_cameraUbo[i].handle(), sizeof(glm::mat4));
       // range = one matrix: the window the dynamic offset slides across the buffer.
       vk::writeBuffer(device, m_sets[i], 1, m_objectUbo[i].handle(), sizeof(glm::mat4),

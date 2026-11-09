@@ -61,7 +61,7 @@ class TexturedCubeVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_ubo[i] = vk::Buffer(ctx, sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            fmt::format("03 ubo {}", i));
+                            std::format("03 ubo {}", i));
     }
     loadTexture();
     createSamplers();

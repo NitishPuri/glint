@@ -67,9 +67,9 @@ class RenderToTextureVK final : public vk::Technique {
       constexpr VkMemoryPropertyFlags hostMemory =
           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
       m_sceneUbo[i] = vk::Buffer(ctx, sizeof(shading::Uniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, hostMemory,
-                                 fmt::format("07 scene ubo {}", i));
+                                 std::format("07 scene ubo {}", i));
       m_postUbo[i] = vk::Buffer(ctx, sizeof(PostUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, hostMemory,
-                                fmt::format("07 post ubo {}", i));
+                                std::format("07 post ubo {}", i));
       vk::writeBuffer(device, m_sceneSets[i], 0, m_sceneUbo[i].handle(), sizeof(shading::Uniforms));
       vk::writeImage(device, m_sceneSets[i], 1, m_texture.view(), m_meshSampler);
       vk::writeBuffer(device, m_postSets[i], 0, m_postUbo[i].handle(), sizeof(PostUniforms));

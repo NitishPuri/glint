@@ -6,7 +6,7 @@
 // four channels (scrolling through z) or ray-marches one channel as a volume. The texture is regenerated only
 // when a generation parameter changes, or every frame with "evolve" on.
 
-#include <fmt/format.h>
+#include <format>
 #include <imgui.h>
 
 #include <algorithm>
@@ -133,7 +133,7 @@ inline std::string verifyBlock(const glm::vec4* texels, const Generation& g) {
         const float e = std::max({err.r, err.g, err.b, err.a});
         if (e > worst) worst = e, worstAt = v;
       }
-  return fmt::format("{}: {}^3 voxels at {}, all 4 channels vs the C++ reference: max error {:.5f} at ({}, {}, {})",
+  return std::format("{}: {}^3 voxels at {}, all 4 channels vs the C++ reference: max error {:.5f} at ({}, {}, {})",
                      worst <= 2e-3f ? "OK" : "FAIL", kCheckBlock, origin.x, worst, worstAt.x, worstAt.y, worstAt.z);
 }
 

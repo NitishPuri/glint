@@ -9,6 +9,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include <memory>
+#include <print>
 #include <stdexcept>
 
 #include "core/assets.h"
@@ -50,7 +51,7 @@ void resetGlState() {
 
 std::unique_ptr<gl::Technique> createTechnique(const std::string& name, Camera& camera) {
   std::unique_ptr<gl::Technique> technique = gl::Registry::instance().create(name);
-  if (!technique) throw std::runtime_error(fmt::format("unknown technique '{}'", name));
+  if (!technique) throw std::runtime_error(std::format("unknown technique '{}'", name));
   resetGlState();
   try {
     technique->init();
@@ -223,9 +224,9 @@ int main(int argc, char** argv) {
   try {
     const Config config = parseArgs(argc, argv);
     if (config.showHelp) {
-      fmt::print("{}", usage(argv[0]));
-      fmt::print("techniques:\n");
-      for (const std::string& name : gl::Registry::instance().names()) fmt::print("  {}\n", name);
+      std::print("{}", usage(argv[0]));
+      std::println("techniques:");
+      for (const std::string& name : gl::Registry::instance().names()) std::println("  {}", name);
       return 0;
     }
     // Check the name before creating any GPU objects: failing halfway through startup would skip the

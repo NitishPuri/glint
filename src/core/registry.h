@@ -11,6 +11,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -43,11 +44,7 @@ class Registry {
   }
 
   // Sorted by name, so "01_triangle", "02_cube", ... appear in plan order.
-  std::vector<std::string> names() const {
-    std::vector<std::string> result;
-    for (const auto& entry : m_factories) result.push_back(entry.first);
-    return result;
-  }
+  std::vector<std::string> names() const { return m_factories | std::views::keys | std::ranges::to<std::vector>(); }
 
  private:
   std::map<std::string, Factory, std::less<>> m_factories;  // less<> allows lookup by string_view

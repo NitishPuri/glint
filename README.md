@@ -11,16 +11,17 @@ Successor to [Glint_gl](../Glint_gl) and [Glint_vk](../Glint_vk).
 
 ## Build & run (Linux)
 
-Needs CMake ≥ 3.22, Ninja, X11 dev headers and the [LunarG Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
+Needs CMake ≥ 3.22, Ninja, X11 dev headers, a C++23 compiler (GCC ≥ 14 or Clang ≥ 19; on jammy `g++-14` from
+`ppa:ubuntu-toolchain-r/test`, Clang 20 from apt.llvm.org) and the [LunarG Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 (for `glslc` and the validation layers) — see Phase 0 in the plan. Other dependencies are fetched by CMake.
 
 ```bash
-./build.sh            # = source SDK env; cmake -S . -B build/debug -G Ninja; cmake --build build/debug
+./build.sh            # = source SDK env; cmake --preset debug; cmake --build --preset debug
 ./run.sh gl           # build/debug/glint_gl
 ./run.sh vk           # build/debug/glint_vk
 ```
 
-`./build.sh release` / `CFG=release ./run.sh vk` for an optimized build.
+`./build.sh release` / `CFG=release ./run.sh vk` for an optimized build; `./build.sh clang-debug` for Clang.
 
 Unit tests (core only): `ctest --test-dir build/debug` or `./build/debug/glint_tests`.
 

@@ -1,10 +1,20 @@
 cmake_minimum_required(VERSION 3.22)
 project(glint LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 23)  # GCC 11: -std=c++23 = partial C++23 (see CLAUDE.md "C++ standard")
+set(CMAKE_CXX_STANDARD 23)  # see CLAUDE.md "C++ standard"
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# The C++23 library we use (std::print, std::expected, ranges::to, views::zip) and deducing `this` need at least
+# these. Clang uses GCC's libstdc++ on Linux, and only Clang 19+ can compile libstdc++ 14's <expected>.
+# Configure with a preset (`cmake --preset debug`) to get the right compiler instead of the system `c++`.
+if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14)
+   OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19)
+   OR (MSVC AND MSVC_VERSION LESS 1937))
+  message(FATAL_ERROR "glint needs GCC >= 14, Clang >= 19 or MSVC >= 19.37 (C++23), got "
+                      "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}. Use `cmake --preset debug`.")
+endif()
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "" FORCE)
 endif()
@@ -52,7 +62,7 @@ target_include_directories(glint_core PUBLIC src)
 target_include_directories(glint_core SYSTEM PRIVATE external/renderdoc)
 set(GLINT_RENDERDOC_DIR "$ENV{HOME}/tools/renderdoc" CACHE PATH "RenderDoc install dir (lib/librenderdoc.so)")
 target_link_libraries(glint_core
-  PUBLIC glfw glm::glm fmt::fmt imgui
+  PUBLIC glfw glm::glm imgui
   PRIVATE stb tinyobjloader tinygltf arcball_camera glint_warnings ${CMAKE_DL_LIBS})
 add_dependencies(glint_core glint_git_info)
 target_compile_definitions(glint_core

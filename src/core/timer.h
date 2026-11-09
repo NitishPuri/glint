@@ -49,7 +49,7 @@ class FrameTimeSummary {
     double sum = 0.0;
     for (float ms : sorted) sum += ms;
     const float p95 = sorted[std::min(sorted.size() - 1, size_t(double(sorted.size()) * 0.95))];
-    return fmt::format("mean {:.3f} ms, p95 {:.3f} ms", sum / double(sorted.size()), p95);
+    return std::format("mean {:.3f} ms, p95 {:.3f} ms", sum / double(sorted.size()), p95);
   }
 
   // Empty string if no frames were recorded.
@@ -60,7 +60,7 @@ class FrameTimeSummary {
     double sum = 0.0;
     for (float ms : sorted) sum += ms;
     const float p95 = sorted[std::min(sorted.size() - 1, size_t(double(sorted.size()) * 0.95))];
-    return fmt::format("{} frames, mean {:.2f} ms, p95 {:.2f} ms, max {:.2f} ms", sorted.size(),
+    return std::format("{} frames, mean {:.2f} ms, p95 {:.2f} ms, max {:.2f} ms", sorted.size(),
                        sum / double(sorted.size()), p95, sorted.back());
   }
 

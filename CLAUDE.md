@@ -45,8 +45,11 @@ read `NOTES.md`, and understand every line and every difference.
   `! sudo apt install ...` when packages are needed.
 - Repo lives on an NTFS mount (`/mnt/e/...`): builds are slower than on ext4; file modes show as 755;
   keep `core.filemode=false`. Line endings are LF (`.gitattributes` enforces it).
-- Compiler: **GCC 11.4**, built as **C++23** (`-std=c++23`, which GCC 11 only partly implements, see
-  [C++ standard](#c-standard)). No `std::format`/`<print>` yet: use `{fmt}` everywhere (`fmt::format`, `fmt::print`).
+- Compilers (since 2026-11-09): **GCC 14.3** (`g++-14`, primary) and **Clang 20 + lld** (apt.llvm.org), selected
+  by `CMakePresets.json`, never by the system `c++` (still GCC 11.4, which the build rejects). Clang uses GCC 14's
+  libstdc++, so both see the same standard library. LLVM tools: `clangd-20`, `clang-tidy-20`, `clang-format-20`.
+  Builds as **C++23**, see [C++ standard](#c-standard). Formatting/printing is `std::format`/`std::print`
+  (`{fmt}` was dropped on 2026-11-09).
 - GPUs:
   - **NVIDIA RTX 3060 Laptop (driver 580): primary target since 2026-10-10.** The laptop is in `nvidia`
     graphics mode (`system76-power graphics`): GL *and* VK both run on the RTX by default (VK device scoring prefers
@@ -65,14 +68,17 @@ read `NOTES.md`, and understand every line and every difference.
 
 ```bash
 source ~/vulkan-sdk/*/setup-env.sh           # glslc + validation layers
-cmake -S . -B build/debug -G Ninja -DCMAKE_BUILD_TYPE=Debug
-cmake --build build/debug
+cmake --preset debug                          # GCC 14, Debug, into build/debug (also: release, clang-debug)
+cmake --build --preset debug
 ./build/debug/glint_gl                        # OpenGL app
 ./build/debug/glint_vk                        # Vulkan app
 ```
 
-- CMake ≥ 3.22, Ninja. Dependencies are fetched with `FetchContent` (GLFW 3.4, GLM, ImGui, fmt, stb,
-  tinyobjloader, later tinygltf/VMA). **No prebuilt binaries in the repo**, no `ext/glfw-*.WIN64`.
+`./build.sh [debug|release|clang-debug]` does the SDK sourcing + both steps. Configuring without a preset picks up
+the system GCC 11 and fails the version check in `CMakeLists.txt` on purpose.
+
+- CMake ≥ 3.22, Ninja. Dependencies are fetched with `FetchContent` (GLFW 3.4, GLM, ImGui, stb,
+  tinyobjloader, tinygltf, VMA, doctest). **No prebuilt binaries in the repo**, no `ext/glfw-*.WIN64`.
 - GL loader: glad2 generated for **GL 4.6 core** + `GL_KHR_debug`, vendored under `external/glad/`
   (generated once, committed).
 - Shaders: GLSL `#version 460`. GL loads `.glsl` text at runtime (hot-reloadable). VK shaders are
@@ -158,43 +164,55 @@ glint/
 
 ## Conventions
 
-- C++23 (whatever the current GCC implements, see below), `.clang-format` (Google, 2-space, 120 cols). Namespaces `glint`, `glint::gl`, `glint::vk`.
+- C++23 (see below), `.clang-format` (Google, 2-space, 120 cols). Namespaces `glint`, `glint::gl`, `glint::vk`.
 - Files: `snake_case.cpp/.h`. Types `PascalCase`, functions `camelCase`, members `m_camelCase`.
 - Errors: `VK_CHECK(expr)` aborts with file/line + `string_VkResult`; GL errors come via `KHR_debug` callback.
-- Logging: `glint::log::info/warn/error` on top of fmt. Every run also writes `logs/<app>_<date>_<time>.log`
+- Logging: `glint::log::info/warn/error` on top of `std::format`. Every run also writes `logs/<app>_<date>_<time>.log`
   (gitignored) with a header (commit, build, args, config, GPU) and per-technique `summary` lines — compare
   those across runs for regressions. `--log FILE` / `--no-log-file` override.
 - Commit per technique-backend (`techniques/05_vbo_indexing: vk`), small and reviewable.
 
 ## C++ standard
 
-The project builds as **C++23** (`CMAKE_CXX_STANDARD 23`, extensions off). **New and touched code uses the
-C++23 (and C++20) idiom whenever the toolchain supports it**, as long as it reads at least as clearly as the old
-form (code is for reading). Don't sweep untouched files just to modernise them; convert the code you are editing.
+The project builds as **C++23** (`CMAKE_CXX_STANDARD 23`, extensions off) and requires GCC ≥ 14, Clang ≥ 19 or
+MSVC ≥ 19.37 (`CMakeLists.txt` enforces it). **New and touched code uses the C++23 (and C++20) idiom where one
+exists**, as long as it reads at least as clearly as the old form (code is for reading). Don't sweep untouched
+files just to modernise them; convert the code you are editing. `clang-tidy`'s `modernize-*` checks flag most
+of the old spellings (see [Tooling](#tooling)).
 
-What the compiler supports is checked, not assumed. Probe it with feature-test macros (`<version>`, `__cpp_lib_*`)
-before using a new feature, and update this table when the toolchain changes.
-
-| Feature | Use it for | GCC |
+| Use | Instead of | Where it already is |
 |---|---|---|
-| `std::to_underlying(e)` | enum → int (ImGui radio buttons, indexing tables by an enum); not `int(e)`/`static_cast` | 11 ✅ |
-| `str.contains(x)`, `starts_with`/`ends_with` (C++20) | instead of `find(...) != npos` / `compare(pos, n, ...) == 0` | 11 ✅ |
-| `map.contains(k)` (C++20) | instead of `find(k) != end()` | 11 ✅ |
-| `0uz` / `1uz` | `size_t` literals, e.g. `std::max(n, 1uz)` instead of `size_t{1}` | 11 ✅ |
-| `[x] mutable { ... }` | lambdas with specifiers no longer need `()` | 11 ✅ |
-| `std::unreachable()` | after an exhaustive `switch` over an enum, instead of a dummy `return` | 12 |
-| `std::expected<T, E>` | fallible loaders/creators (shader compile, file load) instead of throw-or-bool | 12 |
-| monadic `optional` (`and_then`, `transform`, `or_else`) | chaining lookups that may fail | 12 |
-| `if consteval`, `std::byteswap`, `std::move_only_function` | as needed | 12 |
-| `views::zip`, `views::enumerate`, `views::chunk`, `views::stride`, `views::cartesian_product` | parallel arrays (positions/normals/uvs in `MeshData`), indexed loops | 13 |
-| `static operator()`, `[[assume(expr)]]`, `std::format` | as needed (keep `{fmt}` until `<print>` too) | 13 |
-| `std::print`/`println`, `ranges::to<std::vector>()`, deducing `this` | logging/CLI output, materialising views, CRTP-free helpers | 14 |
+| `std::format`, `std::print`/`println` | `{fmt}`, `printf`, `iostream` | everywhere (`log.h`, app mains) |
+| `std::expected<T, std::string>` for failures that are a normal outcome | throw + catch at the call site, `bool` + out-param | `gl::Program::build` (hot reload) |
+| exceptions for failures that end the run | `std::expected` that every caller just rethrows | asset loaders, device creation |
+| `std::views::zip(a, b)` | index loops over parallel arrays | `vk::Mesh`, `test_assets.cpp` |
+| `std::views::enumerate(v)` | `for (size_t i...)` when `i` is only a label/second index | `11_gltf`, `gltf.cpp` |
+| `range \| std::ranges::to<std::vector>()` | push_back loops that build a vector | `Registry::names`, `gltf.cpp` |
+| `std::ranges::contains`, `find`, `sort` (with projections: `&Stage::path`) | hand-written search loops | `gl/shader.cpp` |
+| `std::to_underlying(e)` | `int(e)` / `static_cast<int>(e)` on enums | ImGui radio buttons |
+| `std::unreachable()` after a `switch` covering every enumerator | a dummy `return` (keep `-Wswitch` working) | `log.cpp` |
+| `str.contains`, `starts_with`/`ends_with`, `map.contains` | `find(...) != npos`, `compare(pos, n, ...) == 0`, `find != end()` | `registry.h`, `gl/shader.cpp` |
+| monadic `optional` (`and_then`, `transform`, `value_or`) | nested `if (opt)` chains | — |
+| `0uz` | `size_t{0}` | — |
+| deducing `this` (`this auto& self`) | const/non-const overload pairs, CRTP | — |
 
-✅ = available on the current toolchain (GCC 11.4). Rows without ✅ need a GCC upgrade first. Once one lands,
-update the "GCC" column and the Environment section, and from then on use those features in new code. Rules
-that don't depend on the compiler:
+Leave the explicit form where the index *is* the lesson (prefix-sum levels, `for (k...)` over mip levels or
+cascades), and in raw GL/VK sequences: `VkFooCreateInfo` filled field by field stays that way.
 
-- Don't mix `{fmt}` and `std::format` in one codebase: keep `{fmt}` until `std::print` is available
-  everywhere (GCC 14, MSVC 19.37+), then switch in one commit.
-- MSVC (`/std:c++latest`) and libstdc++ differ per feature. A feature used in `src/core/` must exist on both.
+Not available yet on this toolchain (libstdc++ 14): `std::mdspan`, `std::flat_map`, formatting of ranges
+(`std::format("{}", vec)`). When the compiler changes, re-probe with `<version>` feature-test macros
+(`__cpp_lib_*`) and update this section; don't assume from release notes.
 
+## Tooling
+
+- **Presets** (`CMakePresets.json`): `debug`, `release` (GCC 14), `clang-debug` (Clang 20 + lld, build/clang-debug).
+  Build `clang-debug` before committing larger changes: a second compiler finds different warnings.
+- **clangd** (`.clangd`): reads `build/debug/compile_commands.json`; runs cheap clang-tidy checks as you type and
+  flags unused/missing includes. Needs clangd ≥ 19 (`clangd-20`): clangd 18 can't parse libstdc++ 14's
+  `<expected>` and reports false errors.
+- **clang-tidy** (`.clang-tidy`): `modernize-*`, `bugprone-*`, `performance-*` + a few readability checks; the
+  file explains each disabled check. Run on what you changed:
+  `run-clang-tidy-20 -p build/debug -quiet 'src/|techniques/|tests/'` (whole tree) or
+  `clang-tidy-20 -p build/debug <files>`. New code should be clean; fix or `// NOLINT(check)` with a reason.
+- **Build-time profiling**: `cmake --preset clang-debug -DCMAKE_CXX_FLAGS=-ftime-trace`, then open the per-TU
+  `.json` next to each `.o` in `chrome://tracing` / Perfetto (which headers make the NTFS build slow).

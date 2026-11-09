@@ -35,7 +35,7 @@ GLuint compileStage(GLenum stage, const std::string& path) {
     char info[2048];
     glGetShaderInfoLog(shader, sizeof(info), nullptr, info);
     glDeleteShader(shader);
-    throw std::runtime_error(fmt::format("{}:\n{}", path, info));
+    throw std::runtime_error(std::format("{}:\n{}", path, info));
   }
   return shader;
 }
@@ -62,7 +62,7 @@ class TriangleGL final : public gl::Technique {
     if (!ok) {
       char info[2048];
       glGetProgramInfoLog(m_program, sizeof(info), nullptr, info);
-      throw std::runtime_error(fmt::format("link failed:\n{}", info));
+      throw std::runtime_error(std::format("link failed:\n{}", info));
     }
 
     // --- buffers ------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@
 // Read: GPU Gems 3 ch39 "Parallel Prefix Sum (Scan) with CUDA" — the shared-memory kernel here is its
 // work-efficient (Blelloch) scan; the subgroup kernel is the modern hardware shortcut.
 
-#include <fmt/format.h>
+#include <format>
 #include <imgui.h>
 
 #include <cmath>
@@ -55,7 +55,7 @@ struct TimingLog {
   std::string summary(const Params& p) const {
     if (!samples) return "no samples";
     const double s = samples;
-    return fmt::format("{} points, kernel '{}': flags {:.3f} ms, scan {:.3f} ms ({:.2f} G elements/s), scatter "
+    return std::format("{} points, kernel '{}': flags {:.3f} ms, scan {:.3f} ms ({:.2f} G elements/s), scatter "
                        "{:.3f} ms ({} frames)",
                        p.count(), kKernels[p.kernel], sum.flags / s, sum.scan / s, p.count() / (sum.scan / s * 1e6),
                        sum.scatter / s, samples);
@@ -145,15 +145,15 @@ inline std::string verify(const std::vector<uint32_t>& flags, const std::vector<
                           const std::vector<uint32_t>& compact, uint32_t n) {
   uint32_t sum = 0;
   for (uint32_t i = 0; i < n; ++i) {
-    if (scanned[i] != sum) return fmt::format("FAIL: scan[{}] = {}, expected {}", i, scanned[i], sum);
-    if (flags[i] > 1) return fmt::format("FAIL: flag[{}] = {}", i, flags[i]);
+    if (scanned[i] != sum) return std::format("FAIL: scan[{}] = {}, expected {}", i, scanned[i], sum);
+    if (flags[i] > 1) return std::format("FAIL: flag[{}] = {}", i, flags[i]);
     if (flags[i]) {
-      if (compact[1 + sum] != i) return fmt::format("FAIL: compact[{}] = {}, expected {}", sum, compact[1 + sum], i);
+      if (compact[1 + sum] != i) return std::format("FAIL: compact[{}] = {}, expected {}", sum, compact[1 + sum], i);
       ++sum;
     }
   }
-  if (compact[0] != sum) return fmt::format("FAIL: count {}, expected {}", compact[0], sum);
-  return fmt::format("OK: {} points, {} selected ({:.1f}%), scan and compaction match the CPU", n, sum,
+  if (compact[0] != sum) return std::format("FAIL: count {}, expected {}", compact[0], sum);
+  return std::format("OK: {} points, {} selected ({:.1f}%), scan and compaction match the CPU", n, sum,
                      100.0 * sum / n);
 }
 

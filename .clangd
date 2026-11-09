@@ -1,0 +1,12 @@
+# clangd (VS Code "clangd" extension, LLVM 20): compile flags come from the GCC 14 Debug build.
+# Needs clangd >= 19: older clangd can't parse libstdc++ 14's <expected> and reports false errors.
+CompileFlags:
+  CompilationDatabase: build/debug
+Diagnostics:
+  ClangTidy:
+    FastCheckFilter: Loose  # run the .clang-tidy checks that are cheap enough for as-you-type
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
+InlayHints:
+  ParameterNames: Yes
+  DeducedTypes: Yes

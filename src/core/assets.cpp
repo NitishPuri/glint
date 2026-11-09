@@ -21,14 +21,14 @@ namespace glint {
 // ---------------------------------------------------------------------------------------------- OBJ
 
 MeshData loadObj(const std::filesystem::path& path) {
-  ScopedTimer timer(fmt::format("loadObj {}", path.filename().string()));
+  ScopedTimer timer(std::format("loadObj {}", path.filename().string()));
 
   tinyobj::ObjReaderConfig config;
   config.triangulate = true;
   config.mtl_search_path = path.parent_path().string();
   tinyobj::ObjReader reader;
   if (!reader.ParseFromFile(path.string(), config)) {
-    throw std::runtime_error(fmt::format("loadObj '{}': {}", path.string(), reader.Error()));
+    throw std::runtime_error(std::format("loadObj '{}': {}", path.string(), reader.Error()));
   }
   // tinyobjloader's warnings are almost always about missing .mtl files/textures, which we ignore anyway.
   if (!reader.Warning().empty()) log::debug("loadObj '{}': {}", path.string(), reader.Warning());
@@ -63,7 +63,7 @@ MeshData loadObj(const std::filesystem::path& path) {
 
   // An attribute is either there for every vertex or dropped: half-filled arrays would be garbage on the GPU.
   const size_t count = mesh.vertexCount();
-  if (count == 0) throw std::runtime_error(fmt::format("loadObj '{}': no triangles", path.string()));
+  if (count == 0) throw std::runtime_error(std::format("loadObj '{}': no triangles", path.string()));
   if (withNormal != count) {
     if (withNormal > 0) {
       log::warn("loadObj '{}': only {}/{} vertices have normals, dropping them", path.string(), withNormal, count);
@@ -228,7 +228,7 @@ MeshData makeQuad() {
 ImageData loadImage(const std::filesystem::path& path, bool flipVertically) {
   int w = 0, h = 0, fileChannels = 0;
   stbi_uc* data = stbi_load(path.string().c_str(), &w, &h, &fileChannels, 4);
-  if (!data) throw std::runtime_error(fmt::format("loadImage '{}': {}", path.string(), stbi_failure_reason()));
+  if (!data) throw std::runtime_error(std::format("loadImage '{}': {}", path.string(), stbi_failure_reason()));
 
   ImageData img;
   img.width = w;
@@ -253,14 +253,14 @@ void writePng(const std::filesystem::path& path, const ImageData& image, bool fl
   }
   stbi_flip_vertically_on_write(flipVertically ? 1 : 0);
   if (!stbi_write_png(path.string().c_str(), image.width, image.height, 4, image.pixels.data(), image.width * 4)) {
-    throw std::runtime_error(fmt::format("writePng '{}' failed", path.string()));
+    throw std::runtime_error(std::format("writePng '{}' failed", path.string()));
   }
   stbi_flip_vertically_on_write(0);
 }
 
 std::string readTextFile(const std::filesystem::path& path) {
   std::ifstream file(path, std::ios::binary);
-  if (!file) throw std::runtime_error(fmt::format("cannot open '{}'", path.string()));
+  if (!file) throw std::runtime_error(std::format("cannot open '{}'", path.string()));
   std::ostringstream text;
   text << file.rdbuf();
   return text.str();

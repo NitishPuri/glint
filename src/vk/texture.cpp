@@ -42,7 +42,7 @@ Image createTexture(const Context& ctx, const ImageData& image, bool mipmaps, st
     VkFormatProperties props;
     vkGetPhysicalDeviceFormatProperties(ctx.physicalDevice, format, &props);
     if (!(props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-      throw std::runtime_error(fmt::format("{} doesn't support linear blits", string_VkFormat(format)));
+      throw std::runtime_error(std::format("{} doesn't support linear blits", string_VkFormat(format)));
     }
   }
 

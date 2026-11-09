@@ -59,7 +59,7 @@ class HdrVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_sceneUbo[i] = vk::Buffer(ctx, sizeof(SceneUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                 fmt::format("12 scene {}", i));
+                                 std::format("12 scene {}", i));
       vk::writeBuffer(device, m_sceneSets[i], 0, m_sceneUbo[i].handle(), sizeof(SceneUniforms));
       vk::writeImage(device, m_sceneSets[i], 1, m_albedo.view(), m_albedoSampler);
     }

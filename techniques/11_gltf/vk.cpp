@@ -5,6 +5,7 @@
 //   push constants:         the draw's model matrix and material factors — every draw
 // GL does the same with a UBO binding point, texture units and plain uniforms.
 
+#include <ranges>
 #include <vector>
 
 #include "core/assets.h"
@@ -37,16 +38,15 @@ class GltfVK final : public vk::Technique {
     const VkDevice device = ctx.device;
     m_model = loadGltf(assetPath(kModelPath));
     fillMissingAttributes(m_model);
-    for (size_t i = 0; i < m_model.primitives.size(); ++i) {
-      m_meshes.emplace_back(ctx, m_model.primitives[i].mesh, fmt::format("gltf primitive {}", i));
+    for (const auto& [i, primitive] : std::views::enumerate(m_model.primitives)) {
+      m_meshes.emplace_back(ctx, primitive.mesh, std::format("gltf primitive {}", i));
     }
     m_textures.resize(m_model.images.size());
     {
       ScopedTimer timer("11 VK texture uploads");
-      for (size_t i = 0; i < m_model.images.size(); ++i) {
-        if (m_model.images[i].width > 0) {
-          m_textures[i] = vk::createTexture(ctx, m_model.images[i], true, fmt::format("gltf image {}", i));
-        }
+      for (const auto& [i, image] : std::views::enumerate(m_model.images)) {
+        if (image.width == 0) continue;
+        m_textures[size_t(i)] = vk::createTexture(ctx, image, true, std::format("gltf image {}", i));
       }
     }
     m_white = vk::createTexture(ctx, {1, 1, 4, {255, 255, 255, 255}}, false, "white");
@@ -67,7 +67,7 @@ class GltfVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_frameUbo[i] = vk::Buffer(ctx, sizeof(FrameUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                 fmt::format("11 frame {}", i));
+                                 std::format("11 frame {}", i));
       vk::writeBuffer(device, m_frameSets[i], 0, m_frameUbo[i].handle(), sizeof(FrameUniforms));
     }
     // Material sets never change after this: textures are immutable, so no per-frame copies are needed.

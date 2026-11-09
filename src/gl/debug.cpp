@@ -37,7 +37,7 @@ void GLAD_API_PTR onDebugMessage(GLenum source, GLenum type, GLuint id, GLenum s
   // NVIDIA chatter about buffer placement ("will use VIDEO memory as the source...") etc.
   if (id == 131185 || id == 131218 || id == 131204) return;
 
-  const auto text = [&] { return fmt::format("GL {} {} #{}: {}", sourceName(source), typeName(type), id, message); };
+  const auto text = [&] { return std::format("GL {} {} #{}: {}", sourceName(source), typeName(type), id, message); };
   // Compile errors also come back through glGetShaderInfoLog, where gl::Program reports them with the file
   // name. Don't count them: a typo during hot reload isn't an API usage error.
   if (source == GL_DEBUG_SOURCE_SHADER_COMPILER) {

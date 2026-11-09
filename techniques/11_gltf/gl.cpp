@@ -1,6 +1,7 @@
 // 11_gltf — OpenGL. One gl::Mesh per glTF primitive, one gl::Texture per used image; per draw: set the
 // draw's uniforms, rebind textures when the material changes, toggle culling for double-sided materials.
 
+#include <ranges>
 #include <vector>
 
 #include "core/assets.h"
@@ -23,15 +24,13 @@ class GltfGL final : public gl::Technique {
     m_model = loadGltf(assetPath(kModelPath));
     fillMissingAttributes(m_model);
     m_program = gl::Program({"11_gltf/shaders/model.gl.vert", "11_gltf/shaders/model.gl.frag"});
-    for (size_t i = 0; i < m_model.primitives.size(); ++i) {
-      m_meshes.emplace_back(m_model.primitives[i].mesh, fmt::format("gltf primitive {}", i));
+    for (const auto& [i, primitive] : std::views::enumerate(m_model.primitives)) {
+      m_meshes.emplace_back(primitive.mesh, std::format("gltf primitive {}", i));
     }
     // Images the materials don't use were never decoded (width 0): leave an empty texture in their slot.
     m_textures.resize(m_model.images.size());
-    for (size_t i = 0; i < m_model.images.size(); ++i) {
-      if (m_model.images[i].width > 0) {
-        m_textures[i] = gl::Texture(m_model.images[i], true, fmt::format("gltf image {}", i));
-      }
+    for (const auto& [i, image] : std::views::enumerate(m_model.images)) {
+      if (image.width > 0) m_textures[size_t(i)] = gl::Texture(image, true, std::format("gltf image {}", i));
     }
     // Stand-ins for missing textures: white base color, flat (0, 0, 1) normal.
     m_white = gl::Texture(solidImage(255, 255, 255), false, "white");

@@ -70,7 +70,7 @@ class UberGL final : public gl::Technique {
   void buildProgram(int model) {
     // Everything after the #version line of each stage is compiled with these in front.
     const std::string defines =
-        fmt::format("#define LIGHTING_MODEL {}\n#define TOON_DESATURATION {:.6f}\n", model, m_params.toonDesaturation);
+        std::format("#define LIGHTING_MODEL {}\n#define TOON_DESATURATION {:.6f}\n", model, m_params.toonDesaturation);
     m_programs[size_t(model)] = gl::Program(
         {"10_specialization_constants/shaders/uber.gl.vert", "10_specialization_constants/shaders/uber.gl.frag"},
         defines);

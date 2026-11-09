@@ -15,6 +15,7 @@
 // VK has no runtime GLSL compiler: its shaders are SPIR-V built by glslc, and a "reload" means rebuilding
 // the whole pipeline object.
 
+#include <expected>
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <initializer_list>
@@ -68,8 +69,10 @@ class Program {
     std::filesystem::file_time_type modified;
   };
 
-  // Compiles and links all stages; throws std::runtime_error with the driver's log on failure.
-  GLuint build();
+  // Compiles and links all stages. A failure (the driver's log, a missing file, a bad #include) is a normal
+  // outcome while editing shaders, so it comes back as an error value: the constructor throws it, a reload
+  // logs it and keeps the old program.
+  std::expected<GLuint, std::string> build();
   void swap(Program& other) noexcept {
     std::swap(m_id, other.m_id);
     std::swap(m_stages, other.m_stages);

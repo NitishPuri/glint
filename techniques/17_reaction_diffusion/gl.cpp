@@ -187,7 +187,7 @@ class ReactionDiffusionGL final : public gl::Technique {
     for (int i = 0; i < 2; ++i) {
       glCreateTextures(GL_TEXTURE_2D, 1, &m_tex[size_t(i)]);
       glTextureStorage2D(m_tex[size_t(i)], 1, GL_RGBA32F, grid.x, grid.y);
-      const std::string label = fmt::format("17 state {}", i == 0 ? "A" : "B");
+      const std::string label = std::format("17 state {}", i == 0 ? "A" : "B");
       glObjectLabel(GL_TEXTURE, m_tex[size_t(i)], -1, label.c_str());
       glCreateFramebuffers(1, &m_fbo[size_t(i)]);
       glNamedFramebufferTexture(m_fbo[size_t(i)], GL_COLOR_ATTACHMENT0, m_tex[size_t(i)], 0);

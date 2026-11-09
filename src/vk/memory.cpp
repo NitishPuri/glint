@@ -13,7 +13,7 @@ namespace glint::vk {
 namespace {
 std::atomic<long long> g_rawCount{0}, g_rawBytes{0};
 
-std::string mb(double bytes) { return fmt::format("{:.1f} MB", bytes / (1024.0 * 1024.0)); }
+std::string mb(double bytes) { return std::format("{:.1f} MB", bytes / (1024.0 * 1024.0)); }
 }  // namespace
 
 void trackRawAllocation(VkDeviceSize bytes, int delta) {
@@ -23,7 +23,7 @@ void trackRawAllocation(VkDeviceSize bytes, int delta) {
 
 std::string memoryReport(const Context& ctx) {
   if (!ctx.allocator) {
-    return fmt::format("raw: {} allocations = {} VkDeviceMemory objects, {}", g_rawCount.load(), g_rawCount.load(),
+    return std::format("raw: {} allocations = {} VkDeviceMemory objects, {}", g_rawCount.load(), g_rawCount.load(),
                        mb(double(g_rawBytes.load())));
   }
   VmaTotalStatistics stats;
@@ -31,7 +31,7 @@ std::string memoryReport(const Context& ctx) {
   const VmaStatistics& t = stats.total.statistics;
   // blockCount includes dedicated allocations (a block holding exactly one resource). The JSON dump
   // (--vma-stats) shows each block's contents.
-  return fmt::format("VMA: {} allocations in {} VkDeviceMemory blocks, {} used of {} allocated", t.allocationCount,
+  return std::format("VMA: {} allocations in {} VkDeviceMemory blocks, {} used of {} allocated", t.allocationCount,
                      t.blockCount, mb(double(t.allocationBytes)), mb(double(t.blockBytes)));
 }
 

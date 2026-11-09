@@ -1,5 +1,7 @@
 #include <doctest/doctest.h>
 
+#include <ranges>
+
 #include "core/assets.h"
 
 using namespace glint;
@@ -53,9 +55,10 @@ TEST_CASE("computeTangents reproduces the cube's analytic tangents") {
   const std::vector<glm::vec4> expected = cube.tangents;
   cube.tangents.clear();
   computeTangents(cube);
-  for (size_t i = 0; i < expected.size(); ++i) {
-    CHECK(glm::length(glm::vec3(cube.tangents[i]) - glm::vec3(expected[i])) < 1e-5f);
-    CHECK(cube.tangents[i].w == expected[i].w);
+  REQUIRE(cube.tangents.size() == expected.size());
+  for (const auto& [computed, analytic] : std::views::zip(cube.tangents, expected)) {
+    CHECK(glm::length(glm::vec3(computed) - glm::vec3(analytic)) < 1e-5f);
+    CHECK(computed.w == analytic.w);
   }
 }
 

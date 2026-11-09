@@ -59,7 +59,7 @@ class IndexedMeshVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_ubo[i] = vk::Buffer(ctx, m_stride * kInstances, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            fmt::format("05 ubo {}", i));
+                            std::format("05 ubo {}", i));
       // range = one block; the descriptor "slides" over the buffer by the dynamic offset.
       vk::writeBuffer(device, m_sets[i], 0, m_ubo[i].handle(), sizeof(shading::Uniforms),
                       VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);

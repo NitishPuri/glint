@@ -53,7 +53,7 @@ class NormalMappingVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_ubo[i] = vk::Buffer(ctx, sizeof(shading::Uniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            fmt::format("06 ubo {}", i));
+                            std::format("06 ubo {}", i));
       vk::writeBuffer(device, m_sets[i], 0, m_ubo[i].handle(), sizeof(shading::Uniforms));
       vk::writeImage(device, m_sets[i], 1, m_diffuse.view(), m_sampler);  // one sampler, three images
       vk::writeImage(device, m_sets[i], 2, m_normal.view(), m_sampler);

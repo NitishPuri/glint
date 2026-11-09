@@ -25,11 +25,11 @@ std::tm localNow() {
 
 std::string compilerName() {
 #if defined(__clang__)
-  return fmt::format("clang {}.{}.{}", __clang_major__, __clang_minor__, __clang_patchlevel__);
+  return std::format("clang {}.{}.{}", __clang_major__, __clang_minor__, __clang_patchlevel__);
 #elif defined(__GNUC__)
-  return fmt::format("gcc {}.{}.{}", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+  return std::format("gcc {}.{}.{}", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #elif defined(_MSC_VER)
-  return fmt::format("msvc {}", _MSC_VER);
+  return std::format("msvc {}", _MSC_VER);
 #else
   return "unknown";
 #endif
@@ -44,7 +44,7 @@ void startRunLog(std::string_view app, const Config& config, int argc, const cha
     if (path.empty()) {
       std::error_code ec;
       std::filesystem::create_directories(GLINT_LOG_DIR, ec);
-      path = fmt::format("{}/{}_{:04}-{:02}-{:02}_{:02}-{:02}-{:02}.log", GLINT_LOG_DIR, app, now.tm_year + 1900,
+      path = std::format("{}/{}_{:04}-{:02}-{:02}_{:02}-{:02}-{:02}.log", GLINT_LOG_DIR, app, now.tm_year + 1900,
                          now.tm_mon + 1, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
     }
     if (log::setFile(path)) log::info("log file {}", path);

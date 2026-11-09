@@ -24,11 +24,6 @@ FetchContent_Declare(glm
   URL https://github.com/g-truc/glm/archive/refs/tags/1.0.1.tar.gz
   URL_HASH SHA256=9f3174561fd26904b23f0db5e560971cbf9b3cbda0b280f04d5c379d03bf234c)
 
-# --- fmt 11.2.0 ---------------------------------------------------------------------------------
-FetchContent_Declare(fmt
-  URL https://github.com/fmtlib/fmt/archive/refs/tags/11.2.0.tar.gz
-  URL_HASH SHA256=bc23066d87ab3168f27cef3e97d545fa63314f5c79df5ea444d41d56f962c6af)
-
 # --- Dear ImGui 1.92.9b (docking branch) --------------------------------------------------------
 FetchContent_Declare(imgui
   URL https://github.com/ocornut/imgui/archive/refs/tags/v1.92.9b-docking.tar.gz
@@ -71,7 +66,7 @@ FetchContent_Declare(vma
   URL_HASH SHA256=c4f6bbe6b5a45c2eb610ca9d231158e313086d5b1a40c9922cb42b597419b14e
   SOURCE_SUBDIR _no_cmake)
 
-FetchContent_MakeAvailable(glfw glm fmt imgui stb tinyobjloader arcball_camera doctest tinygltf vma)
+FetchContent_MakeAvailable(glfw glm imgui stb tinyobjloader arcball_camera doctest tinygltf vma)
 
 add_library(vma INTERFACE)
 target_include_directories(vma SYSTEM INTERFACE ${vma_SOURCE_DIR}/include)

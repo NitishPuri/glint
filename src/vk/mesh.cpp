@@ -1,5 +1,6 @@
 #include "vk/mesh.h"
 
+#include <ranges>
 #include <stdexcept>
 
 #include "core/log.h"
@@ -29,13 +30,13 @@ VertexInput Mesh::vertexInput(std::initializer_list<AttribLocation> locations) c
   VertexInput subset;
   for (AttribLocation location : locations) {
     bool found = false;
-    for (size_t i = 0; i < m_input.bindings.size(); ++i) {
-      if (m_input.attributes[i].location != location) continue;
-      subset.bindings.push_back(m_input.bindings[i]);
-      subset.attributes.push_back(m_input.attributes[i]);
+    for (const auto& [binding, attribute] : std::views::zip(m_input.bindings, m_input.attributes)) {
+      if (attribute.location != location) continue;
+      subset.bindings.push_back(binding);
+      subset.attributes.push_back(attribute);
       found = true;
     }
-    if (!found) throw std::runtime_error(fmt::format("mesh has no attribute at location {}", uint32_t(location)));
+    if (!found) throw std::runtime_error(std::format("mesh has no attribute at location {}", uint32_t(location)));
   }
   return subset;
 }
@@ -46,20 +47,20 @@ VertexInput Mesh::positionsOnly() {
 }
 
 void Mesh::draw(VkCommandBuffer cmd) const {
-  for (size_t i = 0; i < m_vertexBuffers.size(); ++i) {
-    const VkBuffer buffer = m_vertexBuffers[i].handle();
+  for (const auto& [vertexBuffer, binding] : std::views::zip(m_vertexBuffers, m_bindings)) {
+    const VkBuffer buffer = vertexBuffer.handle();
     const VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(cmd, m_bindings[i], 1, &buffer, &offset);
+    vkCmdBindVertexBuffers(cmd, binding, 1, &buffer, &offset);
   }
   vkCmdBindIndexBuffer(cmd, m_indices.handle(), 0, VK_INDEX_TYPE_UINT32);
   vkCmdDrawIndexed(cmd, m_indexCount, 1, 0, 0, 0);
 }
 
 void Mesh::drawNonIndexed(VkCommandBuffer cmd) const {
-  for (size_t i = 0; i < m_vertexBuffers.size(); ++i) {
-    const VkBuffer buffer = m_vertexBuffers[i].handle();
+  for (const auto& [vertexBuffer, binding] : std::views::zip(m_vertexBuffers, m_bindings)) {
+    const VkBuffer buffer = vertexBuffer.handle();
     const VkDeviceSize offset = 0;
-    vkCmdBindVertexBuffers(cmd, m_bindings[i], 1, &buffer, &offset);
+    vkCmdBindVertexBuffers(cmd, binding, 1, &buffer, &offset);
   }
   vkCmdDraw(cmd, m_vertexCount, 1, 0, 0);
 }

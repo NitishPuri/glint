@@ -54,7 +54,7 @@ class UberVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_ubo[i] = vk::Buffer(ctx, sizeof(Uniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            fmt::format("10 ubo {}", i));
+                            std::format("10 ubo {}", i));
       vk::writeBuffer(device, m_sets[i], 0, m_ubo[i].handle(), sizeof(Uniforms));
       vk::writeImage(device, m_sets[i], 1, m_texture.view(), m_sampler);
     }
@@ -138,7 +138,7 @@ class UberVK final : public vk::Technique {
     desc.layout = m_pipelineLayout;
     desc.colorFormat = m_colorFormat;
     desc.depthFormat = kDepthFormat;
-    desc.name = fmt::format("10 {}", kModelNames[model]);
+    desc.name = std::format("10 {}", kModelNames[model]);
     m_pipelines[size_t(model)] = vk::createGraphicsPipeline(m_ctx->device, desc);
   }
 

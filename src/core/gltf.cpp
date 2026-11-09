@@ -5,6 +5,7 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <ranges>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -86,7 +87,7 @@ size_t ModelData::triangleCount() const {
 }
 
 ModelData loadGltf(const std::filesystem::path& path) {
-  ScopedTimer timer(fmt::format("loadGltf {}", path.filename().string()));
+  ScopedTimer timer(std::format("loadGltf {}", path.filename().string()));
   tinygltf::Model model;
   tinygltf::TinyGLTF loader;
   loader.SetImageLoader(keepEncodedImage, nullptr);
@@ -95,7 +96,7 @@ ModelData loadGltf(const std::filesystem::path& path) {
   const bool ok = binary ? loader.LoadBinaryFromFile(&model, &error, &warning, path.string())
                          : loader.LoadASCIIFromFile(&model, &error, &warning, path.string());
   if (!warning.empty()) log::debug("loadGltf {}: {}", path.filename().string(), warning);
-  if (!ok) throw std::runtime_error(fmt::format("loadGltf '{}': {}", path.string(), error));
+  if (!ok) throw std::runtime_error(std::format("loadGltf '{}': {}", path.string(), error));
 
   ModelData out;
 
@@ -128,7 +129,7 @@ ModelData loadGltf(const std::filesystem::path& path) {
     const std::vector<unsigned char>& encoded = model.images[size_t(i)].image;
     int w = 0, h = 0, channels = 0;
     stbi_uc* pixels = stbi_load_from_memory(encoded.data(), int(encoded.size()), &w, &h, &channels, 4);
-    if (!pixels) throw std::runtime_error(fmt::format("loadGltf: image {} '{}': {}", i, model.images[size_t(i)].uri,
+    if (!pixels) throw std::runtime_error(std::format("loadGltf: image {} '{}': {}", i, model.images[size_t(i)].uri,
                                                       stbi_failure_reason()));
     ImageData& img = out.images[size_t(i)];
     img.width = w;
@@ -140,10 +141,10 @@ ModelData loadGltf(const std::filesystem::path& path) {
 
   // --- meshes: one GltfPrimitive per glTF primitive --------------------------------------------------------
   std::vector<std::vector<int>> meshPrimitives(model.meshes.size());  // glTF mesh -> our primitive indices
-  for (size_t m = 0; m < model.meshes.size(); ++m) {
-    for (const tinygltf::Primitive& p : model.meshes[m].primitives) {
+  for (const auto& [m, mesh] : std::views::enumerate(model.meshes)) {
+    for (const tinygltf::Primitive& p : mesh.primitives) {
       if (p.mode != TINYGLTF_MODE_TRIANGLES && p.mode != -1) {
-        log::warn("loadGltf: skipping non-triangle primitive in mesh '{}'", model.meshes[m].name);
+        log::warn("loadGltf: skipping non-triangle primitive in mesh '{}'", mesh.name);
         continue;
       }
       GltfPrimitive prim;
@@ -160,7 +161,7 @@ ModelData loadGltf(const std::filesystem::path& path) {
       if (p.indices >= 0) {
         prim.mesh.indices = readIndices(model, p.indices);
       } else {
-        for (uint32_t i = 0; i < prim.mesh.positions.size(); ++i) prim.mesh.indices.push_back(i);
+        prim.mesh.indices = std::views::iota(0u, uint32_t(prim.mesh.positions.size())) | std::ranges::to<std::vector>();
       }
       meshPrimitives[m].push_back(int(out.primitives.size()));
       out.primitives.push_back(std::move(prim));

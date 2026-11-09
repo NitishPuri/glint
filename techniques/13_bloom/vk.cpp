@@ -64,7 +64,7 @@ class BloomVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_lutStaging[i] = vk::Buffer(ctx, lut.sizeBytes(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                   fmt::format("13 LUT staging {}", i));
+                                   std::format("13 LUT staging {}", i));
     }
 
     // Bloom format. GL_R11F_G11F_B10F is required to be renderable in GL 4.x, so GL just uses it. In VK,
@@ -104,7 +104,7 @@ class BloomVK final : public vk::Technique {
     for (uint32_t i = 0; i < vk::kFramesInFlight; ++i) {
       m_sceneUbo[i] = vk::Buffer(ctx, sizeof(hdr::SceneUniforms), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                 fmt::format("13 scene {}", i));
+                                 std::format("13 scene {}", i));
       vk::writeBuffer(device, m_sceneSets[i], 0, m_sceneUbo[i].handle(), sizeof(hdr::SceneUniforms));
       vk::writeImage(device, m_sceneSets[i], 1, m_albedo.view(), m_albedoSampler);
     }
@@ -340,7 +340,7 @@ class BloomVK final : public vk::Technique {
       viewInfo.format = m_bloomFormat;
       viewInfo.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, i, 1, 0, 1};  // baseMipLevel = i, levelCount = 1
       VK_CHECK(vkCreateImageView(device, &viewInfo, nullptr, &m_levelViews[i]));
-      vk::debug::setName(device, VK_OBJECT_TYPE_IMAGE_VIEW, m_levelViews[i], fmt::format("13 bloom level {}", i));
+      vk::debug::setName(device, VK_OBJECT_TYPE_IMAGE_VIEW, m_levelViews[i], std::format("13 bloom level {}", i));
     }
 
     // Descriptor sets that point at these views (no frame is in flight: we waited above).

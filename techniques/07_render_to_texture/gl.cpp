@@ -123,7 +123,7 @@ class RenderToTextureGL final : public gl::Technique {
     // GL checks the combination only when asked (or at draw time). VK validates attachments up front
     // (validation layers) — there is no "incomplete framebuffer" state.
     const GLenum status = glCheckNamedFramebufferStatus(m_fbo, GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) throw std::runtime_error(fmt::format("fbo incomplete: 0x{:x}", status));
+    if (status != GL_FRAMEBUFFER_COMPLETE) throw std::runtime_error(std::format("fbo incomplete: 0x{:x}", status));
   }
 
   void destroyTargets() {

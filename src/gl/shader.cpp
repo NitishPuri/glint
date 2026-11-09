@@ -1,6 +1,8 @@
 #include "gl/shader.h"
 
+#include <algorithm>
 #include <stdexcept>
+#include <string_view>
 
 #include "core/assets.h"
 #include "core/log.h"
@@ -15,7 +17,7 @@ GLenum stageFromExtension(const std::filesystem::path& path) {
   if (ext == ".frag") return GL_FRAGMENT_SHADER;
   if (ext == ".comp") return GL_COMPUTE_SHADER;
   if (ext == ".geom") return GL_GEOMETRY_SHADER;
-  throw std::runtime_error(fmt::format("{}: unknown shader stage extension", path.string()));
+  throw std::runtime_error(std::format("{}: unknown shader stage extension", path.string()));
 }
 
 std::filesystem::file_time_type modifiedTime(const std::filesystem::path& path) {
@@ -28,7 +30,7 @@ std::filesystem::file_time_type modifiedTime(const std::filesystem::path& path) 
 // #line directives keep compiler error line numbers pointing at the right lines of each file.
 std::string loadWithIncludes(const std::filesystem::path& path, std::vector<std::filesystem::path>& included,
                              int depth = 0) {
-  if (depth > 8) throw std::runtime_error(fmt::format("{}: #include nested too deep", path.string()));
+  if (depth > 8) throw std::runtime_error(std::format("{}: #include nested too deep", path.string()));
   const std::string text = readTextFile(path);
   std::string out;
   size_t lineNumber = 0, start = 0;
@@ -39,16 +41,16 @@ std::string loadWithIncludes(const std::filesystem::path& path, std::vector<std:
     start = end == std::string::npos ? text.size() : end + 1;
 
     const size_t hash = line.find_first_not_of(" \t");
-    if (hash != std::string::npos && line.compare(hash, 8, "#include") == 0) {
+    if (hash != std::string::npos && std::string_view(line).substr(hash).starts_with("#include")) {
       const size_t open = line.find('"'), close = line.rfind('"');
       if (open == std::string::npos || close <= open) {
-        throw std::runtime_error(fmt::format("{}:{}: bad #include", path.string(), lineNumber));
+        throw std::runtime_error(std::format("{}:{}: bad #include", path.string(), lineNumber));
       }
       const std::string name = line.substr(open + 1, close - open - 1);
       std::filesystem::path file = path.parent_path() / name;
       if (!std::filesystem::exists(file)) file = std::filesystem::path(GLINT_SHADER_DIR) / "common/shaders" / name;
       included.push_back(file);
-      out += "#line 1\n" + loadWithIncludes(file, included, depth + 1) + fmt::format("\n#line {}\n", lineNumber + 1);
+      out += "#line 1\n" + loadWithIncludes(file, included, depth + 1) + std::format("\n#line {}\n", lineNumber + 1);
     } else {
       out += line + "\n";
     }
@@ -64,10 +66,12 @@ Program::Program(std::initializer_list<std::string> relativePaths, std::string d
     const std::filesystem::path path = std::filesystem::path(GLINT_SHADER_DIR) / relative;
     m_stages.push_back({path, modifiedTime(path)});
   }
-  m_id = build();
+  auto program = build();
+  if (!program) throw std::runtime_error(program.error());
+  m_id = *program;
 }
 
-GLuint Program::build() {
+std::expected<GLuint, std::string> Program::build() {
   std::vector<GLuint> shaders;
   auto cleanup = [&] {
     for (GLuint s : shaders) glDeleteShader(s);
@@ -75,7 +79,13 @@ GLuint Program::build() {
 
   std::vector<std::filesystem::path> included;
   for (const Stage& stage : m_stages) {
-    std::string source = loadWithIncludes(stage.path, included);
+    std::string source;
+    try {
+      source = loadWithIncludes(stage.path, included);
+    } catch (const std::exception& e) {  // missing file / bad #include: as recoverable as a compile error
+      cleanup();
+      return std::unexpected(e.what());
+    }
     if (!m_defines.empty()) {
       // After the first line (#version must come first); #line keeps error line numbers matching the file.
       const size_t eol = source.find('\n');
@@ -92,7 +102,7 @@ GLuint Program::build() {
       char info[4096];
       glGetShaderInfoLog(shader, sizeof(info), nullptr, info);
       cleanup();
-      throw std::runtime_error(fmt::format("{}:\n{}", stage.path.string(), info));
+      return std::unexpected(std::format("{}:\n{}", stage.path.string(), info));
     }
   }
 
@@ -106,14 +116,12 @@ GLuint Program::build() {
     char info[4096];
     glGetProgramInfoLog(program, sizeof(info), nullptr, info);
     glDeleteProgram(program);
-    throw std::runtime_error(fmt::format("link {}:\n{}", m_stages.front().path.string(), info));
+    return std::unexpected(std::format("link {}:\n{}", m_stages.front().path.string(), info));
   }
 
   m_includes.clear();
   for (const auto& file : included) {  // several stages often include the same file: watch it once
-    bool seen = false;
-    for (const Stage& existing : m_includes) seen = seen || existing.path == file;
-    if (!seen) m_includes.push_back({file, modifiedTime(file)});
+    if (!std::ranges::contains(m_includes, file, &Stage::path)) m_includes.push_back({file, modifiedTime(file)});
   }
 
   const std::string label = m_stages.front().path.stem().string();  // "cube.gl"
@@ -139,16 +147,15 @@ bool Program::reloadIfChanged() {
   }
   if (changed.empty()) return false;
 
-  try {
-    const GLuint program = build();
-    glDeleteProgram(m_id);
-    m_id = program;
-    log::info("reloaded program after edit to {}", changed);
-    return true;
-  } catch (const std::exception& e) {
-    log::error("shader reload failed, keeping the previous program: {}", e.what());
+  const auto program = build();
+  if (!program) {
+    log::error("shader reload failed, keeping the previous program: {}", program.error());
     return false;
   }
+  glDeleteProgram(m_id);
+  m_id = *program;
+  log::info("reloaded program after edit to {}", changed);
+  return true;
 }
 
 }  // namespace glint::gl

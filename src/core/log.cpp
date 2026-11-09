@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <ctime>
 #include <mutex>
+#include <print>
+#include <utility>
 
 namespace glint::log {
 
@@ -24,7 +26,7 @@ const char* levelTag(Level level) {
     case Level::Warn: return "WARN ";
     case Level::Error: return "ERROR";
   }
-  return "?";
+  std::unreachable();  // the switch covers every Level; -Wswitch flags a new one
 }
 
 // Time since the first log line: short, and handy for spotting slow startup steps.
@@ -44,7 +46,7 @@ std::string wallClock() {
   localtime_r(&t, &local);
 #endif
   const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
-  return fmt::format("{:02}:{:02}:{:02}.{:03}", local.tm_hour, local.tm_min, local.tm_sec, ms);
+  return std::format("{:02}:{:02}:{:02}.{:03}", local.tm_hour, local.tm_min, local.tm_sec, ms);
 }
 
 }  // namespace
@@ -52,7 +54,7 @@ std::string wallClock() {
 void write(Level level, std::string_view message) {
   if (level < g_minLevel) return;
   std::lock_guard lock(g_mutex);
-  const std::string line = fmt::format("[{:8.3f}] {} {}\n", secondsSinceStart(), levelTag(level), message);
+  const std::string line = std::format("[{:8.3f}] {} {}\n", secondsSinceStart(), levelTag(level), message);
   std::FILE* console = level >= Level::Warn ? stderr : stdout;
   std::fputs(line.c_str(), console);
   if (g_file) {
@@ -68,7 +70,7 @@ bool setFile(const std::string& path) {
   if (g_file) std::fclose(g_file);
   g_file = path.empty() ? nullptr : std::fopen(path.c_str(), "w");
   if (!path.empty() && !g_file) {
-    fmt::print(stderr, "log: cannot open '{}'\n", path);
+    std::println(stderr, "log: cannot open '{}'", path);
     return false;
   }
   return true;

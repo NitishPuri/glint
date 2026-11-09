@@ -50,7 +50,7 @@ class CubeVK final : public vk::Technique {
                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_ubo[i],
                    m_uboMemory[i]);
       VK_CHECK(vkMapMemory(device, m_uboMemory[i], 0, sizeof(glm::mat4), 0, &m_uboMapped[i]));
-      vk::debug::setName(device, VK_OBJECT_TYPE_BUFFER, m_ubo[i], fmt::format("02 ubo {}", i));
+      vk::debug::setName(device, VK_OBJECT_TYPE_BUFFER, m_ubo[i], std::format("02 ubo {}", i));
     }
 
     // --- descriptors: how the shader's `set = 0, binding = 0` finds the uniform buffer ------------------
