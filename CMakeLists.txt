@@ -52,6 +52,7 @@ add_library(glint_core STATIC
   src/core/camera.cpp
   src/core/config.cpp
   src/core/gltf.cpp
+  src/core/gpu.cpp
   src/core/input.cpp
   src/core/log.cpp
   src/core/renderdoc.cpp
@@ -156,7 +157,7 @@ endforeach()
 option(GLINT_BUILD_TESTS "Build unit tests" ON)
 if(GLINT_BUILD_TESTS)
   enable_testing()
-  add_executable(glint_tests tests/main.cpp tests/test_assets.cpp tests/test_camera.cpp tests/test_config.cpp)
+  add_executable(glint_tests tests/main.cpp tests/test_assets.cpp tests/test_camera.cpp tests/test_config.cpp tests/test_gpu.cpp)
   target_link_libraries(glint_tests PRIVATE glint_core doctest glint_warnings)
   add_test(NAME glint_tests COMMAND glint_tests)
 endif()

@@ -15,6 +15,7 @@
 #include "core/assets.h"
 #include "core/camera.h"
 #include "core/config.h"
+#include "core/gpu.h"
 #include "core/log.h"
 #include "core/renderdoc.h"
 #include "core/run_log.h"
@@ -80,6 +81,8 @@ void saveScreenshot(const std::string& path, glm::ivec2 size) {
 }
 
 int run(const Config& config) {
+  // GL lands on whatever GPU the window system picks: route it *before* the context exists (core/gpu.h).
+  const GpuChoice gpu = selectGpu(config.gpu);
   // RenderDoc hooks GL when the context is created, so it must be loaded before the window.
   if (config.renderdoc) renderdoc::load("glint_gl");
   Window window({.title = "glint - OpenGL",
@@ -94,6 +97,8 @@ int run(const Config& config) {
   if (!gladLoadGL(glfwGetProcAddress)) throw std::runtime_error("gladLoadGL failed");
   glfwSwapInterval(config.vsync ? 1 : 0);  // VK: choosing FIFO vs IMMEDIATE/MAILBOX present mode
   gl::logContextInfo();
+  const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+  checkGpuVendor(gpu, vendorIdFromName(vendor), reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
   if (config.validation) gl::enableDebugOutput();
 
   ui::init();

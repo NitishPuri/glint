@@ -24,6 +24,7 @@
 #include "core/assets.h"
 #include "core/camera.h"
 #include "core/config.h"
+#include "core/gpu.h"
 #include "core/log.h"
 #include "core/renderdoc.h"
 #include "core/run_log.h"
@@ -132,14 +133,19 @@ void saveReadback(const vk::Context& ctx, const Readback& r, const std::string& 
   log::info("screenshot saved to {}", path);
 }
 
-void runApp(const Config& config) {
+void runApp(const Config& config, const GpuChoice& gpu) {
   Window window({.title = "glint - Vulkan",
                  .width = config.width,
                  .height = config.height,
                  .api = GraphicsApi::Vulkan});
 
   // GL: context + function pointers in two lines. VK: instance, validation, surface, GPU choice, device, queue.
-  vk::Context ctx({.window = window.handle(), .validation = config.validation, .vma = config.vma});
+  vk::Context ctx({.window = window.handle(),
+                   .validation = config.validation,
+                   .vma = config.vma,
+                   .gpu = config.gpu,
+                   .gpuVendorId = gpu.gpu ? gpu.gpu->vendorId : 0});
+  checkGpuVendor(gpu, ctx.properties.vendorID, ctx.properties.deviceName);
   const glm::ivec2 fb = window.framebufferSize();
   vk::Swapchain swapchain(ctx, {uint32_t(fb.x), uint32_t(fb.y)}, config.vsync);
   vk::Frames frames(ctx);
@@ -436,13 +442,16 @@ void enableRenderDocLayer() {
 }
 
 int run(const Config& config) {
+  // Same choice as glint_gl (core/gpu.h): the environment must be set before the instance exists, because the
+  // loader enables vendor layers (NVIDIA's VK_LAYER_NV_optimus) from it at vkCreateInstance.
+  const GpuChoice gpu = selectGpu(config.gpu);
   if (config.renderdoc) {
 #ifndef _WIN32  // on Windows the RenderDoc installer registers the layer
     enableRenderDocLayer();
 #endif
     renderdoc::load("glint_vk");  // before the instance exists
   }
-  runApp(config);  // everything VK is destroyed when this returns, so leak reports are counted below
+  runApp(config, gpu);  // everything VK is destroyed when this returns, so leak reports are counted below
   if (config.validation) log::info("validation issues (warnings + errors): {}", vk::Context::validationIssueCount());
   return config.validation && vk::Context::validationIssueCount() > 0 ? 2 : 0;
 }

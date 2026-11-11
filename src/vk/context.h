@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "core/gpu.h"
+
 #include "vk/memory.h"
 #include "vk/vk.h"
 
@@ -19,6 +21,8 @@ struct ContextDesc {
   GLFWwindow* window = nullptr;
   bool validation = true;  // VK_LAYER_KHRONOS_validation + synchronization validation
   bool vma = true;         // false (--no-vma): vk::Buffer / vk::Image allocate raw, one VkDeviceMemory each
+  GpuPreference gpu = GpuPreference::Auto;  // --gpu: which device type wins
+  uint32_t gpuVendorId = 0;  // the GPU core/gpu.h chose (and routed GL to), if any: its vendor wins over the type
 };
 
 class Context {

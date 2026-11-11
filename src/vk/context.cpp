@@ -88,19 +88,24 @@ uint32_t findQueueFamily(VkPhysicalDevice gpu, VkSurfaceKHR surface) {
   return UINT32_MAX;
 }
 
-// Higher is better; < 0 = unusable.
-int scoreDevice(VkPhysicalDevice gpu, VkSurfaceKHR surface) {
+// Higher is better; < 0 = unusable. The device type ranks by --gpu; the vendor of the GPU that core/gpu.h chose
+// (the one GL is routed to) outranks the type, so both apps end up on the same GPU.
+int scoreDevice(VkPhysicalDevice gpu, VkSurfaceKHR surface, const ContextDesc& desc) {
   VkPhysicalDeviceProperties props;
   vkGetPhysicalDeviceProperties(gpu, &props);
   if (props.apiVersion < VK_API_VERSION_1_3) return -1;
   if (!hasDeviceExtension(gpu, VK_KHR_SWAPCHAIN_EXTENSION_NAME)) return -1;
   if (findQueueFamily(gpu, surface) == UINT32_MAX) return -1;
+  const bool integratedFirst = desc.gpu == GpuPreference::Integrated;
+  int score = 0;
   switch (props.deviceType) {
-    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: return 3;
-    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: return 2;
-    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: return 1;
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: score = integratedFirst ? 2 : 3; break;
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: score = integratedFirst ? 3 : 2; break;
+    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: score = 1; break;
     default: return -1;  // CPU (llvmpipe/lavapipe): works, but it's not what we want to measure
   }
+  if (desc.gpuVendorId != 0 && props.vendorID == desc.gpuVendorId) score += 10;
+  return score;
 }
 
 }  // namespace
@@ -176,8 +181,8 @@ Context::Context(const ContextDesc& desc) {
   VK_CHECK(glfwCreateWindowSurface(instance, desc.window, nullptr, &surface));
 
   // --- physical device -----------------------------------------------------------------------------------
-  // GL runs on whatever GPU the window system picked. VK lists them all (here: RADV, llvmpipe, and NVIDIA
-  // under PRIME offload) and lets you choose.
+  // GL runs on whatever GPU the window system picked (core/gpu.h routes it with environment variables). VK lists
+  // them all (here: RADV, llvmpipe, NVIDIA) and lets you choose.
   uint32_t gpuCount = 0;
   vkEnumeratePhysicalDevices(instance, &gpuCount, nullptr);
   std::vector<VkPhysicalDevice> gpus(gpuCount);
@@ -186,7 +191,7 @@ Context::Context(const ContextDesc& desc) {
   for (VkPhysicalDevice gpu : gpus) {
     VkPhysicalDeviceProperties props;
     vkGetPhysicalDeviceProperties(gpu, &props);
-    const int score = scoreDevice(gpu, surface);
+    const int score = scoreDevice(gpu, surface, desc);
     log::info("GPU        {} ({}){}", props.deviceName, string_VkPhysicalDeviceType(props.deviceType),
               score < 0 ? " - skipped" : "");
     if (score > bestScore) {

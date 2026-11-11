@@ -3,9 +3,11 @@
 // Startup settings from the command line, shared by both apps:
 //   glint_vk [technique] [--size WxH] [--no-vsync] [--validation|--no-validation] [--log FILE] [--assets DIR]
 //            [--frames N] [--screenshot FILE] [--fixed-dt S] [--no-log-file] [--renderdoc]
-//            [--no-vma] [--vma-stats FILE]
+//            [--no-vma] [--vma-stats FILE] [--gpu auto|discrete|integrated]
 
 #include <string>
+
+#include "core/gpu.h"
 
 namespace glint {
 
@@ -29,6 +31,8 @@ struct Config {
   bool renderdoc = false;   // load RenderDoc's in-app API (before the window/context/instance exist)
   bool vma = true;          // VK only: vk::Buffer / vk::Image allocate through VMA (--no-vma: raw, one each)
   std::string vmaStats;     // VK only: write VMA's JSON statistics here when a technique is unloaded
+  // Which GPU both apps run on (core/gpu.h). Default: $GLINT_GPU, else auto.
+  GpuPreference gpu = GpuPreference::Auto;
   bool showHelp = false;
 };
 

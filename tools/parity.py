@@ -15,6 +15,7 @@ side. Exit code 1 if any technique is below --min-psnr (or failed to run).
   tools/parity.py 07_render_to_texture    # just one
   tools/parity.py --build build/release --min-psnr 35
   tools/parity.py --vk-args=--no-vma      # extra arguments for the VK app only
+  GLINT_GPU=integrated tools/parity.py    # both apps on the same chosen GPU (default: auto = discrete if usable)
 """
 
 import argparse

@@ -148,4 +148,5 @@ itself. VK doesn't distinguish: every hazard is yours, including write-after-rea
 | Instance index in GLSL | `gl_InstanceID` restarts at 0 per draw (add `gl_BaseInstance`, GLSL 4.60) | `gl_InstanceIndex` includes `firstInstance` (glint.glsl: `INSTANCE_ID`) | 18 |
 | Sampling in the vertex shader | Any sampler binding; `textureLod` (no derivatives) | Descriptor binding's `stageFlags` must include `VERTEX`; barrier `dstStage` must include `VERTEX_SHADER` | 18 |
 | Memory allocation | Driver decides; `glNamedBufferStorage` flags are hints, buffers may migrate later | App decides: memory type, sub-allocation, dedicated or not — usually via VMA (`docs/vma.md`), raw = one `vkAllocateMemory` each | VMA |
+| Choosing the GPU | The window system's GPU; on Linux hybrids, PRIME offload env vars before the context exists (`src/core/gpu.h`) | `vkEnumeratePhysicalDevices` + pick (type, vendor, features) | --gpu |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

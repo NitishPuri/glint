@@ -11,6 +11,12 @@ namespace glint {
 
 Config parseArgs(int argc, const char* const* argv) {
   Config config;
+  // $GLINT_GPU sets the default, so scripts (tools/parity.py) and IDE launch configs pick the GPU once for both apps.
+  if (const char* env = std::getenv("GLINT_GPU")) {
+    const auto gpu = parseGpuPreference(env);
+    if (!gpu) throw std::invalid_argument(std::format("GLINT_GPU expects auto|discrete|integrated, got '{}'", env));
+    config.gpu = *gpu;
+  }
   for (int i = 1; i < argc; ++i) {
     const std::string_view arg = argv[i];
     auto value = [&]() -> std::string {
@@ -40,6 +46,11 @@ Config parseArgs(int argc, const char* const* argv) {
       config.vma = false;
     } else if (arg == "--vma-stats") {
       config.vmaStats = value();
+    } else if (arg == "--gpu") {
+      const std::string text = value();
+      const auto gpu = parseGpuPreference(text);
+      if (!gpu) throw std::invalid_argument(std::format("--gpu expects auto|discrete|integrated, got '{}'", text));
+      config.gpu = *gpu;
     } else if (arg == "--no-log-file") {
       config.writeLogFile = false;
     } else if (arg == "--frames") {
@@ -81,6 +92,8 @@ std::string usage(const char* exe) {
       "  --frames N         quit after N frames\n"
       "  --screenshot FILE  save the last frame to FILE (PNG) and quit (after 60 frames unless --frames)\n"
       "  --fixed-dt S       advance animations by exactly S seconds per frame (deterministic screenshots)\n"
+      "  --gpu KIND         auto | discrete | integrated: the GPU both apps run on (default: $GLINT_GPU, else\n"
+      "                     auto = discrete if usable); GL is routed with PRIME offload variables\n"
       "  -h, --help\n",
       exe);
 }

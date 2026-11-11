@@ -51,14 +51,20 @@ read `NOTES.md`, and understand every line and every difference.
   Builds as **C++23**, see [C++ standard](#c-standard). Formatting/printing is `std::format`/`std::print`
   (`{fmt}` was dropped on 2026-11-09).
 - GPUs:
-  - **NVIDIA RTX 3060 Laptop (driver 580): primary target since 2026-10-10.** The laptop is in `nvidia`
-    graphics mode (`system76-power graphics`): GL *and* VK both run on the RTX by default (VK device scoring prefers
-    discrete). To run VK on RADV anyway: `VK_LOADER_DRIVERS_SELECT='*radeon*' ./glint_vk ...`. GL on the AMD
-    needs `hybrid` mode (+ reboot/re-login). Record which GPU a number came from (the log header says).
-    NVIDIA's GL driver reports undefined-behaviour warnings Mesa doesn't (found a real bug in 08).
+  - **NVIDIA RTX 3060 Laptop (driver 580): primary target since 2026-10-10.** Since 2026-10-31 the laptop is in
+    `hybrid` graphics mode (`system76-power graphics`; `nvidia` mode froze the desktop): the AMD iGPU drives the
+    displays, the RTX is used on demand.
+  - **Choosing the GPU: `--gpu auto|discrete|integrated`** in both apps, default `$GLINT_GPU`, else `auto` (discrete
+    if usable). `src/core/gpu.h` picks a GPU from `/sys/class/drm` before the window exists, routes GL there with PRIME
+    offload variables, and VK device scoring follows. `export GLINT_GPU=integrated` applies to everything, including
+    `tools/parity.py`. An explicit choice that can't be honoured is an error; `auto` falls back with a warning.
+    Record which GPU a number came from (the log's `gpu`/`GPU`/`GL_RENDERER` lines say).
+  - The RTX can get stuck in a failed runtime suspend (PCI `power/runtime_status` = `error`, `nvidia-smi` finds no
+    device; first seen 2026-10-31 21:55). Then it's gone for every API, CUDA included, until a reboot. `--gpu` reports
+    it as unusable. NVIDIA's GL driver reports undefined-behaviour warnings Mesa doesn't (found a real bug in 08).
   - AMD Radeon (Cezanne iGPU, RADV reports "RENOIR"): GL 4.6 (radeonsi), Vulkan 1.4 (RADV). Primary until
     2026-10-10; still worth a VK run for a second driver and a bandwidth-starved GPU.
-  - llvmpipe (software Vulkan) is also listed — make sure device selection prefers discrete/integrated.
+  - llvmpipe (software Vulkan) is also listed — device scoring skips CPU devices.
 - Vulkan: loader + headers 1.3.280 installed (`libvulkan-dev`). **Shader compiler and validation layers
   come from the LunarG SDK tarball** extracted into `~/vulkan-sdk` (no sudo; apt's versions are 1.3.204,
   too old and no `glslc`). `source ~/vulkan-sdk/<ver>/setup-env.sh` before configuring.
