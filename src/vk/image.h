@@ -2,7 +2,8 @@
 
 // Move-only VkImage + VkDeviceMemory + one VkImageView, as 02_cube creates its depth buffer raw
 // (vkCreateImage, vkGetImageMemoryRequirements, vkAllocateMemory, vkBindImageMemory, vkCreateImageView).
-// Always DEVICE_LOCAL, optimal tiling, 2D. Contents and layout are the caller's business.
+// Always DEVICE_LOCAL, optimal tiling, 2D (or 3D with depth > 1, as 16_noise creates one raw). Contents and layout
+// are the caller's business.
 // Memory: raw (its own VkDeviceMemory) or VMA (a range of a shared block, or a *dedicated* block when the driver
 // prefers one — typical for render targets), chosen by the Context (vk/memory.h).
 
@@ -21,6 +22,7 @@ struct ImageDesc {
   VkImageUsageFlags usage = 0;
   VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT;  // DEPTH for depth formats
   std::string_view name;
+  uint32_t depth = 1;  // > 1: a 3D image (VK_IMAGE_TYPE_3D, extent.depth = depth) with a 3D view
 };
 
 class Image {

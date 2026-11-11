@@ -202,7 +202,7 @@ Compute shaders and the data-parallel building blocks every simulation and GPU-d
 
 Drawing a lot: instancing, GPU-driven culling with indirect draws, tessellated terrain.
 
-- [ ] **18_grass** — new API: instancing (`glVertexAttribDivisor` vs `VK_VERTEX_INPUT_RATE_INSTANCE`); new idea: procedural vegetation + wind
+- [x] **18_grass** — new API: instancing (`glVertexAttribDivisor` vs `VK_VERTEX_INPUT_RATE_INSTANCE`); new idea: procedural vegetation + wind
       - Read: [GG1 ch7 Rendering Countless Blades of Waving Grass](https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-7-rendering-countless-blades-waving-grass) — **the target chapter**: blade geometry, density, wind animation; local: `GPU-Gems-1-CD-Content/Natural_Effects/Grass` — demo only (zip)
       - Read: [GG3 ch6 GPU-Generated Procedural Wind Animations for Trees](https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-6-gpu-generated-procedural-wind-animations-trees) — GPU-generated procedural wind (local source); local: `GPU-Gems-3-CD-Content/content/06` — C++ source
       - Read: [GG3 ch16 Vegetation Procedural Animation and Shading in Crysis](https://developer.nvidia.com/gpugems/gpugems3/part-iii-rendering/chapter-16-vegetation-procedural-animation-and-shading-crysis) — vegetation animation in Crysis (for ideas); local: `GPU-Gems-3-CD-Content/content/16` — video only

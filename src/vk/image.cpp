@@ -11,9 +11,9 @@ namespace glint::vk {
 Image::Image(const Context& ctx, const ImageDesc& desc)
     : m_device(ctx.device), m_format(desc.format), m_extent(desc.extent), m_mipLevels(desc.mipLevels) {
   VkImageCreateInfo info{VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-  info.imageType = VK_IMAGE_TYPE_2D;
+  info.imageType = desc.depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
   info.format = desc.format;
-  info.extent = {desc.extent.width, desc.extent.height, 1};
+  info.extent = {desc.extent.width, desc.extent.height, desc.depth};
   info.mipLevels = desc.mipLevels;
   info.arrayLayers = 1;
   info.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -45,7 +45,7 @@ Image::Image(const Context& ctx, const ImageDesc& desc)
 
   VkImageViewCreateInfo viewInfo{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
   viewInfo.image = m_image;
-  viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  viewInfo.viewType = desc.depth > 1 ? VK_IMAGE_VIEW_TYPE_3D : VK_IMAGE_VIEW_TYPE_2D;
   viewInfo.format = desc.format;
   viewInfo.subresourceRange = {desc.aspect, 0, desc.mipLevels, 0, 1};
   VK_CHECK(vkCreateImageView(m_device, &viewInfo, nullptr, &m_view));

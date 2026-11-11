@@ -7,6 +7,7 @@
 //   SAMPLER(0, 1) sampler2D uTexture;
 //   PUSH_CONSTANTS Draw { mat4 model; } draw;
 //   SSBO(0, 2) Particles { Particle p[]; } particles;   // shader storage buffer (std430), from 14
+//   INSTANCE_ID                                          // index of the instance being drawn, from 18
 //
 // Binding rules that make one number work in both APIs:
 //   - VK: (set, binding) of a descriptor set. GL has no sets: `set` is ignored and `binding` is the UBO
@@ -23,6 +24,8 @@
 #define PUSH_CONSTANTS layout(push_constant) uniform
 #define SSBO(set_, binding_) layout(std430, set = set_, binding = binding_) buffer
 #define VERTEX_ID gl_VertexIndex
+// VK's gl_InstanceIndex counts from the draw's firstInstance...
+#define INSTANCE_ID gl_InstanceIndex
 #else
 #define UBO(set_, binding_) layout(std140, binding = binding_) uniform
 #define SAMPLER(set_, binding_) layout(binding = binding_) uniform
@@ -30,4 +33,7 @@
 #define PUSH_CONSTANTS layout(std140, binding = 15) uniform
 #define SSBO(set_, binding_) layout(std430, binding = binding_) buffer
 #define VERTEX_ID gl_VertexID
+// ...GL's gl_InstanceID restarts at 0 in every draw, whatever its baseinstance; gl_BaseInstance (GLSL 4.60) adds it
+// back. Per-instance *attributes* already start at baseinstance in both APIs.
+#define INSTANCE_ID (gl_BaseInstance + gl_InstanceID)
 #endif

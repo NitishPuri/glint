@@ -142,5 +142,10 @@ itself. VK doesn't distinguish: every hazard is yours, including write-after-rea
 | Readback without stalling | Persistent coherent mapping + `GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT` + `glFenceSync`, poll with `glClientWaitSync(..., 0)` | `HOST_VISIBLE` buffer per frame slot, barrier → `HOST`, read after the frame fence | 17 |
 | Float32 formats | RGBA32F filterable, RG32F image load/store: guaranteed | Linear filtering optional (query); `rg32f` storage needs `shaderStorageImageExtendedFormats` | 17 |
 | `texelFetch` on a 1-level texture | Still needs a complete texture (non-mipmap min filter) | No completeness rules: the view is what it is | 17 |
+| Per-instance vertex data | `glVertexArrayBindingDivisor(vao, binding, 1)` — VAO state, set once | `VkVertexInputBindingDescription::inputRate = VK_VERTEX_INPUT_RATE_INSTANCE` — pipeline state | 18 |
+| Instance divisor > 1 | Any divisor since GL 3.3 | `VK_KHR_vertex_attribute_divisor` (core in 1.4) | 18 |
+| Instanced draw | `glDrawArraysInstanced(mode, first, count, instances)` | `vkCmdDraw(cmd, vertexCount, instanceCount, firstVertex, firstInstance)` — every draw is instanced | 18 |
+| Instance index in GLSL | `gl_InstanceID` restarts at 0 per draw (add `gl_BaseInstance`, GLSL 4.60) | `gl_InstanceIndex` includes `firstInstance` (glint.glsl: `INSTANCE_ID`) | 18 |
+| Sampling in the vertex shader | Any sampler binding; `textureLod` (no derivatives) | Descriptor binding's `stageFlags` must include `VERTEX`; barrier `dstStage` must include `VERTEX_SHADER` | 18 |
 | Memory allocation | Driver decides; `glNamedBufferStorage` flags are hints, buffers may migrate later | App decides: memory type, sub-allocation, dedicated or not — usually via VMA (`docs/vma.md`), raw = one `vkAllocateMemory` each | VMA |
 | Multiple viewports | `glViewport` between draws | `vkCmdSetViewport` + `vkCmdSetScissor` (dynamic state) between draws | 10 |

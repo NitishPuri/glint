@@ -765,6 +765,119 @@ def vma_blocks():
     return fig
 
 
+# --- 18 ---------------------------------------------------------------------------------------------------------
+
+def blade_curve(t, h, b):
+    """grass.vert bladeCurve(): root-relative point at height fraction t; b = (bx, bz) bend. Returns (x, y, z)."""
+    t = np.asarray(t, float)[..., None]
+    chord = np.concatenate([b[0] * t, np.ones_like(t), b[1] * t], axis=-1)
+    return chord / np.linalg.norm(chord, axis=-1, keepdims=True) * (t * h)
+
+
+def smoothstep(e0, e1, x):
+    x = np.clip((x - e0) / (e1 - e0), 0, 1)
+    return x * x * (3 - 2 * x)
+
+
+def wind_fbm(xz, time, scale, speed, evolve, direction, perm):
+    """grass.glsl windAt()'s gust value: fBm (3 octaves, period 4, gain 0.5, the 0.5 + 0.7 * fbm mapping of 16's R
+    channel), sampled at the root scrolled downwind. The shader samples the 64^3 texture of exactly this function."""
+    p = (xz - direction * speed * time) / scale * 4  # texture coords -> lattice units (period 4)
+    pts = np.concatenate([p, np.full(p.shape[:-1] + (1,), (time * evolve % 1.0) * 4)], axis=-1)
+    fbm = sum(inoise(pts * 2**o, 4 * 2**o, perm) * 0.5 * 0.5**o for o in range(3))
+    return np.clip(0.5 + 0.7 * fbm, 0, 1)
+
+
+@figure("grass_blade", "techniques/18_grass/diagrams/grass_blade.svg")
+def grass_blade():
+    """bladeCurve for increasing bend, and the strip (segments = 4) with its taper — the vertex buffer of 18."""
+    fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1.5, 1]})
+    t = np.linspace(0, 1, 60)
+    for b, shade in zip([0, 0.5, 1, 2, 4, 10], np.linspace(0.25, 0.9, 6)):
+        c = blade_curve(t, 1.0, (b, 0.0))
+        ax0.plot(c[:, 0], c[:, 1], color=plt.cm.Greens(shade), lw=2, label=f"bend {b}")
+        ax0.plot(c[-1, 0], c[-1, 1], "o", color=plt.cm.Greens(shade), ms=4)
+    arc = np.linspace(0, np.pi / 2, 60)
+    ax0.plot(np.sin(arc), np.cos(arc), ls="--", color="#a0aec0", lw=0.8, label="|tip − root| = h")
+    ax0.set_aspect("equal")
+    ax0.set_xlim(-0.05, 1.15)
+    ax0.set_ylim(0, 1.08)
+    ax0.set_xlabel("downwind offset / h")
+    ax0.set_ylabel("height / h")
+    ax0.legend(fontsize=7.5, frameon=False, loc="upper right")
+    ax0.set_title("bladeCurve: offset ∝ t², each point pulled back to distance t·h\n"
+                  "(the root never moves; a bent blade gets lower, not longer)", fontsize=9)
+
+    segments, width = 4, 0.18
+    verts = []
+    for i in range(segments):
+        tt = i / segments
+        verts += [(-1, tt), (1, tt)]
+    verts.append((0, 1))
+    pos = []
+    for edge, tt in verts:
+        c = blade_curve([tt], 1.0, (0.6, 0.0))[0]
+        pos.append((c[0] + edge * 0.5 * width * (1 - tt**1.5), c[1]))
+    pos = np.array(pos)
+    for k in range(len(pos) - 2):
+        ax1.add_patch(Polygon(pos[k:k + 3], closed=True, fc=plt.cm.Greens(0.35 + 0.08 * k), ec="#276749", lw=0.8))
+    for k, (x, y) in enumerate(pos):
+        ax1.text(x + (0.035 if verts[k][0] >= 0 else -0.035), y, str(k), fontsize=8,
+                 ha="left" if verts[k][0] >= 0 else "right", va="center")
+    ax1.set_aspect("equal")
+    ax1.set_xlim(-0.25, 0.75)
+    ax1.set_ylim(-0.03, 1.05)
+    ax1.axis("off")
+    ax1.set_title("the strip: segments = 4 → 9 vertices, 7 triangles\n(vertex k = aStrip[k] = (edge, t); one copy for "
+                  "all blades)", fontsize=9)
+    return fig
+
+
+@figure("grass_wind", "techniques/18_grass/diagrams/grass_wind.svg")
+def grass_wind():
+    """The wind the blades sample: the gust field over the ground at t = 0, and gusts travelling in space-time."""
+    perm = perlin_permutation()
+    scale, speed, evolve, angle = 14.0, 4.0, 0.04, math.radians(35)  # params.h Wind defaults
+    direction = np.array([math.cos(angle), math.sin(angle)])
+    n, size = 120, 28.0
+    xs = (np.arange(n) + 0.5) / n * size - size / 2
+    X, Z = np.meshgrid(xs, xs)
+    g = wind_fbm(np.stack([X, Z], axis=-1), 0.0, scale, speed, evolve, direction, perm)
+    strength = 0.6 * (0.15 + 2.0 * smoothstep(0.35, 0.75, g))
+
+    fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(11.5, 4.4), gridspec_kw={"wspace": 0.5})
+    im = ax0.imshow(strength, origin="lower", extent=(-size / 2, size / 2, -size / 2, size / 2), cmap="YlOrRd",
+                    vmin=0, vmax=1.35)
+    k = slice(4, n, 10)
+    ax0.quiver(X[k, k], Z[k, k], strength[k, k] * direction[0], strength[k, k] * direction[1], color="#2d3748",
+               scale=14, width=0.004)
+    ax0.add_patch(Rectangle((-12, -12), 24, 24, fill=False, ec="#2f855a", lw=1.2, ls="--"))
+    ax0.text(-11.5, 11, "the 24 m field", color="#2f855a", fontsize=8, va="top")
+    fig.colorbar(im, ax=ax0, fraction=0.046, pad=0.03, label="bend along the wind (blade heights / t²)")
+    ax0.set_xlabel("x (m)")
+    ax0.set_ylabel("z (m)")
+    ax0.set_title("gust strength at t = 0: 0.6·(0.15 + 2·smoothstep(0.35, 0.75, fBm))\n"
+                  "arrows: the along-wind part of each blade's bend (direction 35°)", fontsize=9)
+
+    s = np.linspace(-size / 2, size / 2, 200)
+    times = np.linspace(0, 8, 160)
+    S, T = np.meshgrid(s, times)
+    pts = S[..., None] * direction
+    gt = np.stack([wind_fbm(pts[i], times[i], scale, speed, evolve, direction, perm) for i in range(len(times))])
+    ax1.imshow(0.6 * (0.15 + 2.0 * smoothstep(0.35, 0.75, gt)), origin="lower", aspect="auto", cmap="YlOrRd",
+               extent=(s[0], s[-1], times[0], times[-1]), vmin=0, vmax=1.35)
+    ax1.plot([-12, -12 + speed * 6], [0.5, 6.5], color="#2d3748", lw=1, ls="--")
+    ax1.text(-13, 7.3, f"dashed: {speed:.0f} m/s = gust speed", fontsize=8, color="#2d3748",
+             bbox=dict(fc="white", ec="none", alpha=0.8))
+    ax1.set_xlim(s[0], s[-1])
+    ax1.set_xlabel("position along the wind direction (m)")
+    ax1.set_ylabel("time (s)")
+    ax1.set_title("the same line of ground over 8 s: gusts travel downwind\n"
+                  f"(and slowly change shape: texture z = time · {evolve})", fontsize=9)
+    fig.suptitle("18: the wind is 16's fBm, one sample per blade root (GPU Gems 1 ch7 §7.4.4)", fontsize=11, y=1.02)
+    return fig
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("names", nargs="*", help="figures to build (default: all)")
